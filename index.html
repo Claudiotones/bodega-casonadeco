@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Casona Deco | Gestión de pedidos</title>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- =====================================================
+       CABECERA
+  ====================================================== -->
+
+  <header class="topbar">
+    <div class="topbar-inner">
+
+      <div class="brand">
+        <div class="brand-mark">
+          CD
+        </div>
+
+        <div>
+          <h1>Casona Deco</h1>
+          <p>Gestión de pedidos</p>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <div class="current-user">
+          <span class="user-dot"></span>
+          <span>Equipo Casona Deco</span>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+
+  <!-- =====================================================
+       CONTENIDO PRINCIPAL
+  ====================================================== -->
+
+  <main class="main-container">
+
+    <!-- Título -->
+
+    <section class="page-heading">
+      <div>
+        <h2>Pedidos</h2>
+        <p>
+          Control de preparación y despacho de pedidos.
+        </p>
+      </div>
+
+      <div class="heading-actions">
+        <button
+          id="reset-demo"
+          class="button button-secondary"
+          type="button"
+        >
+          Reiniciar demo
+        </button>
+      </div>
+    </section>
+
+
+    <!-- =================================================
+         RESUMEN
+    ================================================== -->
+
+    <section class="stats-grid">
+
+      <article class="stat-card">
+        <span class="stat-label">Pendientes</span>
+        <strong
+          id="stat-pendiente"
+          class="stat-number"
+        >
+          0
+        </strong>
+      </article>
+
+      <article class="stat-card">
+        <span class="stat-label">En bodega</span>
+        <strong
+          id="stat-bodega"
+          class="stat-number"
+        >
+          0
+        </strong>
+      </article>
+
+      <article class="stat-card">
+        <span class="stat-label">Armando</span>
+        <strong
+          id="stat-armando"
+          class="stat-number"
+        >
+          0
+        </strong>
+      </article>
+
+      <article class="stat-card">
+        <span class="stat-label">Enviados</span>
+        <strong
+          id="stat-enviado"
+          class="stat-number"
+        >
+          0
+        </strong>
+      </article>
+
+    </section>
+
+
+    <!-- =================================================
+         FILTROS
+    ================================================== -->
+
+    <section class="filters-panel">
+
+      <div class="filters-top">
+
+        <div class="filter-buttons">
+
+          <button
+            class="filter-button active"
+            data-zone="todos"
+            type="button"
+          >
+            Todos
+          </button>
+
+          <button
+            class="filter-button"
+            data-zone="santiago"
+            type="button"
+          >
+            Santiago
+          </button>
+
+          <button
+            class="filter-button"
+            data-zone="regiones"
+            type="button"
+          >
+            Regiones
+          </button>
+
+          <button
+            class="filter-button"
+            data-zone="problema"
+            type="button"
+          >
+            Problemas
+          </button>
+
+        </div>
+
+
+        <div class="search-wrapper">
+          <input
+            id="search-order"
+            class="search-input"
+            type="search"
+            placeholder="Buscar pedido..."
+            autocomplete="off"
+          >
+        </div>
+
+      </div>
+
+
+      <div class="status-filters">
+
+        <button
+          class="status-filter active"
+          data-status="todos"
+          type="button"
+        >
+          Todos los estados
+        </button>
+
+        <button
+          class="status-filter"
+          data-status="pendiente"
+          type="button"
+        >
+          Pendientes
+        </button>
+
+        <button
+          class="status-filter"
+          data-status="bodega"
+          type="button"
+        >
+          Bodega
+        </button>
+
+        <button
+          class="status-filter"
+          data-status="armando"
+          type="button"
+        >
+          Armando
+        </button>
+
+        <button
+          class="status-filter"
+          data-status="enviado"
+          type="button"
+        >
+          Enviados
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <!-- =================================================
+         TABLERO
+    ================================================== -->
+
+    <section class="orders-section">
+
+      <div
+        id="orders-grid"
+        class="orders-grid"
+      >
+        <!-- Los pedidos se generan desde app.js -->
+      </div>
+
+
+      <div
+        id="empty-state"
+        class="empty-state hidden"
+      >
+        <div class="empty-icon">
+          📦
+        </div>
+
+        <h3>No hay pedidos</h3>
+
+        <p>
+          No encontramos pedidos que coincidan con los filtros seleccionados.
+        </p>
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- =====================================================
+       MODAL DETALLE DEL PEDIDO
+  ====================================================== -->
+
+  <div
+    id="order-modal"
+    class="modal-overlay hidden"
+  >
+
+    <div class="modal">
+
+      <div class="modal-header">
+
+        <div>
+          <button
+            id="close-modal"
+            class="back-button"
+            type="button"
+          >
+            ← Volver
+          </button>
+
+          <div class="modal-title-row">
+
+            <h2 id="modal-order-number">
+              #7028
+            </h2>
+
+            <span
+              id="modal-zone"
+              class="zone-badge"
+            >
+              Santiago
+            </span>
+
+          </div>
+
+          <p
+            id="modal-order-date"
+            class="modal-date"
+          >
+          </p>
+        </div>
+
+
+        <button
+          id="close-modal-x"
+          class="modal-close"
+          type="button"
+          aria-label="Cerrar"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <div class="modal-content">
+
+        <!-- Progreso -->
+
+        <section class="order-progress">
+
+          <h3>Estado del pedido</h3>
+
+          <div
+            id="progress-steps"
+            class="progress-steps"
+          >
+          </div>
+
+        </section>
+
+
+        <!-- Productos -->
+
+        <section class="order-products">
+
+          <div class="section-heading">
+            <h3>Productos</h3>
+
+            <span
+              id="modal-product-count"
+              class="product-count"
+            >
+            </span>
+          </div>
+
+          <div
+            id="modal-products"
+            class="product-list"
+          >
+          </div>
+
+        </section>
+
+
+        <!-- Observaciones -->
+
+        <section class="order-notes">
+
+          <h3>Observaciones</h3>
+
+          <textarea
+            id="order-notes-input"
+            placeholder="Agregar una observación para este pedido..."
+          ></textarea>
+
+          <button
+            id="save-notes"
+            class="button button-secondary"
+            type="button"
+          >
+            Guardar observación
+          </button>
+
+        </section>
+
+
+        <!-- Historial -->
+
+        <section class="order-history">
+
+          <h3>Historial</h3>
+
+          <div
+            id="history-list"
+            class="history-list"
+          >
+          </div>
+
+        </section>
+
+
+        <!-- Acciones -->
+
+        <section class="modal-actions">
+
+          <button
+            id="problem-button"
+            class="button button-problem"
+            type="button"
+          >
+            ⚠ Marcar problema
+          </button>
+
+          <button
+            id="next-status-button"
+            class="button button-primary"
+            type="button"
+          >
+            Avanzar pedido
+          </button>
+
+        </section>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- =====================================================
+       VISOR DE IMAGEN
+  ====================================================== -->
+
+  <div
+    id="image-viewer"
+    class="image-viewer hidden"
+  >
+    <button
+      id="close-image-viewer"
+      class="image-viewer-close"
+      type="button"
+      aria-label="Cerrar imagen"
+    >
+      ×
+    </button>
+
+    <img
+      id="image-viewer-img"
+      class="image-viewer-img"
+      src=""
+      alt="Producto"
+    >
+  </div>
+
+  <!-- =====================================================
+       NOTIFICACIÓN
+  ====================================================== -->
+
+  <div
+    id="toast"
+    class="toast hidden"
+  >
+    <span id="toast-message">
+      Cambio guardado
+    </span>
+  </div>
+
+
+  <!-- =====================================================
+       JAVASCRIPT
+  ====================================================== -->
+
+  <script src="app.js"></script>
+
+</body>
+</html>
