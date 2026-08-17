@@ -144,6 +144,7 @@ function shopifyOrderToLocalOrder(order) {
       id: product.id,
       name: product.name,
       quantity: product.quantity,
+      code: product.code || "",
       sku: product.sku || "",
       variant: product.variant || "",
       image: product.image || ""
@@ -634,6 +635,17 @@ function renderProducts(order) {
                 : ""
             }
 
+                        ${
+              product.code
+                ? `
+                  <p class="product-meta">
+                    <strong>Código:</strong>
+                    ${escapeHtml(product.code)}
+                  </p>
+                `
+                : ""
+            }
+
             ${
               product.sku
                 ? `
@@ -645,6 +657,7 @@ function renderProducts(order) {
                 : ""
             }
 
+            <span class="product-quantity">
             <span class="product-quantity">
               Cantidad:
               ${product.quantity}
