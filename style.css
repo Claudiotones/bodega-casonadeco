@@ -2385,3 +2385,111 @@ img {
   }
 
 }
+
+/* =========================================================
+   INCIDENCIAS POR PRODUCTO
+========================================================= */
+
+.incident-report-button {
+  margin-top: 10px;
+
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+
+  background: #fff;
+
+  color: #dc2626;
+
+  padding: 6px 9px;
+
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.incident-report-button:hover {
+  background: #fef2f2;
+}
+
+
+.product-incident {
+  margin-top: 10px;
+
+  border-radius: 9px;
+
+  padding: 9px 10px;
+
+  font-size: 10px;
+}
+
+
+.product-incident.active {
+  border: 1px solid #fecaca;
+
+  background: #fef2f2;
+
+  color: #991b1b;
+}
+
+
+.product-incident.resolved {
+  border: 1px solid #bbf7d0;
+
+  background: #f0fdf4;
+
+  color: #166534;
+
+  font-weight: 700;
+}
+
+
+.incident-header {
+  margin-bottom: 6px;
+
+  font-size: 10px;
+  font-weight: 900;
+
+  text-transform: uppercase;
+}
+
+
+.incident-details {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  margin-bottom: 5px;
+}
+
+
+.incident-time {
+  display: block;
+
+  color: #b91c1c;
+
+  font-size: 9px;
+}
+
+
+.incident-resolve-button {
+  width: 100%;
+
+  margin-top: 9px;
+
+  border: 0;
+  border-radius: 7px;
+
+  background: #dc2626;
+
+  color: #fff;
+
+  padding: 7px 9px;
+
+  font-size: 9px;
+  font-weight: 900;
+}
+
+
+.incident-resolve-button:hover {
+  background: #b91c1c;
+}
