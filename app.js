@@ -140,7 +140,9 @@ function shopifyOrderToLocalOrder(order) {
 
     notes: "",
 
-    products: order.products.map(product => ({
+      incidents: [],
+
+      products: order.products.map(product => ({
       id: product.id,
       name: product.name,
       quantity: product.quantity,
@@ -215,8 +217,13 @@ function applySavedStates() {
           : order.notes,
       history:
         Array.isArray(saved.history)
-          ? saved.history
-          : order.history
+        ? saved.history
+        : order.history,
+
+      incidents:
+        Array.isArray(saved.incidents)
+        ? saved.incidents
+        : []
     };
   });
 }
