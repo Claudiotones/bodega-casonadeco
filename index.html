@@ -856,4 +856,136 @@
   <script src="app.js"></script>
 
 </body>
+
+  <!-- ==========================================
+     MODAL REPORTAR INCIDENCIA
+=========================================== -->
+
+<div
+  id="incidentModal"
+  class="incident-modal"
+  aria-hidden="true"
+>
+  <div class="incident-modal-backdrop"></div>
+
+  <div
+    class="incident-modal-card"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="incidentModalTitle"
+  >
+    <button
+      type="button"
+      id="incidentModalClose"
+      class="incident-modal-close"
+      aria-label="Cerrar"
+    >
+      ×
+    </button>
+
+    <span class="incident-modal-label">
+      INCIDENCIA
+    </span>
+
+    <h3 id="incidentModalTitle">
+      Reportar problema
+    </h3>
+
+    <p
+      id="incidentProductName"
+      class="incident-modal-product"
+    ></p>
+
+    <p class="incident-modal-question">
+      ¿Qué ocurrió con el producto?
+    </p>
+
+    <div class="incident-reason-options">
+
+      <button
+        type="button"
+        class="incident-reason-button damaged"
+        data-reason="Dañado"
+      >
+        <span class="incident-reason-icon">!</span>
+
+        <span>
+          <strong>DAÑADO</strong>
+          <small>El producto presenta daños</small>
+        </span>
+      </button>
+
+      <button
+        type="button"
+        class="incident-reason-button broken"
+        data-reason="Quebrado"
+      >
+        <span class="incident-reason-icon">×</span>
+
+        <span>
+          <strong>QUEBRADO</strong>
+          <small>El producto está roto</small>
+        </span>
+      </button>
+
+    </div>
+
+    <div
+      id="incidentQuantitySection"
+      class="incident-quantity-section"
+      hidden
+    >
+      <p class="incident-modal-question">
+        ¿Cuántas unidades?
+      </p>
+
+      <div class="incident-quantity-control">
+
+        <button
+          type="button"
+          id="incidentQuantityMinus"
+          aria-label="Disminuir cantidad"
+        >
+          −
+        </button>
+
+        <strong id="incidentQuantity">
+          1
+        </strong>
+
+        <button
+          type="button"
+          id="incidentQuantityPlus"
+          aria-label="Aumentar cantidad"
+        >
+          +
+        </button>
+
+      </div>
+
+      <p
+        id="incidentQuantityAvailable"
+        class="incident-quantity-available"
+      ></p>
+
+      <button
+        type="button"
+        id="incidentConfirmButton"
+        class="incident-confirm-button"
+      >
+        Confirmar incidencia
+      </button>
+
+    </div>
+
+    <button
+      type="button"
+      id="incidentCancelButton"
+      class="incident-cancel-button"
+    >
+      Cancelar
+    </button>
+
+  </div>
+</div>
 </html>
