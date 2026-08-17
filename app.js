@@ -415,14 +415,14 @@ function createOrderCard(order) {
     </div>
   `;
 
-  article
-    .querySelector(".order-view-button")
-    .addEventListener(
-      "click",
-      () => openOrder(order.id)
-    );
+  article.addEventListener(
+  "click",
+  () => {
+    openOrder(order.id);
+  }
+);
 
-  return article;
+return article;
 }
 
 
