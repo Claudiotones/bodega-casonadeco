@@ -1,226 +1,6 @@
-const STORAGE_KEY = "casona_deco_orders_demo_v1";
+const STORAGE_KEY = "casona_deco_order_states_v2";
 
-const demoOrders = [
-  {
-    id: 7028,
-    number: "#7028",
-    zone: "santiago",
-    date: "15 ago 2026 · 12:27",
-    status: "pendiente",
-    shipping: "Envío Express Santiago",
-    notes: "",
-    products: [
-      {
-        name: "Casa porta bolsitas de té de cerámica",
-        quantity: 1,
-        variant: "",
-        image:
-          "https://images.unsplash.com/photo-1610701596007-11502861dcfa?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        name: "Adorno Percha Pez Espada de hierro",
-        quantity: 1,
-        variant: "",
-        image:
-          "https://images.unsplash.com/photo-1531988042231-d39a9cc12a9a?auto=format&fit=crop&w=800&q=80"
-      }
-    ],
-    history: [
-      {
-        text: "Pedido recibido",
-        time: "15 ago 2026 · 12:27"
-      }
-    ]
-  },
-
-  {
-    id: 7029,
-    number: "#7029",
-    zone: "regiones",
-    date: "15 ago 2026 · 12:40",
-    status: "bodega",
-    shipping: "Chilexpress Regiones",
-    notes: "",
-    products: [
-      {
-        name: "Florero de vidrio ámbar",
-        quantity: 2,
-        variant: "",
-        image:
-          "https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        name: "Canasto decorativo",
-        quantity: 1,
-        variant: "Grande",
-        image:
-          "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=800&q=80"
-      }
-    ],
-    history: [
-      {
-        text: "Pedido recibido",
-        time: "15 ago 2026 · 12:40"
-      },
-      {
-        text: "Pedido bajado de bodega",
-        time: "15 ago 2026 · 13:05"
-      }
-    ]
-  },
-
-  {
-    id: 7030,
-    number: "#7030",
-    zone: "santiago",
-    date: "15 ago 2026 · 13:02",
-    status: "armando",
-    shipping: "Envío Express Santiago",
-    notes: "Revisar que el espejo no tenga marcas.",
-    products: [
-      {
-        name: "Espejo decorativo dorado",
-        quantity: 1,
-        variant: "",
-        image:
-          "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80"
-      }
-    ],
-    history: [
-      {
-        text: "Pedido recibido",
-        time: "15 ago 2026 · 13:02"
-      },
-      {
-        text: "Pedido bajado de bodega",
-        time: "15 ago 2026 · 13:20"
-      },
-      {
-        text: "Pedido en preparación",
-        time: "15 ago 2026 · 13:34"
-      }
-    ]
-  },
-
-  {
-    id: 7031,
-    number: "#7031",
-    zone: "regiones",
-    date: "15 ago 2026 · 13:18",
-    status: "enviado",
-    shipping: "Starken",
-    notes: "",
-    products: [
-      {
-        name: "Fanales metálicos",
-        quantity: 2,
-        variant: "Mediano",
-        image:
-          "https://images.unsplash.com/photo-1603006905003-be475563bc59?auto=format&fit=crop&w=800&q=80"
-      }
-    ],
-    history: [
-      {
-        text: "Pedido recibido",
-        time: "15 ago 2026 · 13:18"
-      },
-      {
-        text: "Pedido bajado de bodega",
-        time: "15 ago 2026 · 13:45"
-      },
-      {
-        text: "Pedido en preparación",
-        time: "15 ago 2026 · 14:05"
-      },
-      {
-        text: "Pedido enviado",
-        time: "15 ago 2026 · 15:12"
-      }
-    ]
-  },
-
-  {
-    id: 7032,
-    number: "#7032",
-    zone: "santiago",
-    date: "15 ago 2026 · 13:31",
-    status: "problema",
-    previousStatus: "bodega",
-    shipping: "Envío Express Santiago",
-    notes: "Producto no encontrado en ubicación habitual.",
-    products: [
-      {
-        name: "Adorno Virgen",
-        quantity: 1,
-        variant: "",
-        image:
-          "https://images.unsplash.com/photo-1578662996442-48f60103fc96?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        name: "Pañuelo decorativo",
-        quantity: 1,
-        variant: "Beige",
-        image:
-          "https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&w=800&q=80"
-      }
-    ],
-    history: [
-      {
-        text: "Pedido recibido",
-        time: "15 ago 2026 · 13:31"
-      },
-      {
-        text: "Pedido bajado de bodega",
-        time: "15 ago 2026 · 13:50"
-      },
-      {
-        text: "Problema reportado",
-        time: "15 ago 2026 · 14:02"
-      }
-    ]
-  },
-
-  {
-    id: 7033,
-    number: "#7033",
-    zone: "regiones",
-    date: "15 ago 2026 · 14:10",
-    status: "pendiente",
-    shipping: "Blue Express",
-    notes: "",
-    products: [
-      {
-        name: "Tetera decorativa",
-        quantity: 1,
-        variant: "",
-        image:
-          "https://images.unsplash.com/photo-1563822249366-3efb23b8e0c9?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        name: "Molinillo decorativo",
-        quantity: 1,
-        variant: "",
-        image:
-          "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        name: "Planta artificial",
-        quantity: 2,
-        variant: "",
-        image:
-          "https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=800&q=80"
-      }
-    ],
-    history: [
-      {
-        text: "Pedido recibido",
-        time: "15 ago 2026 · 14:10"
-      }
-    ]
-  }
-];
-
-let orders = loadOrders();
+let orders = [];
 let selectedOrderId = null;
 
 let activeZone = "todos";
@@ -266,27 +46,203 @@ const imageViewer = document.getElementById("image-viewer");
 const imageViewerImg = document.getElementById("image-viewer-img");
 const closeImageViewerButton = document.getElementById("close-image-viewer");
 
-function loadOrders() {
+
+// ==========================================================
+// INICIO
+// ==========================================================
+
+async function init() {
+  try {
+    showLoadingState();
+
+    const response = await fetch("/api/orders", {
+      cache: "no-store"
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(
+        data.detail ||
+        data.error ||
+        "No se pudieron cargar los pedidos."
+      );
+    }
+
+    orders = data.orders
+      .filter(order => {
+        return (
+          order.financialStatus === "PAID" &&
+          order.fulfillmentStatus !== "FULFILLED"
+        );
+      })
+      .map(shopifyOrderToLocalOrder);
+
+    applySavedStates();
+
+    render();
+  } catch (error) {
+    console.error(error);
+
+    ordersGrid.innerHTML = `
+      <div style="
+        grid-column: 1 / -1;
+        padding: 30px;
+        background: white;
+        border-radius: 16px;
+        border: 1px solid #e5e1da;
+      ">
+        <strong>No se pudieron cargar los pedidos.</strong>
+        <p style="margin-bottom:0;">
+          ${escapeHtml(error.message)}
+        </p>
+      </div>
+    `;
+  }
+}
+
+
+// ==========================================================
+// SHOPIFY → FORMATO DEL PANEL
+// ==========================================================
+
+function shopifyOrderToLocalOrder(order) {
+  const shippingMethod =
+    order.shipping?.methods?.[0] || "";
+
+  const zone = classifyZone(
+    shippingMethod,
+    order.shipping
+  );
+
+  return {
+    id: order.id,
+    number: order.number,
+
+    date: formatShopifyDate(order.createdAt),
+
+    status: "pendiente",
+
+    previousStatus: null,
+
+    zone,
+
+    shipping:
+      shippingMethod || "Sin método de envío",
+
+    shippingDetails: {
+      city: order.shipping?.city || "",
+      province: order.shipping?.province || "",
+      provinceCode:
+        order.shipping?.provinceCode || "",
+      country: order.shipping?.country || ""
+    },
+
+    notes: "",
+
+    products: order.products.map(product => ({
+      id: product.id,
+      name: product.name,
+      quantity: product.quantity,
+      sku: product.sku || "",
+      variant: product.variant || "",
+      image: product.image || ""
+    })),
+
+    history: [
+      {
+        text: "Pedido recibido desde Shopify",
+        time: formatShopifyDate(order.createdAt)
+      }
+    ]
+  };
+}
+
+
+// ==========================================================
+// CLASIFICAR SANTIAGO / REGIONES
+// ==========================================================
+
+function classifyZone(shippingMethod, shipping) {
+  const method =
+    String(shippingMethod || "").toLowerCase();
+
+  if (method.includes("santiago")) {
+    return "santiago";
+  }
+
+  return "regiones";
+}
+
+
+// ==========================================================
+// ESTADOS LOCALES
+// ==========================================================
+
+function getSavedStates() {
   const saved = localStorage.getItem(STORAGE_KEY);
 
   if (!saved) {
-    const cloned = JSON.parse(JSON.stringify(demoOrders));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(cloned));
-    return cloned;
+    return {};
   }
 
   try {
     return JSON.parse(saved);
   } catch {
-    const cloned = JSON.parse(JSON.stringify(demoOrders));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(cloned));
-    return cloned;
+    return {};
   }
 }
 
-function saveOrders() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+function applySavedStates() {
+  const savedStates = getSavedStates();
+
+  orders = orders.map(order => {
+    const saved = savedStates[order.number];
+
+    if (!saved) {
+      return order;
+    }
+
+    return {
+      ...order,
+      status: saved.status || order.status,
+      previousStatus:
+        saved.previousStatus || null,
+      notes:
+        typeof saved.notes === "string"
+          ? saved.notes
+          : order.notes,
+      history:
+        Array.isArray(saved.history)
+          ? saved.history
+          : order.history
+    };
+  });
 }
+
+function saveOrderStates() {
+  const states = {};
+
+  orders.forEach(order => {
+    states[order.number] = {
+      status: order.status,
+      previousStatus:
+        order.previousStatus || null,
+      notes: order.notes || "",
+      history: order.history || []
+    };
+  });
+
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(states)
+  );
+}
+
+
+// ==========================================================
+// RENDER
+// ==========================================================
 
 function render() {
   renderStats();
@@ -315,21 +271,31 @@ function renderOrders() {
   const filteredOrders = orders.filter(order => {
     const matchesZone =
       activeZone === "todos" ||
-      (activeZone === "problema"
-        ? order.status === "problema"
-        : order.zone === activeZone);
+      (
+        activeZone === "problema"
+          ? order.status === "problema"
+          : order.zone === activeZone
+      );
 
     const matchesStatus =
       activeStatus === "todos" ||
       order.status === activeStatus;
 
     const matchesSearch =
-      order.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.number
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
       order.products.some(product =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase())
+        product.name
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())
       );
 
-    return matchesZone && matchesStatus && matchesSearch;
+    return (
+      matchesZone &&
+      matchesStatus &&
+      matchesSearch
+    );
   });
 
   ordersGrid.innerHTML = "";
@@ -341,24 +307,26 @@ function renderOrders() {
 
   emptyState.classList.add("hidden");
 
-  filteredOrders
-    .sort((a, b) => b.id - a.id)
-    .forEach(order => {
-      const card = createOrderCard(order);
-      ordersGrid.appendChild(card);
-    });
+  filteredOrders.forEach(order => {
+    const card = createOrderCard(order);
+    ordersGrid.appendChild(card);
+  });
 }
 
 function createOrderCard(order) {
   const article = document.createElement("article");
+
   article.className = "order-card";
 
-  const visibleProducts = order.products.slice(0, 3);
+  const visibleProducts =
+    order.products.slice(0, 3);
 
-  const totalUnits = order.products.reduce(
-    (sum, product) => sum + product.quantity,
-    0
-  );
+  const totalUnits =
+    order.products.reduce(
+      (sum, product) =>
+        sum + product.quantity,
+      0
+    );
 
   article.innerHTML = `
     <div class="order-card-inner">
@@ -367,11 +335,11 @@ function createOrderCard(order) {
 
         <div>
           <h3 class="order-number">
-            ${order.number}
+            ${escapeHtml(order.number)}
           </h3>
 
           <p class="order-date">
-            ${order.date}
+            ${escapeHtml(order.date)}
           </p>
         </div>
 
@@ -392,17 +360,21 @@ function createOrderCard(order) {
       <div class="order-card-products">
 
         <div class="order-thumb-group">
-          ${visibleProducts
-            .map(
-              product => `
-                <img
-                  class="order-thumb"
-                  src="${product.image}"
-                  alt="${escapeHtml(product.name)}"
-                >
-              `
-            )
-            .join("")}
+
+          ${visibleProducts.map(product => {
+            if (!product.image) {
+              return "";
+            }
+
+            return `
+              <img
+                class="order-thumb"
+                src="${product.image}"
+                alt="${escapeHtml(product.name)}"
+              >
+            `;
+          }).join("")}
+
         </div>
 
         <div class="order-product-summary">
@@ -444,16 +416,18 @@ function createOrderCard(order) {
 
   article
     .querySelector(".order-view-button")
-    .addEventListener("click", () => {
-      openOrder(order.id);
-    });
-
-  article.addEventListener("dblclick", () => {
-    openOrder(order.id);
-  });
+    .addEventListener(
+      "click",
+      () => openOrder(order.id)
+    );
 
   return article;
 }
+
+
+// ==========================================================
+// DETALLE DEL PEDIDO
+// ==========================================================
 
 function openOrder(orderId) {
   selectedOrderId = orderId;
@@ -462,7 +436,9 @@ function openOrder(orderId) {
 
   if (!order) return;
 
-  modalOrderNumber.textContent = order.number;
+  modalOrderNumber.textContent =
+    order.number;
+
   modalOrderDate.textContent =
     `${order.date} · ${order.shipping}`;
 
@@ -473,11 +449,14 @@ function openOrder(orderId) {
 
   modalZone.className =
     "zone-badge " +
-    (order.zone === "santiago"
-      ? "zone-santiago"
-      : "zone-regiones");
+    (
+      order.zone === "santiago"
+        ? "zone-santiago"
+        : "zone-regiones"
+    );
 
-  orderNotesInput.value = order.notes || "";
+  orderNotesInput.value =
+    order.notes || "";
 
   renderProgress(order);
   renderProducts(order);
@@ -486,7 +465,8 @@ function openOrder(orderId) {
 
   modal.classList.remove("hidden");
 
-  document.body.style.overflow = "hidden";
+  document.body.style.overflow =
+    "hidden";
 }
 
 function closeModal() {
@@ -496,6 +476,11 @@ function closeModal() {
 
   selectedOrderId = null;
 }
+
+
+// ==========================================================
+// PROGRESO
+// ==========================================================
 
 function renderProgress(order) {
   const statuses = [
@@ -517,84 +502,120 @@ function renderProgress(order) {
     }
   ];
 
-  let comparisonStatus = order.status;
+  let comparisonStatus =
+    order.status;
 
   if (order.status === "problema") {
     comparisonStatus =
-      order.previousStatus || "pendiente";
+      order.previousStatus ||
+      "pendiente";
   }
 
-  const currentIndex = statuses.findIndex(
-    status => status.key === comparisonStatus
-  );
+  const currentIndex =
+    statuses.findIndex(
+      status =>
+        status.key === comparisonStatus
+    );
 
-  progressSteps.innerHTML = statuses
-    .map((status, index) => {
-      let className = "progress-step";
+  progressSteps.innerHTML =
+    statuses.map(
+      (status, index) => {
+        let className =
+          "progress-step";
 
-      if (index < currentIndex) {
-        className += " completed";
+        if (index < currentIndex) {
+          className += " completed";
+        }
+
+        if (index === currentIndex) {
+          className += " current";
+        }
+
+        if (
+          order.status === "enviado" &&
+          index === currentIndex
+        ) {
+          className =
+            "progress-step completed";
+        }
+
+        return `
+          <div class="${className}">
+
+            <span class="progress-step-number">
+              ${
+                index < currentIndex ||
+                order.status === "enviado"
+                  ? "✓"
+                  : index + 1
+              }
+            </span>
+
+            <span class="progress-step-label">
+              ${status.label}
+            </span>
+
+          </div>
+        `;
       }
-
-      if (index === currentIndex) {
-        className += " current";
-      }
-
-      if (
-        order.status === "enviado" &&
-        index === currentIndex
-      ) {
-        className = "progress-step completed";
-      }
-
-      return `
-        <div class="${className}">
-
-          <span class="progress-step-number">
-            ${
-              index < currentIndex ||
-              order.status === "enviado"
-                ? "✓"
-                : index + 1
-            }
-          </span>
-
-          <span class="progress-step-label">
-            ${status.label}
-          </span>
-
-        </div>
-      `;
-    })
-    .join("");
+    ).join("");
 }
 
+
+// ==========================================================
+// PRODUCTOS
+// ==========================================================
+
 function renderProducts(order) {
-  const totalUnits = order.products.reduce(
-    (sum, product) => sum + product.quantity,
-    0
-  );
+  const totalUnits =
+    order.products.reduce(
+      (sum, product) =>
+        sum + product.quantity,
+      0
+    );
 
   modalProductCount.textContent =
     `${order.products.length} productos · ${totalUnits} unidades`;
 
-  modalProducts.innerHTML = order.products
-    .map(
+  modalProducts.innerHTML =
+    order.products.map(
       product => `
         <article class="product-item">
 
-          <button
-            type="button"
-            class="product-image-wrapper product-image-button"
-            data-image="${product.image}"
-            data-product="${escapeHtml(product.name)}"
-          >
-            <img
-              class="product-image"
-              src="${product.image}"
-              alt="${escapeHtml(product.name)}"
-            >
-          </button>
+          ${
+            product.image
+              ? `
+                <button
+                  type="button"
+                  class="product-image-wrapper product-image-button"
+                  data-image="${product.image}"
+                  data-product="${escapeHtml(product.name)}"
+                >
+                  <img
+                    class="product-image"
+                    src="${product.image}"
+                    alt="${escapeHtml(product.name)}"
+                  >
+                </button>
+              `
+              : `
+                <div class="product-image-wrapper">
+                  <div style="
+                    width:100%;
+                    height:100%;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    color:#888;
+                    font-size:12px;
+                    text-align:center;
+                    padding:8px;
+                  ">
+                    Sin imagen
+                  </div>
+                </div>
+              `
+          }
 
           <div class="product-info">
 
@@ -613,48 +634,96 @@ function renderProducts(order) {
                 : ""
             }
 
+            ${
+              product.sku
+                ? `
+                  <p class="product-meta">
+                    SKU:
+                    ${escapeHtml(product.sku)}
+                  </p>
+                `
+                : ""
+            }
+
             <span class="product-quantity">
-              Cantidad: ${product.quantity}
+              Cantidad:
+              ${product.quantity}
             </span>
 
           </div>
 
         </article>
       `
-    )
-    .join("");
+    ).join("");
 
   modalProducts
-    .querySelectorAll(".product-image-button")
+    .querySelectorAll(
+      ".product-image-button"
+    )
     .forEach(button => {
-      button.addEventListener("click", () => {
-        openImageViewer(
-          button.dataset.image,
-          button.dataset.product
-        );
-      });
+      button.addEventListener(
+        "click",
+        () => {
+          openImageViewer(
+            button.dataset.image,
+            button.dataset.product
+          );
+        }
+      );
     });
 }
 
-function openImageViewer(image, productName) {
-  if (!imageViewer || !imageViewerImg) return;
+
+// ==========================================================
+// VISOR DE IMAGEN
+// ==========================================================
+
+function openImageViewer(
+  image,
+  productName
+) {
+  if (
+    !imageViewer ||
+    !imageViewerImg
+  ) {
+    return;
+  }
 
   imageViewerImg.src = image;
-  imageViewerImg.alt = productName || "Producto";
 
-  imageViewer.classList.remove("hidden");
+  imageViewerImg.alt =
+    productName || "Producto";
+
+  imageViewer.classList.remove(
+    "hidden"
+  );
 }
 
 function closeImageViewer() {
-  if (!imageViewer || !imageViewerImg) return;
+  if (
+    !imageViewer ||
+    !imageViewerImg
+  ) {
+    return;
+  }
 
-  imageViewer.classList.add("hidden");
+  imageViewer.classList.add(
+    "hidden"
+  );
 
   imageViewerImg.src = "";
 }
 
+
+// ==========================================================
+// HISTORIAL
+// ==========================================================
+
 function renderHistory(order) {
-  if (!order.history || order.history.length === 0) {
+  if (
+    !order.history ||
+    order.history.length === 0
+  ) {
     historyList.innerHTML = `
       <div class="history-item">
         Sin movimientos registrados.
@@ -664,24 +733,30 @@ function renderHistory(order) {
     return;
   }
 
-  historyList.innerHTML = order.history
-    .slice()
-    .reverse()
-    .map(
-      item => `
-        <div class="history-item">
+  historyList.innerHTML =
+    order.history
+      .slice()
+      .reverse()
+      .map(
+        item => `
+          <div class="history-item">
 
-          ${escapeHtml(item.text)}
+            ${escapeHtml(item.text)}
 
-          <span class="history-time">
-            ${escapeHtml(item.time)}
-          </span>
+            <span class="history-time">
+              ${escapeHtml(item.time)}
+            </span>
 
-        </div>
-      `
-    )
-    .join("");
+          </div>
+        `
+      )
+      .join("");
 }
+
+
+// ==========================================================
+// BOTONES DE ESTADO
+// ==========================================================
 
 function updateModalButtons(order) {
   if (order.status === "enviado") {
@@ -690,17 +765,22 @@ function updateModalButtons(order) {
 
     nextStatusButton.disabled = true;
 
-    nextStatusButton.style.opacity = "0.5";
+    nextStatusButton.style.opacity =
+      "0.5";
   } else {
     nextStatusButton.disabled = false;
-    nextStatusButton.style.opacity = "1";
+
+    nextStatusButton.style.opacity =
+      "1";
 
     if (order.status === "problema") {
       nextStatusButton.textContent =
         "Resolver problema";
     } else {
       nextStatusButton.textContent =
-        getNextButtonLabel(order.status);
+        getNextButtonLabel(
+          order.status
+        );
     }
   }
 
@@ -709,37 +789,45 @@ function updateModalButtons(order) {
       "✓ Problema registrado";
 
     problemButton.disabled = true;
-    problemButton.style.opacity = "0.5";
+
+    problemButton.style.opacity =
+      "0.5";
   } else {
     problemButton.textContent =
       "⚠ Marcar problema";
 
     problemButton.disabled = false;
-    problemButton.style.opacity = "1";
+
+    problemButton.style.opacity =
+      "1";
   }
 }
 
 function advanceSelectedOrder() {
-  const order = getSelectedOrder();
+  const order =
+    getSelectedOrder();
 
   if (!order) return;
 
   if (order.status === "problema") {
     order.status =
-      order.previousStatus || "pendiente";
+      order.previousStatus ||
+      "pendiente";
 
     order.history.push({
       text: "Problema resuelto",
       time: getCurrentDateTime()
     });
 
-    delete order.previousStatus;
+    order.previousStatus = null;
 
-    saveOrders();
+    saveOrderStates();
 
     refreshOpenOrder();
 
-    showToast("Problema resuelto");
+    showToast(
+      "Problema resuelto"
+    );
 
     return;
   }
@@ -750,18 +838,22 @@ function advanceSelectedOrder() {
     armando: "enviado"
   };
 
-  const nextStatus = nextStatusMap[order.status];
+  const nextStatus =
+    nextStatusMap[order.status];
 
   if (!nextStatus) return;
 
   order.status = nextStatus;
 
   order.history.push({
-    text: getHistoryText(nextStatus),
-    time: getCurrentDateTime()
+    text:
+      getHistoryText(nextStatus),
+
+    time:
+      getCurrentDateTime()
   });
 
-  saveOrders();
+  saveOrderStates();
 
   refreshOpenOrder();
 
@@ -771,58 +863,85 @@ function advanceSelectedOrder() {
 }
 
 function markProblem() {
-  const order = getSelectedOrder();
+  const order =
+    getSelectedOrder();
 
   if (!order) return;
 
-  if (order.status === "problema") return;
+  if (order.status === "problema") {
+    return;
+  }
 
   if (order.status === "enviado") {
     showToast(
       "Un pedido enviado no puede marcarse como problema"
     );
+
     return;
   }
 
-  order.previousStatus = order.status;
-  order.status = "problema";
+  order.previousStatus =
+    order.status;
+
+  order.status =
+    "problema";
 
   order.history.push({
     text: "Problema reportado",
     time: getCurrentDateTime()
   });
 
-  saveOrders();
+  saveOrderStates();
 
   refreshOpenOrder();
 
-  showToast("Problema registrado");
+  showToast(
+    "Problema registrado"
+  );
 }
 
+
+// ==========================================================
+// OBSERVACIONES
+// ==========================================================
+
 function saveNotes() {
-  const order = getSelectedOrder();
+  const order =
+    getSelectedOrder();
 
   if (!order) return;
 
-  order.notes = orderNotesInput.value.trim();
+  order.notes =
+    orderNotesInput.value.trim();
 
   order.history.push({
-    text: order.notes
-      ? "Observación actualizada"
-      : "Observación eliminada",
-    time: getCurrentDateTime()
+    text:
+      order.notes
+        ? "Observación actualizada"
+        : "Observación eliminada",
+
+    time:
+      getCurrentDateTime()
   });
 
-  saveOrders();
+  saveOrderStates();
 
   renderHistory(order);
   render();
 
-  showToast("Observación guardada");
+  showToast(
+    "Observación guardada"
+  );
 }
 
+
+// ==========================================================
+// HELPERS
+// ==========================================================
+
 function refreshOpenOrder() {
-  const orderId = selectedOrderId;
+  const orderId =
+    selectedOrderId;
 
   render();
 
@@ -833,7 +952,8 @@ function refreshOpenOrder() {
 
 function getSelectedOrder() {
   return orders.find(
-    order => order.id === selectedOrderId
+    order =>
+      order.id === selectedOrderId
   );
 }
 
@@ -851,22 +971,38 @@ function getStatusLabel(status) {
 
 function getNextButtonLabel(status) {
   const labels = {
-    pendiente: "Marcar como bajado de bodega",
-    bodega: "Marcar como armado",
-    armando: "Marcar como enviado"
+    pendiente:
+      "Marcar como bajado de bodega",
+
+    bodega:
+      "Marcar como armado",
+
+    armando:
+      "Marcar como enviado"
   };
 
-  return labels[status] || "Avanzar pedido";
+  return (
+    labels[status] ||
+    "Avanzar pedido"
+  );
 }
 
 function getHistoryText(status) {
   const labels = {
-    bodega: "Pedido bajado de bodega",
-    armando: "Pedido en preparación",
-    enviado: "Pedido enviado"
+    bodega:
+      "Pedido bajado de bodega",
+
+    armando:
+      "Pedido en preparación",
+
+    enviado:
+      "Pedido enviado"
   };
 
-  return labels[status] || "Estado actualizado";
+  return (
+    labels[status] ||
+    "Estado actualizado"
+  );
 }
 
 function getCurrentDateTime() {
@@ -882,16 +1018,57 @@ function getCurrentDateTime() {
   ).format(new Date());
 }
 
+function formatShopifyDate(dateString) {
+  if (!dateString) {
+    return "";
+  }
+
+  const date =
+    new Date(dateString);
+
+  return new Intl.DateTimeFormat(
+    "es-CL",
+    {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    }
+  ).format(date);
+}
+
 function showToast(message) {
-  toastMessage.textContent = message;
+  toastMessage.textContent =
+    message;
 
-  toast.classList.remove("hidden");
+  toast.classList.remove(
+    "hidden"
+  );
 
-  clearTimeout(showToast.timeout);
+  clearTimeout(
+    showToast.timeout
+  );
 
-  showToast.timeout = setTimeout(() => {
-    toast.classList.add("hidden");
-  }, 2300);
+  showToast.timeout =
+    setTimeout(() => {
+      toast.classList.add(
+        "hidden"
+      );
+    }, 2300);
+}
+
+function showLoadingState() {
+  ordersGrid.innerHTML = `
+    <div style="
+      grid-column: 1 / -1;
+      padding: 50px;
+      text-align: center;
+      color: #78716a;
+    ">
+      Cargando pedidos de Shopify...
+    </div>
+  `;
 }
 
 function escapeHtml(value = "") {
@@ -903,47 +1080,80 @@ function escapeHtml(value = "") {
     .replaceAll("'", "&#039;");
 }
 
+
+// ==========================================================
+// EVENTOS
+// ==========================================================
+
 document
-  .querySelectorAll(".filter-button")
+  .querySelectorAll(
+    ".filter-button"
+  )
   .forEach(button => {
-    button.addEventListener("click", () => {
-      document
-        .querySelectorAll(".filter-button")
-        .forEach(item =>
-          item.classList.remove("active")
+    button.addEventListener(
+      "click",
+      () => {
+        document
+          .querySelectorAll(
+            ".filter-button"
+          )
+          .forEach(item =>
+            item.classList.remove(
+              "active"
+            )
+          );
+
+        button.classList.add(
+          "active"
         );
 
-      button.classList.add("active");
+        activeZone =
+          button.dataset.zone;
 
-      activeZone = button.dataset.zone;
-
-      renderOrders();
-    });
+        renderOrders();
+      }
+    );
   });
 
 document
-  .querySelectorAll(".status-filter")
+  .querySelectorAll(
+    ".status-filter"
+  )
   .forEach(button => {
-    button.addEventListener("click", () => {
-      document
-        .querySelectorAll(".status-filter")
-        .forEach(item =>
-          item.classList.remove("active")
+    button.addEventListener(
+      "click",
+      () => {
+        document
+          .querySelectorAll(
+            ".status-filter"
+          )
+          .forEach(item =>
+            item.classList.remove(
+              "active"
+            )
+          );
+
+        button.classList.add(
+          "active"
         );
 
-      button.classList.add("active");
+        activeStatus =
+          button.dataset.status;
 
-      activeStatus = button.dataset.status;
-
-      renderOrders();
-    });
+        renderOrders();
+      }
+    );
   });
 
-searchOrder.addEventListener("input", event => {
-  searchTerm = event.target.value.trim();
+searchOrder.addEventListener(
+  "input",
+  event => {
+    searchTerm =
+      event.target.value.trim();
 
-  renderOrders();
-});
+    renderOrders();
+  }
+);
 
 closeModalButton.addEventListener(
   "click",
@@ -955,11 +1165,14 @@ closeModalXButton.addEventListener(
   closeModal
 );
 
-modal.addEventListener("click", event => {
-  if (event.target === modal) {
-    closeModal();
+modal.addEventListener(
+  "click",
+  event => {
+    if (event.target === modal) {
+      closeModal();
+    }
   }
-});
+);
 
 document.addEventListener(
   "keydown",
@@ -967,7 +1180,9 @@ document.addEventListener(
     if (
       event.key === "Escape" &&
       imageViewer &&
-      !imageViewer.classList.contains("hidden")
+      !imageViewer.classList.contains(
+        "hidden"
+      )
     ) {
       closeImageViewer();
       return;
@@ -975,7 +1190,9 @@ document.addEventListener(
 
     if (
       event.key === "Escape" &&
-      !modal.classList.contains("hidden")
+      !modal.classList.contains(
+        "hidden"
+      )
     ) {
       closeModal();
     }
@@ -997,26 +1214,10 @@ saveNotesButton.addEventListener(
   saveNotes
 );
 
-resetDemoButton.addEventListener(
-  "click",
-  () => {
-    const confirmed = confirm(
-      "¿Quieres reiniciar todos los pedidos de demostración?"
-    );
-
-    if (!confirmed) return;
-
-    orders = JSON.parse(
-      JSON.stringify(demoOrders)
-    );
-
-    saveOrders();
-
-    render();
-
-    showToast("Demo reiniciada");
-  }
-);
+if (resetDemoButton) {
+  resetDemoButton.style.display =
+    "none";
+}
 
 if (closeImageViewerButton) {
   closeImageViewerButton.addEventListener(
@@ -1029,11 +1230,18 @@ if (imageViewer) {
   imageViewer.addEventListener(
     "click",
     event => {
-      if (event.target === imageViewer) {
+      if (
+        event.target === imageViewer
+      ) {
         closeImageViewer();
       }
     }
   );
 }
 
-render();
+
+// ==========================================================
+// EJECUTAR
+// ==========================================================
+
+init();
