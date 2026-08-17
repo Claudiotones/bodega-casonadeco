@@ -55,7 +55,7 @@ async function getShopifyOrders(env) {
   const query = `
     query GetRecentOrders {
       orders(
-        first: 10
+        first: 100
         sortKey: CREATED_AT
         reverse: true
       ) {
