@@ -237,7 +237,8 @@ function saveOrderStates() {
       previousStatus:
         order.previousStatus || null,
       notes: order.notes || "",
-      history: order.history || []
+      history: order.history || [],
+      incidents: order.incidents || []
     };
   });
 
@@ -665,12 +666,14 @@ function renderProducts(order) {
             }
 
             <span class="product-quantity">
-            <span class="product-quantity">
-              Cantidad:
-              ${product.quantity}
-            </span>
+           <span class="product-quantity">
+  Cantidad:
+  ${product.quantity}
+</span>
 
-          </div>
+${renderProductIncident(order, product)}
+
+</div>
 
         </article>
       `
@@ -680,6 +683,36 @@ function renderProducts(order) {
     .querySelectorAll(
       ".product-image-button"
     )
+    modalProducts
+  .querySelectorAll(
+    ".incident-report-button"
+  )
+  .forEach(button => {
+    button.addEventListener(
+      "click",
+      () => {
+        reportProductIncident(
+          button.dataset.productId
+        );
+      }
+    );
+  });
+
+
+modalProducts
+  .querySelectorAll(
+    ".incident-resolve-button"
+  )
+  .forEach(button => {
+    button.addEventListener(
+      "click",
+      () => {
+        resolveProductIncident(
+          button.dataset.productId
+        );
+      }
+    );
+  });
     .forEach(button => {
       button.addEventListener(
         "click",
@@ -691,6 +724,220 @@ function renderProducts(order) {
         }
       );
     });
+}
+
+
+function renderProductIncident(order, product) {
+  const incident = order.incidents?.find(
+    item =>
+      item.productId === product.id &&
+      item.status === "pendiente"
+  );
+
+  if (incident) {
+    return `
+      <div class="product-incident active">
+
+        <div class="incident-header">
+          <strong>⚠ Reemplazo pendiente</strong>
+        </div>
+
+        <div class="incident-details">
+          <span>
+            ${escapeHtml(incident.reason)}
+          </span>
+
+          <span>
+            Cantidad:
+            <strong>${incident.quantity}</strong>
+          </span>
+        </div>
+
+        <span class="incident-time">
+          Reportado:
+          ${escapeHtml(incident.createdAt)}
+        </span>
+
+        <button
+          type="button"
+          class="incident-resolve-button"
+          data-product-id="${product.id}"
+        >
+          ✓ Marcar como reemplazado
+        </button>
+
+      </div>
+    `;
+  }
+
+  const resolvedIncident =
+    order.incidents
+      ?.slice()
+      .reverse()
+      .find(
+        item =>
+          item.productId === product.id &&
+          item.status === "resuelto"
+      );
+
+  return `
+    ${
+      resolvedIncident
+        ? `
+          <div class="product-incident resolved">
+            ✓ Último reemplazo completado
+            · ${resolvedIncident.quantity} unidad(es)
+          </div>
+        `
+        : ""
+    }
+
+    <button
+      type="button"
+      class="incident-report-button"
+      data-product-id="${product.id}"
+    >
+      ⚠ Reportar incidencia
+    </button>
+  `;
+}
+
+
+function reportProductIncident(productId) {
+  const order = getSelectedOrder();
+
+  if (!order) return;
+
+  const product = order.products.find(
+    item => item.id === productId
+  );
+
+  if (!product) return;
+
+  const reason = prompt(
+    `Motivo de la incidencia para:\n${product.name}\n\n` +
+    `Escribe una de estas opciones:\n` +
+    `Dañado\nQuebrado\nManchado\nProducto equivocado\nFaltante\nOtro`
+  );
+
+  if (!reason) return;
+
+  const quantityInput = prompt(
+    `¿Cuántas unidades necesitan reemplazo?\n\n` +
+    `Cantidad pedida: ${product.quantity}`,
+    "1"
+  );
+
+  if (!quantityInput) return;
+
+  const quantity =
+    Number.parseInt(quantityInput, 10);
+
+  if (
+    Number.isNaN(quantity) ||
+    quantity < 1 ||
+    quantity > product.quantity
+  ) {
+    showToast(
+      "La cantidad indicada no es válida"
+    );
+
+    return;
+  }
+
+  if (!Array.isArray(order.incidents)) {
+    order.incidents = [];
+  }
+
+  order.incidents.push({
+    id:
+      `${Date.now()}-${product.id}`,
+
+    productId:
+      product.id,
+
+    productName:
+      product.name,
+
+    productCode:
+      product.code || "",
+
+    reason:
+      reason.trim(),
+
+    quantity,
+
+    status:
+      "pendiente",
+
+    createdAt:
+      getCurrentDateTime(),
+
+    resolvedAt:
+      null
+  });
+
+  order.history.push({
+    text:
+      `Incidencia reportada: ${product.name} · ${reason.trim()} · x${quantity}`,
+
+    time:
+      getCurrentDateTime()
+  });
+
+  saveOrderStates();
+
+  refreshOpenOrder();
+
+  showToast(
+    "Incidencia reportada"
+  );
+}
+
+
+function resolveProductIncident(productId) {
+  const order = getSelectedOrder();
+
+  if (!order) return;
+
+  const incident =
+    order.incidents?.find(
+      item =>
+        item.productId === productId &&
+        item.status === "pendiente"
+    );
+
+  if (!incident) return;
+
+  const confirmed = confirm(
+    `¿Confirmas que fue reemplazado?\n\n` +
+    `${incident.productName}\n` +
+    `Cantidad: ${incident.quantity}`
+  );
+
+  if (!confirmed) return;
+
+  incident.status =
+    "resuelto";
+
+  incident.resolvedAt =
+    getCurrentDateTime();
+
+  order.history.push({
+    text:
+      `Producto reemplazado: ${incident.productName} · x${incident.quantity}`,
+
+    time:
+      getCurrentDateTime()
+  });
+
+  saveOrderStates();
+
+  refreshOpenOrder();
+
+  showToast(
+    "Reemplazo completado"
+  );
 }
 
 
