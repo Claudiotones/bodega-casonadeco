@@ -32,7 +32,7 @@ export default {
     }
 
     // ==========================================
-    // RESTO DE SOLICITUDES → ARCHIVOS ESTÁTICOS
+    // RESTO → ARCHIVOS ESTÁTICOS
     // ==========================================
 
     return env.ASSETS.fetch(request);
@@ -47,7 +47,8 @@ export default {
 async function getShopifyOrders(env) {
   validateEnvironment(env);
 
-  const accessToken = await getShopifyAccessToken(env);
+  const accessToken =
+    await getShopifyAccessToken(env);
 
   const endpoint =
     `https://${env.SHOPIFY_SHOP}/admin/api/${SHOPIFY_API_VERSION}/graphql.json`;
@@ -63,6 +64,7 @@ async function getShopifyOrders(env) {
           id
           name
           createdAt
+
           displayFinancialStatus
           displayFulfillmentStatus
 
@@ -98,6 +100,14 @@ async function getShopifyOrders(env) {
                 product {
                   id
                   title
+                  descriptionHtml
+
+                  codigo: metafield(
+                    namespace: "custom"
+                    key: "codigo"
+                  ) {
+                    value
+                  }
 
                   featuredMedia {
                     preview {
@@ -116,20 +126,27 @@ async function getShopifyOrders(env) {
     }
   `;
 
-  const response = await fetch(endpoint, {
-    method: "POST",
+  const response = await fetch(
+    endpoint,
+    {
+      method: "POST",
 
-    headers: {
-      "Content-Type": "application/json",
-      "X-Shopify-Access-Token": accessToken
-    },
+      headers: {
+        "Content-Type":
+          "application/json",
 
-    body: JSON.stringify({
-      query
-    })
-  });
+        "X-Shopify-Access-Token":
+          accessToken
+      },
 
-  const data = await response.json();
+      body: JSON.stringify({
+        query
+      })
+    }
+  );
+
+  const data =
+    await response.json();
 
   if (!response.ok) {
     throw new Error(
@@ -140,62 +157,89 @@ async function getShopifyOrders(env) {
   if (data.errors) {
     throw new Error(
       data.errors
-        .map(error => error.message)
+        .map(
+          error =>
+            error.message
+        )
         .join(" | ")
     );
   }
 
-  const orders = data.data.orders.nodes.map(order => ({
-    id: order.id,
+  const orders =
+    data.data.orders.nodes.map(
+      order => ({
+        id:
+          order.id,
 
-    number: order.name,
+        number:
+          order.name,
 
-    createdAt: order.createdAt,
+        createdAt:
+          order.createdAt,
 
-    financialStatus:
-      order.displayFinancialStatus,
+        financialStatus:
+          order.displayFinancialStatus,
 
-    fulfillmentStatus:
-      order.displayFulfillmentStatus,
+        fulfillmentStatus:
+          order.displayFulfillmentStatus,
 
-    shipping: {
-      city:
-        order.shippingAddress?.city || "",
+        shipping: {
+          city:
+            order.shippingAddress
+              ?.city || "",
 
-      province:
-        order.shippingAddress?.province || "",
+          province:
+            order.shippingAddress
+              ?.province || "",
 
-      provinceCode:
-        order.shippingAddress?.provinceCode || "",
+          provinceCode:
+            order.shippingAddress
+              ?.provinceCode || "",
 
-      country:
-        order.shippingAddress?.country || "",
+          country:
+            order.shippingAddress
+              ?.country || "",
 
-      methods:
-        order.shippingLines.nodes.map(
-          shippingLine => shippingLine.title
-        )
-    },
+          methods:
+            order.shippingLines
+              .nodes
+              .map(
+                shippingLine =>
+                  shippingLine.title
+              )
+        },
 
-    products: order.lineItems.nodes.map(item => ({
-      id: item.id,
+        products:
+          order.lineItems.nodes.map(
+            item => ({
+              id:
+                item.id,
 
-      name: item.name,
+              name:
+                item.name,
 
-      quantity: item.quantity,
+              quantity:
+                item.quantity,
 
-      sku: item.sku || "",
+              sku:
+                item.sku || "",
 
-      variant:
-        item.variant?.title &&
-        item.variant.title !== "Default Title"
-          ? item.variant.title
-          : "",
+              code:
+                getProductCode(item),
 
-      image:
-        getLineItemImage(item)
-    }))
-  }));
+              variant:
+                item.variant?.title &&
+                item.variant.title !==
+                  "Default Title"
+                  ? item.variant.title
+                  : "",
+
+              image:
+                getLineItemImage(item)
+            })
+          )
+      })
+    );
 
   return jsonResponse({
     success: true,
@@ -206,31 +250,195 @@ async function getShopifyOrders(env) {
 
 
 // ==========================================================
+// OBTENER CÓDIGO DEL PRODUCTO
+// ==========================================================
+
+function getProductCode(item) {
+  const product =
+    item.variant?.product;
+
+  if (!product) {
+    return "";
+  }
+
+  // ------------------------------------------------------
+  // 1. PRIORIDAD: METACAMPO custom.codigo
+  // ------------------------------------------------------
+
+  const metafieldCode =
+    product.codigo?.value
+      ?.trim();
+
+  if (metafieldCode) {
+    return metafieldCode;
+  }
+
+  // ------------------------------------------------------
+  // 2. SI NO EXISTE, BUSCAR EN LA DESCRIPCIÓN
+  // ------------------------------------------------------
+
+  const description =
+    stripHtml(
+      product.descriptionHtml || ""
+    );
+
+  return extractCodeFromDescription(
+    description
+  );
+}
+
+
+// ==========================================================
+// EXTRAER CÓDIGO DE LA DESCRIPCIÓN
+// ==========================================================
+
+function extractCodeFromDescription(
+  description
+) {
+  if (!description) {
+    return "";
+  }
+
+  /*
+    Detecta, por ejemplo:
+
+    Código: BJ1121-9
+    Codigo: BJ1121-9
+    COD: BJ1121-9
+    Cod: BJ1121-9
+    cod: BJ1121-9
+    Cód.: BJ1121-9
+    codigo BJ1121-9
+    Código - BJ1121-9
+  */
+
+  const patterns = [
+    /\bc[oó]digo\.?\s*[:\-]?\s*([A-Z0-9][A-Z0-9._\/-]*)/i,
+
+    /\bc[oó]d\.?\s*[:\-]?\s*([A-Z0-9][A-Z0-9._\/-]*)/i
+  ];
+
+  for (const pattern of patterns) {
+    const match =
+      description.match(pattern);
+
+    if (
+      match &&
+      match[1]
+    ) {
+      return match[1].trim();
+    }
+  }
+
+  return "";
+}
+
+
+// ==========================================================
+// QUITAR HTML DE LA DESCRIPCIÓN
+// ==========================================================
+
+function stripHtml(html) {
+  if (!html) {
+    return "";
+  }
+
+  return String(html)
+
+    // Saltos de línea
+    .replace(
+      /<br\s*\/?>/gi,
+      " "
+    )
+
+    .replace(
+      /<\/p>/gi,
+      " "
+    )
+
+    .replace(
+      /<\/li>/gi,
+      " "
+    )
+
+    // Quitar etiquetas
+    .replace(
+      /<[^>]*>/g,
+      " "
+    )
+
+    // Algunas entidades HTML comunes
+    .replace(
+      /&nbsp;/gi,
+      " "
+    )
+
+    .replace(
+      /&amp;/gi,
+      "&"
+    )
+
+    .replace(
+      /&quot;/gi,
+      '"'
+    )
+
+    .replace(
+      /&#39;/gi,
+      "'"
+    )
+
+    // Espacios repetidos
+    .replace(
+      /\s+/g,
+      " "
+    )
+
+    .trim();
+}
+
+
+// ==========================================================
 // ACCESS TOKEN DE SHOPIFY
 // ==========================================================
 
-async function getShopifyAccessToken(env) {
+async function getShopifyAccessToken(
+  env
+) {
   const endpoint =
     `https://${env.SHOPIFY_SHOP}/admin/oauth/access_token`;
 
-  const response = await fetch(endpoint, {
-    method: "POST",
+  const response = await fetch(
+    endpoint,
+    {
+      method: "POST",
 
-    headers: {
-      "Content-Type":
-        "application/x-www-form-urlencoded"
-    },
+      headers: {
+        "Content-Type":
+          "application/x-www-form-urlencoded"
+      },
 
-    body: new URLSearchParams({
-      grant_type: "client_credentials",
-      client_id: env.SHOPIFY_CLIENT_ID,
-      client_secret: env.SHOPIFY_CLIENT_SECRET
-    })
-  });
+      body:
+        new URLSearchParams({
+          grant_type:
+            "client_credentials",
 
-  const data = await response.json();
+          client_id:
+            env.SHOPIFY_CLIENT_ID,
 
-  if (!response.ok || !data.access_token) {
+          client_secret:
+            env.SHOPIFY_CLIENT_SECRET
+        })
+    }
+  );
+
+  const data =
+    await response.json();
+
+  if (
+    !response.ok ||
+    !data.access_token
+  ) {
     throw new Error(
       "Shopify no entregó un access token."
     );
@@ -255,8 +463,11 @@ function getLineItemImage(item) {
   }
 
   const productImage =
-    item.variant?.product?.featuredMedia
-      ?.preview?.image?.url;
+    item.variant?.product
+      ?.featuredMedia
+      ?.preview
+      ?.image
+      ?.url;
 
   if (productImage) {
     return getFullSizeShopifyImage(
@@ -272,8 +483,12 @@ function getLineItemImage(item) {
 // QUITAR TAMAÑOS COMO _160x160 DE SHOPIFY
 // ==========================================================
 
-function getFullSizeShopifyImage(url) {
-  if (!url) return "";
+function getFullSizeShopifyImage(
+  url
+) {
+  if (!url) {
+    return "";
+  }
 
   return url.replace(
     /_(?:pico|icon|thumb|small|compact|medium|large|grande|\d+x\d+)(?=\.[a-zA-Z]+(?:\?|$))/,
@@ -293,11 +508,14 @@ function validateEnvironment(env) {
     "SHOPIFY_CLIENT_SECRET"
   ];
 
-  const missing = required.filter(
-    key => !env[key]
-  );
+  const missing =
+    required.filter(
+      key => !env[key]
+    );
 
-  if (missing.length > 0) {
+  if (
+    missing.length > 0
+  ) {
     throw new Error(
       `Faltan variables: ${missing.join(", ")}`
     );
@@ -309,9 +527,16 @@ function validateEnvironment(env) {
 // RESPUESTA JSON
 // ==========================================================
 
-function jsonResponse(data, status = 200) {
+function jsonResponse(
+  data,
+  status = 200
+) {
   return new Response(
-    JSON.stringify(data, null, 2),
+    JSON.stringify(
+      data,
+      null,
+      2
+    ),
     {
       status,
 
