@@ -2493,3 +2493,388 @@ img {
 .incident-resolve-button:hover {
   background: #b91c1c;
 }
+/* =========================================================
+   MODAL DE INCIDENCIAS
+========================================================= */
+
+.incident-modal {
+  position: fixed;
+  inset: 0;
+
+  z-index: 700;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+}
+
+.incident-modal.is-open {
+  display: flex;
+}
+
+.incident-modal-backdrop {
+  position: absolute;
+  inset: 0;
+
+  background: rgba(15, 23, 42, 0.58);
+
+  backdrop-filter: blur(5px);
+}
+
+.incident-modal-card {
+  position: relative;
+
+  z-index: 2;
+
+  width: min(440px, 100%);
+
+  border: 1px solid var(--border);
+  border-radius: 18px;
+
+  background: var(--surface);
+
+  padding: 26px;
+
+  box-shadow:
+    0 30px 80px rgba(15, 23, 42, 0.28);
+
+  animation:
+    incidentModalIn 0.18s ease;
+}
+
+@keyframes incidentModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.incident-modal-close {
+  position: absolute;
+
+  top: 15px;
+  right: 15px;
+
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid var(--border);
+  border-radius: 9px;
+
+  background: var(--surface-soft);
+  color: var(--text-soft);
+
+  font-size: 22px;
+  line-height: 1;
+}
+
+.incident-modal-close:hover {
+  background: var(--surface-hover);
+}
+
+.incident-modal-label {
+  display: inline-flex;
+
+  margin-bottom: 9px;
+
+  border-radius: 999px;
+
+  background: var(--danger-soft);
+  color: var(--danger);
+
+  padding: 5px 8px;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  letter-spacing: 0.08em;
+}
+
+.incident-modal-card h3 {
+  margin: 0;
+
+  color: var(--text);
+
+  font-size: 22px;
+  font-weight: 900;
+
+  letter-spacing: -0.025em;
+}
+
+.incident-modal-product {
+  margin: 8px 0 0;
+
+  color: var(--muted);
+
+  font-size: 12px;
+
+  line-height: 1.45;
+}
+
+.incident-modal-question {
+  margin: 22px 0 10px;
+
+  color: var(--text-soft);
+
+  font-size: 12px;
+  font-weight: 800;
+}
+
+
+/* =========================================================
+   MOTIVOS
+========================================================= */
+
+.incident-reason-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  gap: 10px;
+}
+
+.incident-reason-button {
+  min-height: 92px;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  border: 1px solid var(--border);
+  border-radius: 13px;
+
+  background: var(--surface);
+
+  color: var(--text);
+
+  padding: 13px;
+
+  text-align: left;
+
+  transition:
+    transform 0.15s ease,
+    border 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.incident-reason-button:hover {
+  transform: translateY(-1px);
+
+  box-shadow: var(--shadow-sm);
+}
+
+.incident-reason-button.selected {
+  border-color: #fca5a5;
+
+  background: var(--danger-soft);
+
+  box-shadow:
+    0 0 0 3px rgba(239, 68, 68, 0.07);
+}
+
+.incident-reason-icon {
+  width: 34px;
+  height: 34px;
+
+  flex: 0 0 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 10px;
+
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.incident-reason-button.damaged
+.incident-reason-icon {
+  background: #fff7ed;
+  color: #ea580c;
+}
+
+.incident-reason-button.broken
+.incident-reason-icon {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.incident-reason-button strong {
+  display: block;
+
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.incident-reason-button small {
+  display: block;
+
+  margin-top: 3px;
+
+  color: var(--muted);
+
+  font-size: 9px;
+  line-height: 1.3;
+}
+
+
+/* =========================================================
+   CANTIDAD
+========================================================= */
+
+.incident-quantity-section {
+  margin-top: 8px;
+}
+
+.incident-quantity-control {
+  width: 170px;
+
+  display: grid;
+  grid-template-columns: 46px 1fr 46px;
+
+  align-items: center;
+
+  overflow: hidden;
+
+  border: 1px solid var(--border);
+  border-radius: 11px;
+
+  background: var(--surface);
+}
+
+.incident-quantity-control button {
+  height: 44px;
+
+  border: 0;
+
+  background: var(--surface-soft);
+
+  color: var(--text);
+
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.incident-quantity-control button:hover {
+  background: var(--surface-hover);
+}
+
+.incident-quantity-control strong {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: var(--text);
+
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.incident-quantity-available {
+  margin: 7px 0 0;
+
+  color: var(--muted);
+
+  font-size: 9px;
+}
+
+
+/* =========================================================
+   ACCIONES
+========================================================= */
+
+.incident-confirm-button {
+  width: 100%;
+  min-height: 44px;
+
+  margin-top: 16px;
+
+  border: 0;
+  border-radius: 10px;
+
+  background: var(--danger);
+
+  color: white;
+
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.incident-confirm-button:hover {
+  background: var(--danger-hover);
+}
+
+.incident-cancel-button {
+  width: 100%;
+
+  margin-top: 10px;
+
+  border: 0;
+
+  background: transparent;
+
+  color: var(--muted);
+
+  padding: 8px;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.incident-cancel-button:hover {
+  color: var(--text);
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 520px) {
+
+  .incident-modal {
+    align-items: flex-end;
+
+    padding: 0;
+  }
+
+  .incident-modal-card {
+    width: 100%;
+
+    border-radius:
+      18px
+      18px
+      0
+      0;
+
+    padding:
+      23px
+      17px
+      20px;
+  }
+
+  .incident-reason-options {
+    grid-template-columns: 1fr;
+  }
+
+  .incident-reason-button {
+    min-height: 75px;
+  }
+
+  .incident-quantity-control {
+    width: 100%;
+  }
+
+}
