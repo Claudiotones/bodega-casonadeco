@@ -713,17 +713,7 @@ modalProducts
       }
     );
   });
-    .forEach(button => {
-      button.addEventListener(
-        "click",
-        () => {
-          openImageViewer(
-            button.dataset.image,
-            button.dataset.product
-          );
-        }
-      );
-    });
+    
 }
 
 
