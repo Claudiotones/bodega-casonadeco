@@ -658,7 +658,7 @@ function createOrderCard(order) {
     );
 
   article.className =
-    "order-card";
+      `order-card location-card-${order.assemblyLocation || "sin-asignar"}`;
 
   const visibleProducts =
     order.products.slice(
