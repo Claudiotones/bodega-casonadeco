@@ -5,6 +5,7 @@ let selectedOrderId = null;
 
 let activeZone = "todos";
 let activeStatus = "todos";
+let activeLocation = "todos";
 let searchTerm = "";
 
 // ==========================================================
@@ -64,6 +65,12 @@ const modalZone =
 
 const modalOrderDate =
   document.getElementById("modal-order-date");
+
+const assemblyLocationSelect =
+  document.getElementById("assembly-location-select");
+
+const assemblyLocationBadge =
+  document.getElementById("assembly-location-badge");
 
 const progressSteps =
   document.getElementById("progress-steps");
@@ -276,13 +283,16 @@ function shopifyOrderToLocalOrder(order) {
         order.createdAt
       ),
 
-    status:
-      "pendiente",
+status:
+  "pendiente",
 
-    previousStatus:
-      null,
+previousStatus:
+  null,
 
-    zone,
+assemblyLocation:
+  "sin-asignar",
+
+zone,
 
     shipping:
       shippingMethod ||
@@ -415,12 +425,16 @@ function applySavedStates() {
         ...order,
 
         status:
-          saved.status ||
-          order.status,
+  saved.status ||
+  order.status,
 
-        previousStatus:
-          saved.previousStatus ||
-          null,
+previousStatus:
+  saved.previousStatus ||
+  null,
+
+assemblyLocation:
+  saved.assemblyLocation ||
+  "sin-asignar",
 
         notes:
           typeof saved.notes ===
@@ -454,11 +468,15 @@ function saveOrderStates() {
       order.number
     ] = {
       status:
-        order.status,
+  order.status,
 
-      previousStatus:
-        order.previousStatus ||
-        null,
+previousStatus:
+  order.previousStatus ||
+  null,
+
+assemblyLocation:
+  order.assemblyLocation ||
+  "sin-asignar",
 
       notes:
         order.notes || "",
@@ -550,6 +568,10 @@ function renderOrders() {
           "todos" ||
         order.status ===
           activeStatus;
+      
+      const matchesLocation =
+  activeLocation === "todos" ||
+  order.assemblyLocation === activeLocation;
 
       const normalizedSearch =
         searchTerm.toLowerCase();
@@ -587,10 +609,11 @@ function renderOrders() {
         );
 
       return (
-        matchesZone &&
-        matchesStatus &&
-        matchesSearch
-      );
+  matchesZone &&
+  matchesStatus &&
+  matchesLocation &&
+  matchesSearch
+);
     });
 
   ordersGrid.innerHTML = "";
@@ -853,6 +876,103 @@ function openOrder(orderId) {
 
   orderNotesInput.value =
     order.notes || "";
+
+  function updateAssemblyLocationUI(order) {
+  const location =
+    order.assemblyLocation ||
+    "sin-asignar";
+
+  assemblyLocationSelect.value =
+    location;
+
+  assemblyLocationBadge.className =
+    "assembly-location-badge";
+
+  if (location === "las-condes") {
+    assemblyLocationBadge.textContent =
+      "Las Condes";
+
+    assemblyLocationBadge.classList.add(
+      "location-las-condes"
+    );
+  } else if (location === "patronato") {
+    assemblyLocationBadge.textContent =
+      "Patronato";
+
+    assemblyLocationBadge.classList.add(
+      "location-patronato"
+    );
+  } else {
+    assemblyLocationBadge.textContent =
+      "Sin asignar";
+
+    assemblyLocationBadge.classList.add(
+      "location-unassigned"
+    );
+  }
+}
+
+
+function changeAssemblyLocation() {
+  const order =
+    getSelectedOrder();
+
+  if (!order) {
+    return;
+  }
+
+  const newLocation =
+    assemblyLocationSelect.value;
+
+  if (
+    newLocation ===
+    order.assemblyLocation
+  ) {
+    return;
+  }
+
+  order.assemblyLocation =
+    newLocation;
+
+  order.history.push({
+    text:
+      `Lugar de armado: ${getAssemblyLocationLabel(newLocation)}`,
+
+    time:
+      getCurrentDateTime()
+  });
+
+  saveOrderStates();
+
+  updateAssemblyLocationUI(order);
+
+  render();
+
+  showToast(
+    `Pedido asignado a ${getAssemblyLocationLabel(newLocation)}`
+  );
+}
+
+
+function getAssemblyLocationLabel(location) {
+  const labels = {
+    "las-condes":
+      "Las Condes",
+
+    patronato:
+      "Patronato",
+
+    "sin-asignar":
+      "Sin asignar"
+  };
+
+  return (
+    labels[location] ||
+    "Sin asignar"
+  );
+}
+
+  updateAssemblyLocationUI(order);
 
   renderProgress(order);
   renderProducts(order);
@@ -2428,6 +2548,40 @@ document
     );
   });
 
+// ==========================================================
+// FILTROS POR LUGAR DE ARMADO
+// ==========================================================
+
+document
+  .querySelectorAll(
+    ".location-filter"
+  )
+  .forEach(button => {
+    button.addEventListener(
+      "click",
+      () => {
+        document
+          .querySelectorAll(
+            ".location-filter"
+          )
+          .forEach(
+            item =>
+              item.classList.remove(
+                "active"
+              )
+          );
+
+        button.classList.add(
+          "active"
+        );
+
+        activeLocation =
+          button.dataset.location;
+
+        renderOrders();
+      }
+    );
+  });
 
 // ==========================================================
 // BUSCADOR
@@ -2657,6 +2811,17 @@ incidentCancelButton.addEventListener(
 incidentModalBackdrop.addEventListener(
   "click",
   closeIncidentModal
+);
+
+
+
+// ==========================================================
+// CAMBIAR LUGAR DE ARMADO
+// ==========================================================
+
+assemblyLocationSelect.addEventListener(
+  "change",
+  changeAssemblyLocation
 );
 
 
