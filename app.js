@@ -7,44 +7,176 @@ let activeZone = "todos";
 let activeStatus = "todos";
 let searchTerm = "";
 
-const ordersGrid = document.getElementById("orders-grid");
-const emptyState = document.getElementById("empty-state");
+// ==========================================================
+// INCIDENCIA ACTUAL
+// ==========================================================
 
-const statPendiente = document.getElementById("stat-pendiente");
-const statBodega = document.getElementById("stat-bodega");
-const statArmando = document.getElementById("stat-armando");
-const statEnviado = document.getElementById("stat-enviado");
+let incidentProductId = null;
+let incidentReason = null;
+let incidentQuantity = 1;
+let incidentMaxQuantity = 1;
 
-const searchOrder = document.getElementById("search-order");
 
-const modal = document.getElementById("order-modal");
-const closeModalButton = document.getElementById("close-modal");
-const closeModalXButton = document.getElementById("close-modal-x");
+// ==========================================================
+// ELEMENTOS PRINCIPALES
+// ==========================================================
 
-const modalOrderNumber = document.getElementById("modal-order-number");
-const modalZone = document.getElementById("modal-zone");
-const modalOrderDate = document.getElementById("modal-order-date");
+const ordersGrid =
+  document.getElementById("orders-grid");
 
-const progressSteps = document.getElementById("progress-steps");
-const modalProductCount = document.getElementById("modal-product-count");
-const modalProducts = document.getElementById("modal-products");
+const emptyState =
+  document.getElementById("empty-state");
 
-const orderNotesInput = document.getElementById("order-notes-input");
-const saveNotesButton = document.getElementById("save-notes");
+const statPendiente =
+  document.getElementById("stat-pendiente");
 
-const historyList = document.getElementById("history-list");
+const statBodega =
+  document.getElementById("stat-bodega");
 
-const problemButton = document.getElementById("problem-button");
-const nextStatusButton = document.getElementById("next-status-button");
+const statArmando =
+  document.getElementById("stat-armando");
 
-const resetDemoButton = document.getElementById("reset-demo");
+const statEnviado =
+  document.getElementById("stat-enviado");
 
-const toast = document.getElementById("toast");
-const toastMessage = document.getElementById("toast-message");
+const searchOrder =
+  document.getElementById("search-order");
 
-const imageViewer = document.getElementById("image-viewer");
-const imageViewerImg = document.getElementById("image-viewer-img");
-const closeImageViewerButton = document.getElementById("close-image-viewer");
+
+// ==========================================================
+// MODAL PEDIDO
+// ==========================================================
+
+const modal =
+  document.getElementById("order-modal");
+
+const closeModalButton =
+  document.getElementById("close-modal");
+
+const closeModalXButton =
+  document.getElementById("close-modal-x");
+
+const modalOrderNumber =
+  document.getElementById("modal-order-number");
+
+const modalZone =
+  document.getElementById("modal-zone");
+
+const modalOrderDate =
+  document.getElementById("modal-order-date");
+
+const progressSteps =
+  document.getElementById("progress-steps");
+
+const modalProductCount =
+  document.getElementById("modal-product-count");
+
+const modalProducts =
+  document.getElementById("modal-products");
+
+const orderNotesInput =
+  document.getElementById("order-notes-input");
+
+const saveNotesButton =
+  document.getElementById("save-notes");
+
+const historyList =
+  document.getElementById("history-list");
+
+const problemButton =
+  document.getElementById("problem-button");
+
+const nextStatusButton =
+  document.getElementById("next-status-button");
+
+const resetDemoButton =
+  document.getElementById("reset-demo");
+
+
+// ==========================================================
+// TOAST
+// ==========================================================
+
+const toast =
+  document.getElementById("toast");
+
+const toastMessage =
+  document.getElementById("toast-message");
+
+
+// ==========================================================
+// VISOR IMAGEN
+// ==========================================================
+
+const imageViewer =
+  document.getElementById("image-viewer");
+
+const imageViewerImg =
+  document.getElementById("image-viewer-img");
+
+const closeImageViewerButton =
+  document.getElementById("close-image-viewer");
+
+
+// ==========================================================
+// MODAL INCIDENCIAS
+// ==========================================================
+
+const incidentModal =
+  document.getElementById("incidentModal");
+
+const incidentModalClose =
+  document.getElementById("incidentModalClose");
+
+const incidentModalBackdrop =
+  document.querySelector(
+    ".incident-modal-backdrop"
+  );
+
+const incidentProductName =
+  document.getElementById(
+    "incidentProductName"
+  );
+
+const incidentQuantitySection =
+  document.getElementById(
+    "incidentQuantitySection"
+  );
+
+const incidentQuantityValue =
+  document.getElementById(
+    "incidentQuantity"
+  );
+
+const incidentQuantityAvailable =
+  document.getElementById(
+    "incidentQuantityAvailable"
+  );
+
+const incidentQuantityMinus =
+  document.getElementById(
+    "incidentQuantityMinus"
+  );
+
+const incidentQuantityPlus =
+  document.getElementById(
+    "incidentQuantityPlus"
+  );
+
+const incidentConfirmButton =
+  document.getElementById(
+    "incidentConfirmButton"
+  );
+
+const incidentCancelButton =
+  document.getElementById(
+    "incidentCancelButton"
+  );
+
+const incidentReasonButtons =
+  document.querySelectorAll(
+    ".incident-reason-button"
+  );
 
 
 // ==========================================================
@@ -55,13 +187,21 @@ async function init() {
   try {
     showLoadingState();
 
-    const response = await fetch("/api/orders", {
-      cache: "no-store"
-    });
+    const response =
+      await fetch(
+        "/api/orders",
+        {
+          cache: "no-store"
+        }
+      );
 
-    const data = await response.json();
+    const data =
+      await response.json();
 
-    if (!response.ok || !data.success) {
+    if (
+      !response.ok ||
+      !data.success
+    ) {
       throw new Error(
         data.detail ||
         data.error ||
@@ -69,14 +209,17 @@ async function init() {
       );
     }
 
-    orders = data.orders
-      .filter(order => {
-        return (
-          order.financialStatus === "PAID" &&
-          order.fulfillmentStatus !== "FULFILLED"
+    orders =
+      data.orders
+        .filter(order => {
+          return (
+            order.financialStatus === "PAID" &&
+            order.fulfillmentStatus !== "FULFILLED"
+          );
+        })
+        .map(
+          shopifyOrderToLocalOrder
         );
-      })
-      .map(shopifyOrderToLocalOrder);
 
     applySavedStates();
 
@@ -85,14 +228,19 @@ async function init() {
     console.error(error);
 
     ordersGrid.innerHTML = `
-      <div style="
-        grid-column: 1 / -1;
-        padding: 30px;
-        background: white;
-        border-radius: 16px;
-        border: 1px solid #e5e1da;
-      ">
-        <strong>No se pudieron cargar los pedidos.</strong>
+      <div
+        style="
+          grid-column:1 / -1;
+          padding:30px;
+          background:white;
+          border-radius:16px;
+          border:1px solid #e5e1da;
+        "
+      >
+        <strong>
+          No se pudieron cargar los pedidos.
+        </strong>
+
         <p style="margin-bottom:0;">
           ${escapeHtml(error.message)}
         </p>
@@ -110,52 +258,91 @@ function shopifyOrderToLocalOrder(order) {
   const shippingMethod =
     order.shipping?.methods?.[0] || "";
 
-  const zone = classifyZone(
-    shippingMethod,
-    order.shipping
-  );
+  const zone =
+    classifyZone(
+      shippingMethod,
+      order.shipping
+    );
 
   return {
-    id: order.id,
-    number: order.number,
+    id:
+      order.id,
 
-    date: formatShopifyDate(order.createdAt),
+    number:
+      order.number,
 
-    status: "pendiente",
+    date:
+      formatShopifyDate(
+        order.createdAt
+      ),
 
-    previousStatus: null,
+    status:
+      "pendiente",
+
+    previousStatus:
+      null,
 
     zone,
 
     shipping:
-      shippingMethod || "Sin método de envío",
+      shippingMethod ||
+      "Sin método de envío",
 
     shippingDetails: {
-      city: order.shipping?.city || "",
-      province: order.shipping?.province || "",
+      city:
+        order.shipping?.city || "",
+
+      province:
+        order.shipping?.province || "",
+
       provinceCode:
         order.shipping?.provinceCode || "",
-      country: order.shipping?.country || ""
+
+      country:
+        order.shipping?.country || ""
     },
 
-    notes: "",
+    notes:
+      "",
 
-      incidents: [],
+    incidents:
+      [],
 
-      products: order.products.map(product => ({
-      id: product.id,
-      name: product.name,
-      quantity: product.quantity,
-      code: product.code || "",
-      sku: product.sku || "",
-      variant: product.variant || "",
-      image: product.image || ""
-    })),
+    products:
+      order.products.map(
+        product => ({
+          id:
+            product.id,
+
+          name:
+            product.name,
+
+          quantity:
+            product.quantity,
+
+          code:
+            product.code || "",
+
+          sku:
+            product.sku || "",
+
+          variant:
+            product.variant || "",
+
+          image:
+            product.image || ""
+        })
+      ),
 
     history: [
       {
-        text: "Pedido recibido desde Shopify",
-        time: formatShopifyDate(order.createdAt)
+        text:
+          "Pedido recibido desde Shopify",
+
+        time:
+          formatShopifyDate(
+            order.createdAt
+          )
       }
     ]
   };
@@ -166,11 +353,20 @@ function shopifyOrderToLocalOrder(order) {
 // CLASIFICAR SANTIAGO / REGIONES
 // ==========================================================
 
-function classifyZone(shippingMethod, shipping) {
+function classifyZone(
+  shippingMethod,
+  shipping
+) {
   const method =
-    String(shippingMethod || "").toLowerCase();
+    String(
+      shippingMethod || ""
+    ).toLowerCase();
 
-  if (method.includes("santiago")) {
+  if (
+    method.includes(
+      "santiago"
+    )
+  ) {
     return "santiago";
   }
 
@@ -183,7 +379,10 @@ function classifyZone(shippingMethod, shipping) {
 // ==========================================================
 
 function getSavedStates() {
-  const saved = localStorage.getItem(STORAGE_KEY);
+  const saved =
+    localStorage.getItem(
+      STORAGE_KEY
+    );
 
   if (!saved) {
     return {};
@@ -196,49 +395,79 @@ function getSavedStates() {
   }
 }
 
+
 function applySavedStates() {
-  const savedStates = getSavedStates();
+  const savedStates =
+    getSavedStates();
 
-  orders = orders.map(order => {
-    const saved = savedStates[order.number];
+  orders =
+    orders.map(order => {
+      const saved =
+        savedStates[
+          order.number
+        ];
 
-    if (!saved) {
-      return order;
-    }
+      if (!saved) {
+        return order;
+      }
 
-    return {
-      ...order,
-      status: saved.status || order.status,
-      previousStatus:
-        saved.previousStatus || null,
-      notes:
-        typeof saved.notes === "string"
-          ? saved.notes
-          : order.notes,
-      history:
-        Array.isArray(saved.history)
-        ? saved.history
-        : order.history,
+      return {
+        ...order,
 
-      incidents:
-        Array.isArray(saved.incidents)
-        ? saved.incidents
-        : []
-    };
-  });
+        status:
+          saved.status ||
+          order.status,
+
+        previousStatus:
+          saved.previousStatus ||
+          null,
+
+        notes:
+          typeof saved.notes ===
+          "string"
+            ? saved.notes
+            : order.notes,
+
+        history:
+          Array.isArray(
+            saved.history
+          )
+            ? saved.history
+            : order.history,
+
+        incidents:
+          Array.isArray(
+            saved.incidents
+          )
+            ? saved.incidents
+            : []
+      };
+    });
 }
+
 
 function saveOrderStates() {
   const states = {};
 
   orders.forEach(order => {
-    states[order.number] = {
-      status: order.status,
+    states[
+      order.number
+    ] = {
+      status:
+        order.status,
+
       previousStatus:
-        order.previousStatus || null,
-      notes: order.notes || "",
-      history: order.history || [],
-      incidents: order.incidents || []
+        order.previousStatus ||
+        null,
+
+      notes:
+        order.notes || "",
+
+      history:
+        order.history || [],
+
+      incidents:
+        order.incidents || []
     };
   });
 
@@ -250,7 +479,7 @@ function saveOrderStates() {
 
 
 // ==========================================================
-// RENDER
+// RENDER GENERAL
 // ==========================================================
 
 function render() {
@@ -258,83 +487,176 @@ function render() {
   renderOrders();
 }
 
+
+// ==========================================================
+// ESTADÍSTICAS
+// ==========================================================
+
 function renderStats() {
-  statPendiente.textContent = orders.filter(
-    order => order.status === "pendiente"
-  ).length;
+  statPendiente.textContent =
+    orders.filter(
+      order =>
+        order.status ===
+        "pendiente"
+    ).length;
 
-  statBodega.textContent = orders.filter(
-    order => order.status === "bodega"
-  ).length;
+  statBodega.textContent =
+    orders.filter(
+      order =>
+        order.status ===
+        "bodega"
+    ).length;
 
-  statArmando.textContent = orders.filter(
-    order => order.status === "armando"
-  ).length;
+  statArmando.textContent =
+    orders.filter(
+      order =>
+        order.status ===
+        "armando"
+    ).length;
 
-  statEnviado.textContent = orders.filter(
-    order => order.status === "enviado"
-  ).length;
+  statEnviado.textContent =
+    orders.filter(
+      order =>
+        order.status ===
+        "enviado"
+    ).length;
 }
 
+
+// ==========================================================
+// LISTADO DE PEDIDOS
+// ==========================================================
+
 function renderOrders() {
-  const filteredOrders = orders.filter(order => {
-    const matchesZone =
-      activeZone === "todos" ||
-      (
-        activeZone === "problema"
-          ? order.status === "problema"
-          : order.zone === activeZone
-      );
+  const filteredOrders =
+    orders.filter(order => {
+      const matchesZone =
+        activeZone ===
+          "todos" ||
+        (
+          activeZone ===
+            "problema"
+            ? hasPendingIncidents(
+                order
+              ) ||
+              order.status ===
+                "problema"
+            : order.zone ===
+              activeZone
+        );
 
-    const matchesStatus =
-      activeStatus === "todos" ||
-      order.status === activeStatus;
+      const matchesStatus =
+        activeStatus ===
+          "todos" ||
+        order.status ===
+          activeStatus;
 
-    const matchesSearch =
-      order.number
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      order.products.some(product =>
-        product.name
+      const normalizedSearch =
+        searchTerm.toLowerCase();
+
+      const matchesSearch =
+        order.number
           .toLowerCase()
-          .includes(searchTerm.toLowerCase())
-      );
+          .includes(
+            normalizedSearch
+          ) ||
 
-    return (
-      matchesZone &&
-      matchesStatus &&
-      matchesSearch
-    );
-  });
+        order.products.some(
+          product =>
+            product.name
+              .toLowerCase()
+              .includes(
+                normalizedSearch
+              ) ||
+
+            String(
+              product.code || ""
+            )
+              .toLowerCase()
+              .includes(
+                normalizedSearch
+              ) ||
+
+            String(
+              product.sku || ""
+            )
+              .toLowerCase()
+              .includes(
+                normalizedSearch
+              )
+        );
+
+      return (
+        matchesZone &&
+        matchesStatus &&
+        matchesSearch
+      );
+    });
 
   ordersGrid.innerHTML = "";
 
-  if (filteredOrders.length === 0) {
-    emptyState.classList.remove("hidden");
+  if (
+    filteredOrders.length === 0
+  ) {
+    emptyState.classList.remove(
+      "hidden"
+    );
+
     return;
   }
 
-  emptyState.classList.add("hidden");
+  emptyState.classList.add(
+    "hidden"
+  );
 
-  filteredOrders.forEach(order => {
-    const card = createOrderCard(order);
-    ordersGrid.appendChild(card);
-  });
+  filteredOrders.forEach(
+    order => {
+      const card =
+        createOrderCard(
+          order
+        );
+
+      ordersGrid.appendChild(
+        card
+      );
+    }
+  );
 }
 
-function createOrderCard(order) {
-  const article = document.createElement("article");
 
-  article.className = "order-card";
+// ==========================================================
+// TARJETA DE PEDIDO
+// ==========================================================
+
+function createOrderCard(order) {
+  const article =
+    document.createElement(
+      "article"
+    );
+
+  article.className =
+    "order-card";
 
   const visibleProducts =
-    order.products.slice(0, 3);
+    order.products.slice(
+      0,
+      3
+    );
 
   const totalUnits =
     order.products.reduce(
-      (sum, product) =>
-        sum + product.quantity,
+      (
+        sum,
+        product
+      ) =>
+        sum +
+        product.quantity,
       0
+    );
+
+  const pendingIncidents =
+    getPendingIncidentCount(
+      order
     );
 
   article.innerHTML = `
@@ -343,22 +665,32 @@ function createOrderCard(order) {
       <div class="order-card-top">
 
         <div>
+
           <h3 class="order-number">
-            ${escapeHtml(order.number)}
+            ${escapeHtml(
+              order.number
+            )}
           </h3>
 
           <p class="order-date">
-            ${escapeHtml(order.date)}
+            ${escapeHtml(
+              order.date
+            )}
           </p>
+
         </div>
 
-        <span class="zone-badge ${
-          order.zone === "santiago"
-            ? "zone-santiago"
-            : "zone-regiones"
-        }">
+        <span
+          class="zone-badge ${
+            order.zone ===
+              "santiago"
+              ? "zone-santiago"
+              : "zone-regiones"
+          }"
+        >
           ${
-            order.zone === "santiago"
+            order.zone ===
+              "santiago"
               ? "Santiago"
               : "Regiones"
           }
@@ -366,49 +698,96 @@ function createOrderCard(order) {
 
       </div>
 
+
       <div class="order-card-products">
 
         <div class="order-thumb-group">
 
-          ${visibleProducts.map(product => {
-            if (!product.image) {
-              return "";
-            }
+          ${
+            visibleProducts
+              .map(product => {
+                if (
+                  !product.image
+                ) {
+                  return "";
+                }
 
-            return `
-              <img
-                class="order-thumb"
-                src="${product.image}"
-                alt="${escapeHtml(product.name)}"
-              >
-            `;
-          }).join("")}
+                return `
+                  <img
+                    class="order-thumb"
+                    src="${product.image}"
+                    alt="${escapeHtml(
+                      product.name
+                    )}"
+                  >
+                `;
+              })
+              .join("")
+          }
 
         </div>
 
+
         <div class="order-product-summary">
+
           ${order.products.length}
+
           ${
-            order.products.length === 1
+            order.products.length ===
+            1
               ? "producto"
               : "productos"
           }
+
           ·
+
           ${totalUnits}
+
           ${
             totalUnits === 1
               ? "unidad"
               : "unidades"
           }
+
+          ${
+            pendingIncidents > 0
+              ? `
+                <div
+                  style="
+                    margin-top:6px;
+                    color:#dc2626;
+                    font-weight:800;
+                  "
+                >
+                  ⚠ ${pendingIncidents}
+                  ${
+                    pendingIncidents ===
+                    1
+                      ? "incidencia pendiente"
+                      : "incidencias pendientes"
+                  }
+                </div>
+              `
+              : ""
+          }
+
         </div>
 
       </div>
 
+
       <div class="order-status-row">
 
-        <span class="status-badge status-${order.status}">
-          <span class="status-dot"></span>
-          ${getStatusLabel(order.status)}
+        <span
+          class="status-badge status-${order.status}"
+        >
+          <span
+            class="status-dot"
+          ></span>
+
+          ${getStatusLabel(
+            order.status
+          )}
         </span>
 
         <button
@@ -424,13 +803,15 @@ function createOrderCard(order) {
   `;
 
   article.addEventListener(
-  "click",
-  () => {
-    openOrder(order.id);
-  }
-);
+    "click",
+    () => {
+      openOrder(
+        order.id
+      );
+    }
+  );
 
-return article;
+  return article;
 }
 
 
@@ -439,11 +820,15 @@ return article;
 // ==========================================================
 
 function openOrder(orderId) {
-  selectedOrderId = orderId;
+  selectedOrderId =
+    orderId;
 
-  const order = getSelectedOrder();
+  const order =
+    getSelectedOrder();
 
-  if (!order) return;
+  if (!order) {
+    return;
+  }
 
   modalOrderNumber.textContent =
     order.number;
@@ -452,14 +837,16 @@ function openOrder(orderId) {
     `${order.date} · ${order.shipping}`;
 
   modalZone.textContent =
-    order.zone === "santiago"
+    order.zone ===
+      "santiago"
       ? "Santiago"
       : "Regiones";
 
   modalZone.className =
     "zone-badge " +
     (
-      order.zone === "santiago"
+      order.zone ===
+        "santiago"
         ? "zone-santiago"
         : "zone-regiones"
     );
@@ -472,18 +859,25 @@ function openOrder(orderId) {
   renderHistory(order);
   updateModalButtons(order);
 
-  modal.classList.remove("hidden");
+  modal.classList.remove(
+    "hidden"
+  );
 
   document.body.style.overflow =
     "hidden";
 }
 
+
 function closeModal() {
-  modal.classList.add("hidden");
+  modal.classList.add(
+    "hidden"
+  );
 
-  document.body.style.overflow = "";
+  document.body.style.overflow =
+    "";
 
-  selectedOrderId = null;
+  selectedOrderId =
+    null;
 }
 
 
@@ -494,27 +888,45 @@ function closeModal() {
 function renderProgress(order) {
   const statuses = [
     {
-      key: "pendiente",
-      label: "Pedido recibido"
+      key:
+        "pendiente",
+
+      label:
+        "Pedido recibido"
     },
+
     {
-      key: "bodega",
-      label: "Bajado de bodega"
+      key:
+        "bodega",
+
+      label:
+        "Bajado de bodega"
     },
+
     {
-      key: "armando",
-      label: "Pedido armado"
+      key:
+        "armando",
+
+      label:
+        "Pedido armado"
     },
+
     {
-      key: "enviado",
-      label: "Pedido enviado"
+      key:
+        "enviado",
+
+      label:
+        "Pedido enviado"
     }
   ];
 
   let comparisonStatus =
     order.status;
 
-  if (order.status === "problema") {
+  if (
+    order.status ===
+    "problema"
+  ) {
     comparisonStatus =
       order.previousStatus ||
       "pendiente";
@@ -523,51 +935,75 @@ function renderProgress(order) {
   const currentIndex =
     statuses.findIndex(
       status =>
-        status.key === comparisonStatus
+        status.key ===
+        comparisonStatus
     );
 
   progressSteps.innerHTML =
-    statuses.map(
-      (status, index) => {
-        let className =
-          "progress-step";
+    statuses
+      .map(
+        (
+          status,
+          index
+        ) => {
+          let className =
+            "progress-step";
 
-        if (index < currentIndex) {
-          className += " completed";
+          if (
+            index <
+            currentIndex
+          ) {
+            className +=
+              " completed";
+          }
+
+          if (
+            index ===
+            currentIndex
+          ) {
+            className +=
+              " current";
+          }
+
+          if (
+            order.status ===
+              "enviado" &&
+            index ===
+              currentIndex
+          ) {
+            className =
+              "progress-step completed";
+          }
+
+          return `
+            <div
+              class="${className}"
+            >
+
+              <span
+                class="progress-step-number"
+              >
+                ${
+                  index <
+                    currentIndex ||
+                  order.status ===
+                    "enviado"
+                    ? "✓"
+                    : index + 1
+                }
+              </span>
+
+              <span
+                class="progress-step-label"
+              >
+                ${status.label}
+              </span>
+
+            </div>
+          `;
         }
-
-        if (index === currentIndex) {
-          className += " current";
-        }
-
-        if (
-          order.status === "enviado" &&
-          index === currentIndex
-        ) {
-          className =
-            "progress-step completed";
-        }
-
-        return `
-          <div class="${className}">
-
-            <span class="progress-step-number">
-              ${
-                index < currentIndex ||
-                order.status === "enviado"
-                  ? "✓"
-                  : index + 1
-              }
-            </span>
-
-            <span class="progress-step-label">
-              ${status.label}
-            </span>
-
-          </div>
-        `;
-      }
-    ).join("");
+      )
+      .join("");
 }
 
 
@@ -578,8 +1014,12 @@ function renderProgress(order) {
 function renderProducts(order) {
   const totalUnits =
     order.products.reduce(
-      (sum, product) =>
-        sum + product.quantity,
+      (
+        sum,
+        product
+      ) =>
+        sum +
+        product.quantity,
       0
     );
 
@@ -587,166 +1027,272 @@ function renderProducts(order) {
     `${order.products.length} productos · ${totalUnits} unidades`;
 
   modalProducts.innerHTML =
-    order.products.map(
-      product => `
-        <article class="product-item">
+    order.products
+      .map(
+        product => `
+          <article class="product-item">
 
-          ${
-            product.image
-              ? `
-                <button
-                  type="button"
-                  class="product-image-wrapper product-image-button"
-                  data-image="${product.image}"
-                  data-product="${escapeHtml(product.name)}"
-                >
-                  <img
-                    class="product-image"
-                    src="${product.image}"
-                    alt="${escapeHtml(product.name)}"
+            ${
+              product.image
+                ? `
+                  <button
+                    type="button"
+                    class="product-image-wrapper product-image-button"
+                    data-image="${product.image}"
+                    data-product="${escapeHtml(
+                      product.name
+                    )}"
                   >
-                </button>
-              `
-              : `
-                <div class="product-image-wrapper">
-                  <div style="
-                    width:100%;
-                    height:100%;
-                    display:flex;
-                    align-items:center;
-                    justify-content:center;
-                    color:#888;
-                    font-size:12px;
-                    text-align:center;
-                    padding:8px;
-                  ">
-                    Sin imagen
+
+                    <img
+                      class="product-image"
+                      src="${product.image}"
+                      alt="${escapeHtml(
+                        product.name
+                      )}"
+                    >
+
+                  </button>
+                `
+                : `
+                  <div
+                    class="product-image-wrapper"
+                  >
+
+                    <div
+                      style="
+                        width:100%;
+                        height:100%;
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;
+                        color:#888;
+                        font-size:12px;
+                        text-align:center;
+                        padding:8px;
+                      "
+                    >
+                      Sin imagen
+                    </div>
+
                   </div>
-                </div>
-              `
-          }
-
-          <div class="product-info">
-
-            <h4 class="product-name">
-              ${escapeHtml(product.name)}
-            </h4>
-
-            ${
-              product.variant
-                ? `
-                  <p class="product-meta">
-                    Variante:
-                    ${escapeHtml(product.variant)}
-                  </p>
                 `
-                : ""
             }
 
-                        ${
-              product.code
-                ? `
-                  <p class="product-meta">
-                    <strong>Código:</strong>
-                    ${escapeHtml(product.code)}
-                  </p>
-                `
-                : ""
-            }
 
-            ${
-              product.sku
-                ? `
-                  <p class="product-meta">
-                    SKU:
-                    ${escapeHtml(product.sku)}
-                  </p>
-                `
-                : ""
-            }
+            <div class="product-info">
 
-            <span class="product-quantity">
-           <span class="product-quantity">
-  Cantidad:
-  ${product.quantity}
-</span>
+              <h4
+                class="product-name"
+              >
+                ${escapeHtml(
+                  product.name
+                )}
+              </h4>
 
-${renderProductIncident(order, product)}
 
-</div>
+              ${
+                product.variant
+                  ? `
+                    <p
+                      class="product-meta"
+                    >
+                      Variante:
+                      ${escapeHtml(
+                        product.variant
+                      )}
+                    </p>
+                  `
+                  : ""
+              }
 
-        </article>
-      `
-    ).join("");
+
+              ${
+                product.code
+                  ? `
+                    <p
+                      class="product-meta"
+                    >
+                      <strong>
+                        Código:
+                      </strong>
+
+                      ${escapeHtml(
+                        product.code
+                      )}
+                    </p>
+                  `
+                  : ""
+              }
+
+
+              ${
+                product.sku
+                  ? `
+                    <p
+                      class="product-meta"
+                    >
+                      SKU:
+                      ${escapeHtml(
+                        product.sku
+                      )}
+                    </p>
+                  `
+                  : ""
+              }
+
+
+              <span
+                class="product-quantity"
+              >
+                Cantidad:
+                ${product.quantity}
+              </span>
+
+
+              ${renderProductIncident(
+                order,
+                product
+              )}
+
+            </div>
+
+          </article>
+        `
+      )
+      .join("");
+
+
+  // ========================================================
+  // ABRIR IMAGEN
+  // ========================================================
 
   modalProducts
     .querySelectorAll(
       ".product-image-button"
     )
-    modalProducts
-  .querySelectorAll(
-    ".incident-report-button"
-  )
-  .forEach(button => {
-    button.addEventListener(
-      "click",
-      () => {
-        reportProductIncident(
-          button.dataset.productId
-        );
-      }
-    );
-  });
+    .forEach(button => {
+      button.addEventListener(
+        "click",
+        event => {
+          event.stopPropagation();
+
+          openImageViewer(
+            button.dataset.image,
+            button.dataset.product
+          );
+        }
+      );
+    });
 
 
-modalProducts
-  .querySelectorAll(
-    ".incident-resolve-button"
-  )
-  .forEach(button => {
-    button.addEventListener(
-      "click",
-      () => {
-        resolveProductIncident(
-          button.dataset.productId
-        );
-      }
-    );
-  });
-    
+  // ========================================================
+  // REPORTAR INCIDENCIA
+  // ========================================================
+
+  modalProducts
+    .querySelectorAll(
+      ".incident-report-button"
+    )
+    .forEach(button => {
+      button.addEventListener(
+        "click",
+        event => {
+          event.stopPropagation();
+
+          reportProductIncident(
+            button.dataset.productId
+          );
+        }
+      );
+    });
+
+
+  // ========================================================
+  // RESOLVER INCIDENCIA
+  // ========================================================
+
+  modalProducts
+    .querySelectorAll(
+      ".incident-resolve-button"
+    )
+    .forEach(button => {
+      button.addEventListener(
+        "click",
+        event => {
+          event.stopPropagation();
+
+          resolveProductIncident(
+            button.dataset.productId
+          );
+        }
+      );
+    });
 }
 
 
-function renderProductIncident(order, product) {
-  const incident = order.incidents?.find(
-    item =>
-      item.productId === product.id &&
-      item.status === "pendiente"
-  );
+// ==========================================================
+// MOSTRAR INCIDENCIA DEL PRODUCTO
+// ==========================================================
+
+function renderProductIncident(
+  order,
+  product
+) {
+  const incident =
+    order.incidents?.find(
+      item =>
+        item.productId ===
+          product.id &&
+        item.status ===
+          "pendiente"
+    );
 
   if (incident) {
     return `
-      <div class="product-incident active">
+      <div
+        class="product-incident active"
+      >
 
-        <div class="incident-header">
-          <strong>⚠ Reemplazo pendiente</strong>
+        <div
+          class="incident-header"
+        >
+          <strong>
+            ⚠ Reemplazo pendiente
+          </strong>
         </div>
 
-        <div class="incident-details">
+
+        <div
+          class="incident-details"
+        >
+
           <span>
-            ${escapeHtml(incident.reason)}
+            ${escapeHtml(
+              incident.reason
+            )}
           </span>
 
           <span>
             Cantidad:
-            <strong>${incident.quantity}</strong>
+
+            <strong>
+              ${incident.quantity}
+            </strong>
           </span>
+
         </div>
 
-        <span class="incident-time">
+
+        <span
+          class="incident-time"
+        >
           Reportado:
-          ${escapeHtml(incident.createdAt)}
+          ${escapeHtml(
+            incident.createdAt
+          )}
         </span>
+
 
         <button
           type="button"
@@ -760,23 +1306,35 @@ function renderProductIncident(order, product) {
     `;
   }
 
+
   const resolvedIncident =
     order.incidents
       ?.slice()
       .reverse()
       .find(
         item =>
-          item.productId === product.id &&
-          item.status === "resuelto"
+          item.productId ===
+            product.id &&
+          item.status ===
+            "resuelto"
       );
+
 
   return `
     ${
       resolvedIncident
         ? `
-          <div class="product-incident resolved">
+          <div
+            class="product-incident resolved"
+          >
             ✓ Último reemplazo completado
-            · ${resolvedIncident.quantity} unidad(es)
+            · ${resolvedIncident.quantity}
+            ${
+              resolvedIncident.quantity ===
+              1
+                ? "unidad"
+                : "unidades"
+            }
           </div>
         `
         : ""
@@ -793,51 +1351,215 @@ function renderProductIncident(order, product) {
 }
 
 
-function reportProductIncident(productId) {
-  const order = getSelectedOrder();
+// ==========================================================
+// ABRIR MODAL DE INCIDENCIA
+// ==========================================================
 
-  if (!order) return;
+function reportProductIncident(
+  productId
+) {
+  const order =
+    getSelectedOrder();
 
-  const product = order.products.find(
-    item => item.id === productId
-  );
+  if (!order) {
+    return;
+  }
 
-  if (!product) return;
+  const product =
+    order.products.find(
+      item =>
+        item.id ===
+        productId
+    );
 
-  const reason = prompt(
-    `Motivo de la incidencia para:\n${product.name}\n\n` +
-    `Escribe una de estas opciones:\n` +
-    `Dañado\nQuebrado\nManchado\nProducto equivocado\nFaltante\nOtro`
-  );
+  if (!product) {
+    return;
+  }
 
-  if (!reason) return;
 
-  const quantityInput = prompt(
-    `¿Cuántas unidades necesitan reemplazo?\n\n` +
-    `Cantidad pedida: ${product.quantity}`,
-    "1"
-  );
+  const existingIncident =
+    order.incidents?.find(
+      item =>
+        item.productId ===
+          productId &&
+        item.status ===
+          "pendiente"
+    );
 
-  if (!quantityInput) return;
-
-  const quantity =
-    Number.parseInt(quantityInput, 10);
-
-  if (
-    Number.isNaN(quantity) ||
-    quantity < 1 ||
-    quantity > product.quantity
-  ) {
+  if (existingIncident) {
     showToast(
-      "La cantidad indicada no es válida"
+      "Este producto ya tiene una incidencia pendiente"
     );
 
     return;
   }
 
-  if (!Array.isArray(order.incidents)) {
+
+  incidentProductId =
+    product.id;
+
+  incidentReason =
+    null;
+
+  incidentQuantity =
+    1;
+
+  incidentMaxQuantity =
+    product.quantity;
+
+
+  incidentProductName.textContent =
+    product.code
+      ? `${product.name} · Código ${product.code}`
+      : product.name;
+
+
+  incidentQuantityValue.textContent =
+    "1";
+
+
+  incidentQuantityAvailable.textContent =
+    `Cantidad disponible en el pedido: ${product.quantity}`;
+
+
+  incidentQuantitySection.hidden =
+    true;
+
+
+  incidentReasonButtons.forEach(
+    button => {
+      button.classList.remove(
+        "selected"
+      );
+    }
+  );
+
+
+  incidentModal.classList.add(
+    "is-open"
+  );
+
+
+  incidentModal.setAttribute(
+    "aria-hidden",
+    "false"
+  );
+}
+
+
+// ==========================================================
+// SELECCIONAR DAÑADO / QUEBRADO
+// ==========================================================
+
+function selectIncidentReason(
+  reason,
+  button
+) {
+  incidentReason =
+    reason;
+
+  incidentReasonButtons.forEach(
+    item => {
+      item.classList.remove(
+        "selected"
+      );
+    }
+  );
+
+  button.classList.add(
+    "selected"
+  );
+
+  incidentQuantity =
+    1;
+
+  incidentQuantitySection.hidden =
+    false;
+
+  updateIncidentQuantity();
+}
+
+
+// ==========================================================
+// ACTUALIZAR CANTIDAD INCIDENCIA
+// ==========================================================
+
+function updateIncidentQuantity() {
+  if (
+    incidentQuantity < 1
+  ) {
+    incidentQuantity =
+      1;
+  }
+
+  if (
+    incidentQuantity >
+    incidentMaxQuantity
+  ) {
+    incidentQuantity =
+      incidentMaxQuantity;
+  }
+
+
+  incidentQuantityValue.textContent =
+    incidentQuantity;
+
+
+  incidentQuantityMinus.disabled =
+    incidentQuantity <= 1;
+
+
+  incidentQuantityPlus.disabled =
+    incidentQuantity >=
+    incidentMaxQuantity;
+}
+
+
+// ==========================================================
+// CONFIRMAR INCIDENCIA
+// ==========================================================
+
+function confirmProductIncident() {
+  const order =
+    getSelectedOrder();
+
+  if (!order) {
+    return;
+  }
+
+  if (!incidentProductId) {
+    return;
+  }
+
+  if (!incidentReason) {
+    showToast(
+      "Selecciona Dañado o Quebrado"
+    );
+
+    return;
+  }
+
+
+  const product =
+    order.products.find(
+      item =>
+        item.id ===
+        incidentProductId
+    );
+
+  if (!product) {
+    return;
+  }
+
+
+  if (
+    !Array.isArray(
+      order.incidents
+    )
+  ) {
     order.incidents = [];
   }
+
 
   order.incidents.push({
     id:
@@ -853,9 +1575,10 @@ function reportProductIncident(productId) {
       product.code || "",
 
     reason:
-      reason.trim(),
+      incidentReason,
 
-    quantity,
+    quantity:
+      incidentQuantity,
 
     status:
       "pendiente",
@@ -867,15 +1590,19 @@ function reportProductIncident(productId) {
       null
   });
 
+
   order.history.push({
     text:
-      `Incidencia reportada: ${product.name} · ${reason.trim()} · x${quantity}`,
+      `Incidencia: ${incidentReason} · ${product.name} · x${incidentQuantity}`,
 
     time:
       getCurrentDateTime()
   });
 
+
   saveOrderStates();
+
+  closeIncidentModal();
 
   refreshOpenOrder();
 
@@ -885,33 +1612,101 @@ function reportProductIncident(productId) {
 }
 
 
-function resolveProductIncident(productId) {
-  const order = getSelectedOrder();
+// ==========================================================
+// CERRAR MODAL INCIDENCIA
+// ==========================================================
 
-  if (!order) return;
+function closeIncidentModal() {
+  if (!incidentModal) {
+    return;
+  }
+
+  incidentModal.classList.remove(
+    "is-open"
+  );
+
+  incidentModal.setAttribute(
+    "aria-hidden",
+    "true"
+  );
+
+
+  incidentProductId =
+    null;
+
+  incidentReason =
+    null;
+
+  incidentQuantity =
+    1;
+
+  incidentMaxQuantity =
+    1;
+
+
+  incidentQuantitySection.hidden =
+    true;
+
+
+  incidentReasonButtons.forEach(
+    button => {
+      button.classList.remove(
+        "selected"
+      );
+    }
+  );
+}
+
+
+// ==========================================================
+// RESOLVER INCIDENCIA
+// ==========================================================
+
+function resolveProductIncident(
+  productId
+) {
+  const order =
+    getSelectedOrder();
+
+  if (!order) {
+    return;
+  }
+
 
   const incident =
     order.incidents?.find(
       item =>
-        item.productId === productId &&
-        item.status === "pendiente"
+        item.productId ===
+          productId &&
+        item.status ===
+          "pendiente"
     );
 
-  if (!incident) return;
+  if (!incident) {
+    return;
+  }
 
-  const confirmed = confirm(
-    `¿Confirmas que fue reemplazado?\n\n` +
-    `${incident.productName}\n` +
-    `Cantidad: ${incident.quantity}`
-  );
 
-  if (!confirmed) return;
+  const confirmed =
+    confirm(
+      `¿Confirmas que el producto fue reemplazado?\n\n` +
+      `${incident.productName}\n` +
+      `Cantidad: ${incident.quantity}`
+    );
+
+
+  if (!confirmed) {
+    return;
+  }
+
 
   incident.status =
     "resuelto";
 
+
   incident.resolvedAt =
     getCurrentDateTime();
+
 
   order.history.push({
     text:
@@ -921,12 +1716,41 @@ function resolveProductIncident(productId) {
       getCurrentDateTime()
   });
 
+
   saveOrderStates();
 
   refreshOpenOrder();
 
   showToast(
     "Reemplazo completado"
+  );
+}
+
+
+// ==========================================================
+// CONTADORES DE INCIDENCIAS
+// ==========================================================
+
+function getPendingIncidentCount(
+  order
+) {
+  return (
+    order.incidents?.filter(
+      incident =>
+        incident.status ===
+        "pendiente"
+    ).length || 0
+  );
+}
+
+
+function hasPendingIncidents(
+  order
+) {
+  return (
+    getPendingIncidentCount(
+      order
+    ) > 0
   );
 }
 
@@ -946,15 +1770,21 @@ function openImageViewer(
     return;
   }
 
-  imageViewerImg.src = image;
+
+  imageViewerImg.src =
+    image;
+
 
   imageViewerImg.alt =
-    productName || "Producto";
+    productName ||
+    "Producto";
+
 
   imageViewer.classList.remove(
     "hidden"
   );
 }
+
 
 function closeImageViewer() {
   if (
@@ -964,11 +1794,14 @@ function closeImageViewer() {
     return;
   }
 
+
   imageViewer.classList.add(
     "hidden"
   );
 
-  imageViewerImg.src = "";
+
+  imageViewerImg.src =
+    "";
 }
 
 
@@ -982,7 +1815,9 @@ function renderHistory(order) {
     order.history.length === 0
   ) {
     historyList.innerHTML = `
-      <div class="history-item">
+      <div
+        class="history-item"
+      >
         Sin movimientos registrados.
       </div>
     `;
@@ -990,18 +1825,27 @@ function renderHistory(order) {
     return;
   }
 
+
   historyList.innerHTML =
     order.history
       .slice()
       .reverse()
       .map(
         item => `
-          <div class="history-item">
+          <div
+            class="history-item"
+          >
 
-            ${escapeHtml(item.text)}
+            ${escapeHtml(
+              item.text
+            )}
 
-            <span class="history-time">
-              ${escapeHtml(item.time)}
+            <span
+              class="history-time"
+            >
+              ${escapeHtml(
+                item.time
+              )}
             </span>
 
           </div>
@@ -1016,21 +1860,29 @@ function renderHistory(order) {
 // ==========================================================
 
 function updateModalButtons(order) {
-  if (order.status === "enviado") {
+  if (
+    order.status ===
+    "enviado"
+  ) {
     nextStatusButton.textContent =
       "Pedido ya enviado";
 
-    nextStatusButton.disabled = true;
+    nextStatusButton.disabled =
+      true;
 
     nextStatusButton.style.opacity =
       "0.5";
   } else {
-    nextStatusButton.disabled = false;
+    nextStatusButton.disabled =
+      false;
 
     nextStatusButton.style.opacity =
       "1";
 
-    if (order.status === "problema") {
+    if (
+      order.status ===
+      "problema"
+    ) {
       nextStatusButton.textContent =
         "Resolver problema";
     } else {
@@ -1041,42 +1893,79 @@ function updateModalButtons(order) {
     }
   }
 
-  if (order.status === "problema") {
+
+  if (
+    order.status ===
+    "problema"
+  ) {
     problemButton.textContent =
       "✓ Problema registrado";
 
-    problemButton.disabled = true;
+    problemButton.disabled =
+      true;
 
     problemButton.style.opacity =
       "0.5";
   } else {
     problemButton.textContent =
-      "⚠ Marcar problema";
+      "⚠ Reportar incidencia";
 
-    problemButton.disabled = false;
+    problemButton.disabled =
+      false;
 
     problemButton.style.opacity =
       "1";
   }
 }
 
+
+// ==========================================================
+// AVANZAR ESTADO
+// ==========================================================
+
 function advanceSelectedOrder() {
   const order =
     getSelectedOrder();
 
-  if (!order) return;
+  if (!order) {
+    return;
+  }
 
-  if (order.status === "problema") {
+
+  if (
+    hasPendingIncidents(
+      order
+    )
+  ) {
+    showToast(
+      "El pedido tiene incidencias pendientes"
+    );
+
+    return;
+  }
+
+
+  if (
+    order.status ===
+    "problema"
+  ) {
     order.status =
       order.previousStatus ||
       "pendiente";
 
+
     order.history.push({
-      text: "Problema resuelto",
-      time: getCurrentDateTime()
+      text:
+        "Problema resuelto",
+
+      time:
+        getCurrentDateTime()
     });
 
-    order.previousStatus = null;
+
+    order.previousStatus =
+      null;
+
 
     saveOrderStates();
 
@@ -1089,47 +1978,80 @@ function advanceSelectedOrder() {
     return;
   }
 
+
   const nextStatusMap = {
-    pendiente: "bodega",
-    bodega: "armando",
-    armando: "enviado"
+    pendiente:
+      "bodega",
+
+    bodega:
+      "armando",
+
+    armando:
+      "enviado"
   };
 
+
   const nextStatus =
-    nextStatusMap[order.status];
+    nextStatusMap[
+      order.status
+    ];
 
-  if (!nextStatus) return;
 
-  order.status = nextStatus;
+  if (!nextStatus) {
+    return;
+  }
+
+
+  order.status =
+    nextStatus;
+
 
   order.history.push({
     text:
-      getHistoryText(nextStatus),
+      getHistoryText(
+        nextStatus
+      ),
 
     time:
       getCurrentDateTime()
   });
+
 
   saveOrderStates();
 
   refreshOpenOrder();
 
   showToast(
-    `Pedido actualizado: ${getStatusLabel(nextStatus)}`
+    `Pedido actualizado: ${getStatusLabel(
+      nextStatus
+    )}`
   );
 }
+
+
+// ==========================================================
+// PROBLEMA GENERAL DEL PEDIDO
+// ==========================================================
 
 function markProblem() {
   const order =
     getSelectedOrder();
 
-  if (!order) return;
-
-  if (order.status === "problema") {
+  if (!order) {
     return;
   }
 
-  if (order.status === "enviado") {
+  if (
+    order.status ===
+    "problema"
+  ) {
+    return;
+  }
+
+  if (
+    order.status ===
+    "enviado"
+  ) {
     showToast(
       "Un pedido enviado no puede marcarse como problema"
     );
@@ -1137,16 +2059,22 @@ function markProblem() {
     return;
   }
 
+
   order.previousStatus =
     order.status;
 
   order.status =
     "problema";
 
+
   order.history.push({
-    text: "Problema reportado",
-    time: getCurrentDateTime()
+    text:
+      "Problema general reportado",
+
+    time:
+      getCurrentDateTime()
   });
+
 
   saveOrderStates();
 
@@ -1166,10 +2094,16 @@ function saveNotes() {
   const order =
     getSelectedOrder();
 
-  if (!order) return;
+  if (!order) {
+    return;
+  }
+
 
   order.notes =
-    orderNotesInput.value.trim();
+    orderNotesInput
+      .value
+      .trim();
+
 
   order.history.push({
     text:
@@ -1181,9 +2115,11 @@ function saveNotes() {
       getCurrentDateTime()
   });
 
+
   saveOrderStates();
 
   renderHistory(order);
+
   render();
 
   showToast(
@@ -1202,29 +2138,49 @@ function refreshOpenOrder() {
 
   render();
 
-  if (orderId !== null) {
-    openOrder(orderId);
+  if (
+    orderId !== null
+  ) {
+    openOrder(
+      orderId
+    );
   }
 }
+
 
 function getSelectedOrder() {
   return orders.find(
     order =>
-      order.id === selectedOrderId
+      order.id ===
+      selectedOrderId
   );
 }
 
+
 function getStatusLabel(status) {
   const labels = {
-    pendiente: "Pendiente",
-    bodega: "Bodega",
-    armando: "Armando",
-    enviado: "Enviado",
-    problema: "Problema"
+    pendiente:
+      "Pendiente",
+
+    bodega:
+      "Bodega",
+
+    armando:
+      "Armando",
+
+    enviado:
+      "Enviado",
+
+    problema:
+      "Problema"
   };
 
-  return labels[status] || status;
+  return (
+    labels[status] ||
+    status
+  );
 }
+
 
 function getNextButtonLabel(status) {
   const labels = {
@@ -1244,6 +2200,7 @@ function getNextButtonLabel(status) {
   );
 }
 
+
 function getHistoryText(status) {
   const labels = {
     bodega:
@@ -1262,84 +2219,140 @@ function getHistoryText(status) {
   );
 }
 
+
 function getCurrentDateTime() {
   return new Intl.DateTimeFormat(
     "es-CL",
     {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit"
+      day:
+        "2-digit",
+
+      month:
+        "short",
+
+      year:
+        "numeric",
+
+      hour:
+        "2-digit",
+
+      minute:
+        "2-digit"
     }
-  ).format(new Date());
+  ).format(
+    new Date()
+  );
 }
 
-function formatShopifyDate(dateString) {
+
+function formatShopifyDate(
+  dateString
+) {
   if (!dateString) {
     return "";
   }
 
+
   const date =
-    new Date(dateString);
+    new Date(
+      dateString
+    );
+
 
   return new Intl.DateTimeFormat(
     "es-CL",
     {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit"
+      day:
+        "2-digit",
+
+      month:
+        "short",
+
+      year:
+        "numeric",
+
+      hour:
+        "2-digit",
+
+      minute:
+        "2-digit"
     }
   ).format(date);
 }
+
 
 function showToast(message) {
   toastMessage.textContent =
     message;
 
+
   toast.classList.remove(
     "hidden"
   );
+
 
   clearTimeout(
     showToast.timeout
   );
 
+
   showToast.timeout =
-    setTimeout(() => {
-      toast.classList.add(
-        "hidden"
-      );
-    }, 2300);
+    setTimeout(
+      () => {
+        toast.classList.add(
+          "hidden"
+        );
+      },
+      2300
+    );
 }
+
 
 function showLoadingState() {
   ordersGrid.innerHTML = `
-    <div style="
-      grid-column: 1 / -1;
-      padding: 50px;
-      text-align: center;
-      color: #78716a;
-    ">
+    <div
+      style="
+        grid-column:1 / -1;
+        padding:50px;
+        text-align:center;
+        color:#64748b;
+      "
+    >
       Cargando pedidos de Shopify...
     </div>
   `;
 }
 
-function escapeHtml(value = "") {
+
+function escapeHtml(
+  value = ""
+) {
   return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+    .replaceAll(
+      "&",
+      "&amp;"
+    )
+    .replaceAll(
+      "<",
+      "&lt;"
+    )
+    .replaceAll(
+      ">",
+      "&gt;"
+    )
+    .replaceAll(
+      '"',
+      "&quot;"
+    )
+    .replaceAll(
+      "'",
+      "&#039;"
+    );
 }
 
 
 // ==========================================================
-// EVENTOS
+// FILTROS POR ZONA
 // ==========================================================
 
 document
@@ -1354,23 +2367,32 @@ document
           .querySelectorAll(
             ".filter-button"
           )
-          .forEach(item =>
-            item.classList.remove(
-              "active"
-            )
+          .forEach(
+            item =>
+              item.classList.remove(
+                "active"
+              )
           );
+
 
         button.classList.add(
           "active"
         );
 
+
         activeZone =
           button.dataset.zone;
+
 
         renderOrders();
       }
     );
   });
+
+
+// ==========================================================
+// FILTROS POR ESTADO
+// ==========================================================
 
 document
   .querySelectorAll(
@@ -1384,69 +2406,114 @@ document
           .querySelectorAll(
             ".status-filter"
           )
-          .forEach(item =>
-            item.classList.remove(
-              "active"
-            )
+          .forEach(
+            item =>
+              item.classList.remove(
+                "active"
+              )
           );
+
 
         button.classList.add(
           "active"
         );
 
+
         activeStatus =
           button.dataset.status;
+
 
         renderOrders();
       }
     );
   });
 
+
+// ==========================================================
+// BUSCADOR
+// ==========================================================
+
 searchOrder.addEventListener(
   "input",
   event => {
     searchTerm =
-      event.target.value.trim();
+      event.target
+        .value
+        .trim();
+
 
     renderOrders();
   }
 );
+
+
+// ==========================================================
+// CERRAR PEDIDO
+// ==========================================================
 
 closeModalButton.addEventListener(
   "click",
   closeModal
 );
 
+
 closeModalXButton.addEventListener(
   "click",
   closeModal
 );
 
+
 modal.addEventListener(
   "click",
   event => {
-    if (event.target === modal) {
+    if (
+      event.target ===
+      modal
+    ) {
       closeModal();
     }
   }
 );
 
+
+// ==========================================================
+// TECLA ESCAPE
+// ==========================================================
+
 document.addEventListener(
   "keydown",
   event => {
     if (
-      event.key === "Escape" &&
+      event.key ===
+        "Escape" &&
+      incidentModal &&
+      incidentModal.classList.contains(
+        "is-open"
+      )
+    ) {
+      closeIncidentModal();
+
+      return;
+    }
+
+
+    if (
+      event.key ===
+        "Escape" &&
       imageViewer &&
       !imageViewer.classList.contains(
         "hidden"
       )
     ) {
       closeImageViewer();
+
       return;
     }
 
+
     if (
-      event.key === "Escape" &&
+      event.key ===
+        "Escape" &&
       !modal.classList.contains(
         "hidden"
       )
@@ -1456,45 +2523,141 @@ document.addEventListener(
   }
 );
 
+
+// ==========================================================
+// ESTADO / PROBLEMAS / NOTAS
+// ==========================================================
+
 nextStatusButton.addEventListener(
   "click",
   advanceSelectedOrder
 );
+
 
 problemButton.addEventListener(
   "click",
   markProblem
 );
 
+
 saveNotesButton.addEventListener(
   "click",
   saveNotes
 );
+
+
+// ==========================================================
+// OCULTAR REINICIAR DEMO
+// ==========================================================
 
 if (resetDemoButton) {
   resetDemoButton.style.display =
     "none";
 }
 
-if (closeImageViewerButton) {
+
+// ==========================================================
+// VISOR IMAGEN
+// ==========================================================
+
+if (
+  closeImageViewerButton
+) {
   closeImageViewerButton.addEventListener(
     "click",
     closeImageViewer
   );
 }
 
+
 if (imageViewer) {
   imageViewer.addEventListener(
     "click",
     event => {
       if (
-        event.target === imageViewer
+        event.target ===
+        imageViewer
       ) {
         closeImageViewer();
       }
     }
   );
 }
+
+
+// ==========================================================
+// MODAL INCIDENCIA · MOTIVOS
+// ==========================================================
+
+incidentReasonButtons.forEach(
+  button => {
+    button.addEventListener(
+      "click",
+      () => {
+        selectIncidentReason(
+          button.dataset.reason,
+          button
+        );
+      }
+    );
+  }
+);
+
+
+// ==========================================================
+// MODAL INCIDENCIA · CANTIDAD
+// ==========================================================
+
+incidentQuantityMinus.addEventListener(
+  "click",
+  () => {
+    incidentQuantity--;
+
+    updateIncidentQuantity();
+  }
+);
+
+
+incidentQuantityPlus.addEventListener(
+  "click",
+  () => {
+    incidentQuantity++;
+
+    updateIncidentQuantity();
+  }
+);
+
+
+// ==========================================================
+// MODAL INCIDENCIA · CONFIRMAR
+// ==========================================================
+
+incidentConfirmButton.addEventListener(
+  "click",
+  confirmProductIncident
+);
+
+
+// ==========================================================
+// MODAL INCIDENCIA · CERRAR
+// ==========================================================
+
+incidentModalClose.addEventListener(
+  "click",
+  closeIncidentModal
+);
+
+
+incidentCancelButton.addEventListener(
+  "click",
+  closeIncidentModal
+);
+
+
+incidentModalBackdrop.addEventListener(
+  "click",
+  closeIncidentModal
+);
 
 
 // ==========================================================
