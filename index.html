@@ -494,6 +494,46 @@
 
         </div>
 
+        <div class="location-filters">
+
+  <span class="location-filter-label">
+    Lugar de armado:
+  </span>
+
+  <button
+    class="location-filter active"
+    data-location="todos"
+    type="button"
+  >
+    Todos
+  </button>
+
+  <button
+    class="location-filter"
+    data-location="las-condes"
+    type="button"
+  >
+    Las Condes
+  </button>
+
+  <button
+    class="location-filter"
+    data-location="patronato"
+    type="button"
+  >
+    Patronato
+  </button>
+
+  <button
+    class="location-filter"
+    data-location="sin-asignar"
+    type="button"
+  >
+    Sin asignar
+  </button>
+
+</div>
+
       </section>
 
 
@@ -625,7 +665,57 @@
 
       <div class="modal-content">
 
+ ================================================ -->
 
+        <section class="assembly-location-section">
+
+  <div class="section-heading">
+
+    <div>
+      <span class="section-kicker">
+        Preparación
+      </span>
+
+      <h3>
+        Lugar de armado
+      </h3>
+    </div>
+
+    <span
+      id="assembly-location-badge"
+      class="assembly-location-badge location-unassigned"
+    >
+      Sin asignar
+    </span>
+
+  </div>
+
+  <div class="assembly-location-control">
+
+    <label for="assembly-location-select">
+      Este pedido se arma en:
+    </label>
+
+    <select id="assembly-location-select">
+
+      <option value="sin-asignar">
+        Sin asignar
+      </option>
+
+      <option value="las-condes">
+        Las Condes
+      </option>
+
+      <option value="patronato">
+        Patronato
+      </option>
+
+    </select>
+
+  </div>
+
+</section>
+        
         <!-- =============================================
              PROGRESO
         ============================================== -->
