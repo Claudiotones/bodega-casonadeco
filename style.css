@@ -3084,3 +3084,32 @@ img {
   }
 
 }
+
+/* =========================================================
+   COLOR DE TARJETA SEGÚN LUGAR DE ARMADO
+========================================================= */
+
+/* Sin asignar */
+.order-card.location-card-sin-asignar {
+  background: #ffffff;
+}
+
+/* Las Condes */
+.order-card.location-card-las-condes {
+  background: #f4f8ff;
+  border-color: #cfe0ff;
+}
+
+.order-card.location-card-las-condes::before {
+  background: #3b82f6;
+}
+
+/* Patronato */
+.order-card.location-card-patronato {
+  background: #faf7ff;
+  border-color: #e4d8ff;
+}
+
+.order-card.location-card-patronato::before {
+  background: #8b5cf6;
+}
