@@ -877,7 +877,27 @@ function openOrder(orderId) {
   orderNotesInput.value =
     order.notes || "";
 
-  function updateAssemblyLocationUI(order) {
+  updateAssemblyLocationUI(order);
+
+  renderProgress(order);
+  renderProducts(order);
+  renderHistory(order);
+  updateModalButtons(order);
+
+  modal.classList.remove(
+    "hidden"
+  );
+
+  document.body.style.overflow =
+    "hidden";
+}
+
+
+// ==========================================================
+// LUGAR DE ARMADO
+// ==========================================================
+
+function updateAssemblyLocationUI(order) {
   const location =
     order.assemblyLocation ||
     "sin-asignar";
@@ -888,20 +908,28 @@ function openOrder(orderId) {
   assemblyLocationBadge.className =
     "assembly-location-badge";
 
-  if (location === "las-condes") {
+  if (
+    location ===
+    "las-condes"
+  ) {
     assemblyLocationBadge.textContent =
       "Las Condes";
 
     assemblyLocationBadge.classList.add(
       "location-las-condes"
     );
-  } else if (location === "patronato") {
+
+  } else if (
+    location ===
+    "patronato"
+  ) {
     assemblyLocationBadge.textContent =
       "Patronato";
 
     assemblyLocationBadge.classList.add(
       "location-patronato"
     );
+
   } else {
     assemblyLocationBadge.textContent =
       "Sin asignar";
@@ -959,7 +987,7 @@ function getAssemblyLocationLabel(location) {
     "las-condes":
       "Las Condes",
 
-    patronato:
+    "patronato":
       "Patronato",
 
     "sin-asignar":
@@ -971,22 +999,6 @@ function getAssemblyLocationLabel(location) {
     "Sin asignar"
   );
 }
-
-  updateAssemblyLocationUI(order);
-
-  renderProgress(order);
-  renderProducts(order);
-  renderHistory(order);
-  updateModalButtons(order);
-
-  modal.classList.remove(
-    "hidden"
-  );
-
-  document.body.style.overflow =
-    "hidden";
-}
-
 
 function closeModal() {
   modal.classList.add(
