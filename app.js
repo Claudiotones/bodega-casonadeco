@@ -1,3 +1,7 @@
+// ==========================================================
+// ESTADO GLOBAL
+// ==========================================================
+
 let orders = [];
 let selectedOrderId = null;
 
@@ -5,6 +9,9 @@ let activeZone = "todos";
 let activeStatus = "todos";
 let activeLocation = "todos";
 let searchTerm = "";
+
+let currentUser = null;
+let users = [];
 
 
 // ==========================================================
@@ -18,7 +25,73 @@ let incidentMaxQuantity = 1;
 
 
 // ==========================================================
-// ELEMENTOS PRINCIPALES
+// ELEMENTOS GENERALES
+// ==========================================================
+
+const topbar =
+  document.querySelector(".topbar");
+
+const appShell =
+  document.querySelector(".app-shell");
+
+const loginScreen =
+  document.getElementById("login-screen");
+
+const loginForm =
+  document.getElementById("login-form");
+
+const loginUsername =
+  document.getElementById("login-username");
+
+const loginPassword =
+  document.getElementById("login-password");
+
+const loginSubmit =
+  document.getElementById("login-submit");
+
+const loginError =
+  document.getElementById("login-error");
+
+
+// ==========================================================
+// USUARIO ACTUAL
+// ==========================================================
+
+const currentUserAvatar =
+  document.getElementById("current-user-avatar");
+
+const currentUserName =
+  document.getElementById("current-user-name");
+
+const currentUserRole =
+  document.getElementById("current-user-role");
+
+const logoutButton =
+  document.getElementById("logout-button");
+
+
+// ==========================================================
+// NAVEGACIÓN
+// ==========================================================
+
+const ordersNavButton =
+  document.getElementById("orders-nav-button");
+
+const incidentsNavButton =
+  document.getElementById("incidents-nav-button");
+
+const usersNavButton =
+  document.getElementById("users-nav-button");
+
+const ordersPage =
+  document.getElementById("orders-page");
+
+const usersSection =
+  document.getElementById("users-section");
+
+
+// ==========================================================
+// PEDIDOS
 // ==========================================================
 
 const ordersGrid =
@@ -66,30 +139,22 @@ const modalOrderDate =
   document.getElementById("modal-order-date");
 
 const assemblyLocationSelect =
-  document.getElementById(
-    "assembly-location-select"
-  );
+  document.getElementById("assembly-location-select");
 
 const assemblyLocationBadge =
-  document.getElementById(
-    "assembly-location-badge"
-  );
+  document.getElementById("assembly-location-badge");
 
 const progressSteps =
   document.getElementById("progress-steps");
 
 const modalProductCount =
-  document.getElementById(
-    "modal-product-count"
-  );
+  document.getElementById("modal-product-count");
 
 const modalProducts =
   document.getElementById("modal-products");
 
 const orderNotesInput =
-  document.getElementById(
-    "order-notes-input"
-  );
+  document.getElementById("order-notes-input");
 
 const saveNotesButton =
   document.getElementById("save-notes");
@@ -101,9 +166,7 @@ const problemButton =
   document.getElementById("problem-button");
 
 const nextStatusButton =
-  document.getElementById(
-    "next-status-button"
-  );
+  document.getElementById("next-status-button");
 
 const resetDemoButton =
   document.getElementById("reset-demo");
@@ -121,84 +184,114 @@ const toastMessage =
 
 
 // ==========================================================
-// VISOR DE IMAGEN
+// VISOR IMAGEN
 // ==========================================================
 
 const imageViewer =
   document.getElementById("image-viewer");
 
 const imageViewerImg =
-  document.getElementById(
-    "image-viewer-img"
-  );
+  document.getElementById("image-viewer-img");
 
 const closeImageViewerButton =
-  document.getElementById(
-    "close-image-viewer"
-  );
+  document.getElementById("close-image-viewer");
 
 
 // ==========================================================
-// MODAL INCIDENCIAS
+// MODAL INCIDENCIA
 // ==========================================================
 
 const incidentModal =
   document.getElementById("incidentModal");
 
 const incidentModalClose =
-  document.getElementById(
-    "incidentModalClose"
-  );
+  document.getElementById("incidentModalClose");
 
 const incidentModalBackdrop =
-  document.querySelector(
-    ".incident-modal-backdrop"
-  );
+  document.querySelector(".incident-modal-backdrop");
 
 const incidentProductName =
-  document.getElementById(
-    "incidentProductName"
-  );
+  document.getElementById("incidentProductName");
 
 const incidentQuantitySection =
-  document.getElementById(
-    "incidentQuantitySection"
-  );
+  document.getElementById("incidentQuantitySection");
 
 const incidentQuantityValue =
-  document.getElementById(
-    "incidentQuantity"
-  );
+  document.getElementById("incidentQuantity");
 
 const incidentQuantityAvailable =
-  document.getElementById(
-    "incidentQuantityAvailable"
-  );
+  document.getElementById("incidentQuantityAvailable");
 
 const incidentQuantityMinus =
-  document.getElementById(
-    "incidentQuantityMinus"
-  );
+  document.getElementById("incidentQuantityMinus");
 
 const incidentQuantityPlus =
-  document.getElementById(
-    "incidentQuantityPlus"
-  );
+  document.getElementById("incidentQuantityPlus");
 
 const incidentConfirmButton =
-  document.getElementById(
-    "incidentConfirmButton"
-  );
+  document.getElementById("incidentConfirmButton");
 
 const incidentCancelButton =
-  document.getElementById(
-    "incidentCancelButton"
-  );
+  document.getElementById("incidentCancelButton");
 
 const incidentReasonButtons =
-  document.querySelectorAll(
-    ".incident-reason-button"
-  );
+  document.querySelectorAll(".incident-reason-button");
+
+
+// ==========================================================
+// ADMINISTRACIÓN USUARIOS
+// ==========================================================
+
+const usersList =
+  document.getElementById("users-list");
+
+const createUserButton =
+  document.getElementById("create-user-button");
+
+const userModal =
+  document.getElementById("user-modal");
+
+const userModalClose =
+  document.getElementById("user-modal-close");
+
+const userModalCancel =
+  document.getElementById("user-modal-cancel");
+
+const userModalTitle =
+  document.getElementById("user-modal-title");
+
+const userForm =
+  document.getElementById("user-form");
+
+const userIdInput =
+  document.getElementById("user-id");
+
+const userNameInput =
+  document.getElementById("user-name");
+
+const userUsernameInput =
+  document.getElementById("user-username");
+
+const userPasswordInput =
+  document.getElementById("user-password");
+
+const userPasswordHelp =
+  document.getElementById("user-password-help");
+
+const userRoleInput =
+  document.getElementById("user-role");
+
+const userLocationInput =
+  document.getElementById("user-location");
+
+const userActiveInput =
+  document.getElementById("user-active");
+
+const userFormError =
+  document.getElementById("user-form-error");
+
+const userSaveButton =
+  document.getElementById("user-save-button");
 
 
 // ==========================================================
@@ -211,6 +304,10 @@ async function apiRequest(
 ) {
   const config = {
     ...options,
+
+    credentials:
+      "same-origin",
+
     headers: {
       ...(options.body
         ? {
@@ -218,6 +315,7 @@ async function apiRequest(
               "application/json"
           }
         : {}),
+
       ...(options.headers || {})
     }
   };
@@ -228,7 +326,7 @@ async function apiRequest(
       config
     );
 
-  let data;
+  let data = null;
 
   try {
     data =
@@ -242,11 +340,17 @@ async function apiRequest(
     !response.ok ||
     data?.success === false
   ) {
-    throw new Error(
-      data?.detail ||
-      data?.error ||
-      `Error HTTP ${response.status}`
-    );
+    const error =
+      new Error(
+        data?.error ||
+        data?.detail ||
+        `Error HTTP ${response.status}`
+      );
+
+    error.status =
+      response.status;
+
+    throw error;
   }
 
   return data;
@@ -258,69 +362,434 @@ async function apiRequest(
 // ==========================================================
 
 async function init() {
+  hideApplication();
+
   try {
-    showLoadingState();
+    const authenticated =
+      await restoreSession();
 
-    const [
-      shopifyData,
-      statesData
-    ] =
-      await Promise.all([
-        apiRequest(
-          "/api/orders"
-        ),
+    if (!authenticated) {
+      showLogin();
 
-        apiRequest(
-          "/api/states"
-        )
-      ]);
+      return;
+    }
 
-    orders =
-      shopifyData.orders
-        .filter(order => {
-          return (
-            order.financialStatus ===
-              "PAID" &&
-            order.fulfillmentStatus !==
-              "FULFILLED"
-          );
-        })
-        .map(
-          shopifyOrderToLocalOrder
-        );
-
-    applyRemoteStates(
-      statesData.states ||
-      {}
-    );
-
-    render();
+    await loadApplication();
 
   } catch (error) {
     console.error(error);
 
-    ordersGrid.innerHTML = `
-      <div
-        style="
-          grid-column:1 / -1;
-          padding:30px;
-          background:white;
-          border-radius:16px;
-          border:1px solid #e5e1da;
-        "
-      >
-        <strong>
-          No se pudieron cargar los pedidos.
-        </strong>
-
-        <p style="margin-bottom:0;">
-          ${escapeHtml(
-            error.message
-          )}
-        </p>
-      </div>
-    `;
+    showLogin();
   }
+}
+
+
+// ==========================================================
+// RESTAURAR SESIÓN
+// ==========================================================
+
+async function restoreSession() {
+  try {
+    const data =
+      await apiRequest(
+        "/api/auth/me"
+      );
+
+    currentUser =
+      data.user;
+
+    updateCurrentUserUI();
+
+    return true;
+
+  } catch (error) {
+    if (
+      error.status ===
+      401
+    ) {
+      currentUser =
+        null;
+
+      return false;
+    }
+
+    throw error;
+  }
+}
+
+
+// ==========================================================
+// CARGAR APP
+// ==========================================================
+
+async function loadApplication() {
+  hideLogin();
+
+  showApplication();
+
+  showOrdersPage();
+
+  showLoadingState();
+
+  const [
+    shopifyData,
+    statesData
+  ] =
+    await Promise.all([
+      apiRequest(
+        "/api/orders"
+      ),
+
+      apiRequest(
+        "/api/states"
+      )
+    ]);
+
+  orders =
+    shopifyData.orders
+      .filter(order => {
+        return (
+          order.financialStatus ===
+            "PAID" &&
+          order.fulfillmentStatus !==
+            "FULFILLED"
+        );
+      })
+      .map(
+        shopifyOrderToLocalOrder
+      );
+
+  applyRemoteStates(
+    statesData.states ||
+    {}
+  );
+
+  updateCurrentUserUI();
+
+  render();
+}
+
+
+// ==========================================================
+// MOSTRAR / OCULTAR APP
+// ==========================================================
+
+function hideApplication() {
+  if (topbar) {
+    topbar.style.display =
+      "none";
+  }
+
+  if (appShell) {
+    appShell.style.display =
+      "none";
+  }
+}
+
+
+function showApplication() {
+  if (topbar) {
+    topbar.style.display =
+      "";
+  }
+
+  if (appShell) {
+    appShell.style.display =
+      "";
+  }
+}
+
+
+function showLogin() {
+  hideApplication();
+
+  loginScreen.classList.remove(
+    "hidden"
+  );
+
+  loginError.classList.add(
+    "hidden"
+  );
+
+  loginPassword.value =
+    "";
+
+  setTimeout(
+    () => {
+      loginUsername.focus();
+    },
+    50
+  );
+}
+
+
+function hideLogin() {
+  loginScreen.classList.add(
+    "hidden"
+  );
+}
+
+
+// ==========================================================
+// LOGIN
+// ==========================================================
+
+async function handleLogin(
+  event
+) {
+  event.preventDefault();
+
+  const username =
+    loginUsername.value
+      .trim();
+
+  const password =
+    loginPassword.value;
+
+  if (
+    !username ||
+    !password
+  ) {
+    showLoginError(
+      "Ingresa usuario y contraseña."
+    );
+
+    return;
+  }
+
+  loginSubmit.disabled =
+    true;
+
+  loginSubmit.textContent =
+    "Ingresando...";
+
+  hideLoginError();
+
+  try {
+    const data =
+      await apiRequest(
+        "/api/auth/login",
+        {
+          method:
+            "POST",
+
+          body:
+            JSON.stringify({
+              username,
+              password
+            })
+        }
+      );
+
+    currentUser =
+      data.user;
+
+    loginPassword.value =
+      "";
+
+    await loadApplication();
+
+  } catch (error) {
+    console.error(error);
+
+    showLoginError(
+      error.message ||
+      "No se pudo iniciar sesión."
+    );
+
+  } finally {
+    loginSubmit.disabled =
+      false;
+
+    loginSubmit.textContent =
+      "Ingresar";
+  }
+}
+
+
+function showLoginError(
+  message
+) {
+  loginError.textContent =
+    message;
+
+  loginError.classList.remove(
+    "hidden"
+  );
+}
+
+
+function hideLoginError() {
+  loginError.textContent =
+    "";
+
+  loginError.classList.add(
+    "hidden"
+  );
+}
+
+
+// ==========================================================
+// LOGOUT
+// ==========================================================
+
+async function logout() {
+  try {
+    await apiRequest(
+      "/api/auth/logout",
+      {
+        method:
+          "POST",
+
+        body:
+          JSON.stringify({})
+      }
+    );
+
+  } catch (error) {
+    console.error(error);
+  }
+
+  currentUser =
+    null;
+
+  users =
+    [];
+
+  orders =
+    [];
+
+  closeModal();
+  closeIncidentModal();
+  closeUserModal();
+
+  showLogin();
+}
+
+
+// ==========================================================
+// USUARIO CABECERA
+// ==========================================================
+
+function updateCurrentUserUI() {
+  if (!currentUser) {
+    return;
+  }
+
+  currentUserName.textContent =
+    currentUser.name;
+
+  currentUserRole.textContent =
+    getUserRoleLabel(
+      currentUser.role
+    ) +
+    (
+      currentUser.location
+        ? ` · ${getAssemblyLocationLabel(
+            currentUser.location
+          )}`
+        : ""
+    );
+
+  currentUserAvatar.textContent =
+    getInitials(
+      currentUser.name
+    );
+
+  if (
+    currentUser.role ===
+    "admin"
+  ) {
+    usersNavButton.classList.remove(
+      "hidden"
+    );
+  } else {
+    usersNavButton.classList.add(
+      "hidden"
+    );
+  }
+}
+
+
+// ==========================================================
+// NAVEGACIÓN
+// ==========================================================
+
+function clearSidebarSelection() {
+  document
+    .querySelectorAll(
+      ".sidebar-item"
+    )
+    .forEach(button => {
+      button.classList.remove(
+        "active"
+      );
+    });
+}
+
+
+function showOrdersPage() {
+  usersSection.classList.add(
+    "hidden"
+  );
+
+  ordersPage.classList.remove(
+    "hidden"
+  );
+
+  clearSidebarSelection();
+
+  ordersNavButton.classList.add(
+    "active"
+  );
+}
+
+
+async function showUsersPage() {
+  if (
+    currentUser?.role !==
+    "admin"
+  ) {
+    return;
+  }
+
+  ordersPage.classList.add(
+    "hidden"
+  );
+
+  usersSection.classList.remove(
+    "hidden"
+  );
+
+  clearSidebarSelection();
+
+  usersNavButton.classList.add(
+    "active"
+  );
+
+  await loadUsers();
+}
+
+
+function showIncidentsPage() {
+  showOrdersPage();
+
+  activeZone =
+    "problema";
+
+  document
+    .querySelectorAll(
+      ".filter-button"
+    )
+    .forEach(button => {
+      button.classList.toggle(
+        "active",
+        button.dataset.zone ===
+          "problema"
+      );
+    });
+
+  renderOrders();
 }
 
 
@@ -444,7 +913,7 @@ function shopifyOrderToLocalOrder(
 
 
 // ==========================================================
-// MEZCLAR ESTADOS D1 + SHOPIFY
+// MEZCLAR D1 + SHOPIFY
 // ==========================================================
 
 function applyRemoteStates(
@@ -539,12 +1008,11 @@ function applyRemoteStates(
 
 
 // ==========================================================
-// CLASIFICAR SANTIAGO / REGIONES
+// ZONA
 // ==========================================================
 
 function classifyZone(
-  shippingMethod,
-  shipping
+  shippingMethod
 ) {
   const method =
     String(
@@ -565,7 +1033,7 @@ function classifyZone(
 
 
 // ==========================================================
-// GUARDAR ESTADO GENERAL EN D1
+// GUARDAR ESTADO PEDIDO
 // ==========================================================
 
 async function saveRemoteOrderState(
@@ -604,7 +1072,7 @@ async function saveRemoteOrderState(
 
 
 // ==========================================================
-// GUARDAR PRODUCTO EN D1
+// GUARDAR PRODUCTO
 // ==========================================================
 
 async function saveRemoteProductState(
@@ -637,13 +1105,18 @@ async function saveRemoteProductState(
 
 
 // ==========================================================
-// HISTORIAL D1
+// HISTORIAL CENTRALIZADO
 // ==========================================================
 
 async function addRemoteHistory(
   order,
   text
 ) {
+  const attributedText =
+    currentUser?.name
+      ? `${currentUser.name} · ${text}`
+      : text;
+
   const data =
     await apiRequest(
       `/api/orders/${encodeURIComponent(
@@ -655,7 +1128,8 @@ async function addRemoteHistory(
 
         body:
           JSON.stringify({
-            text
+            text:
+              attributedText
           })
       }
     );
@@ -663,7 +1137,7 @@ async function addRemoteHistory(
   const item = {
     text:
       data.history?.text ||
-      text,
+      attributedText,
 
     time:
       formatStoredDate(
@@ -728,7 +1202,7 @@ function renderStats() {
 
 
 // ==========================================================
-// LISTADO DE PEDIDOS
+// LISTADO PEDIDOS
 // ==========================================================
 
 function renderOrders() {
@@ -912,7 +1386,6 @@ function createOrderCard(
 
       </div>
 
-
       <div class="order-card-products">
 
         <div class="order-thumb-group">
@@ -941,7 +1414,6 @@ function createOrderCard(
 
         </div>
 
-
         <div class="order-product-summary">
 
           ${order.products.length}
@@ -953,9 +1425,7 @@ function createOrderCard(
               : "productos"
           }
 
-          ·
-
-          ${totalUnits}
+          · ${totalUnits}
 
           ${
             totalUnits ===
@@ -975,7 +1445,6 @@ function createOrderCard(
                   "
                 >
                   ⚠ ${pendingIncidents}
-
                   ${
                     pendingIncidents ===
                     1
@@ -991,16 +1460,13 @@ function createOrderCard(
 
       </div>
 
-
       <div class="order-status-row">
 
         <span
           class="status-badge status-${order.status}"
         >
 
-          <span
-            class="status-dot"
-          ></span>
+          <span class="status-dot"></span>
 
           ${getStatusLabel(
             order.status
@@ -1118,7 +1584,7 @@ function closeModal() {
 
 
 // ==========================================================
-// LUGAR DE ARMADO
+// SUCURSAL
 // ==========================================================
 
 function updateAssemblyLocationUI(
@@ -1223,8 +1689,6 @@ async function changeAssemblyLocation() {
     );
 
   } catch (error) {
-    console.error(error);
-
     order.assemblyLocation =
       oldLocation;
 
@@ -1265,7 +1729,7 @@ function getAssemblyLocationLabel(
 
 
 // ==========================================================
-// PROGRESO GENERAL
+// PROGRESO
 // ==========================================================
 
 function renderProgress(
@@ -1361,9 +1825,7 @@ function renderProgress(
           }
 
           return `
-            <div
-              class="${className}"
-            >
+            <div class="${className}">
 
               <span
                 class="progress-step-number"
@@ -1410,7 +1872,6 @@ function renderProducts(
       0
     );
 
-
   const readyUnits =
     order.products.reduce(
       (
@@ -1431,7 +1892,6 @@ function renderProducts(
       },
       0
     );
-
 
   const transferUnits =
     order.products.reduce(
@@ -1454,16 +1914,13 @@ function renderProducts(
       0
     );
 
-
   const pendingUnits =
     totalUnits -
     readyUnits -
     transferUnits;
 
-
   let progressText =
     `${readyUnits} de ${totalUnits} listos`;
-
 
   if (
     transferUnits > 0
@@ -1472,14 +1929,12 @@ function renderProducts(
       ` · ${transferUnits} en traslado`;
   }
 
-
   if (
     pendingUnits > 0
   ) {
     progressText +=
       ` · ${pendingUnits} pendientes`;
   }
-
 
   if (
     readyUnits ===
@@ -1490,29 +1945,21 @@ function renderProducts(
       `✓ ${totalUnits} de ${totalUnits} listos`;
   }
 
-
   modalProductCount.textContent =
     progressText;
 
+  modalProductCount.classList.toggle(
+    "products-complete",
+    readyUnits ===
+      totalUnits &&
+    totalUnits > 0
+  );
 
-  modalProductCount
-    .classList
-    .toggle(
-      "products-complete",
-      readyUnits ===
-        totalUnits &&
-      totalUnits > 0
-    );
-
-
-  modalProductCount
-    .classList
-    .toggle(
-      "products-pending",
-      readyUnits <
-        totalUnits
-    );
-
+  modalProductCount.classList.toggle(
+    "products-pending",
+    readyUnits <
+      totalUnits
+  );
 
   modalProducts.innerHTML =
     order.products
@@ -1543,9 +1990,8 @@ function renderProducts(
                   </button>
                 `
                 : `
-                  <div
-                    class="product-image-wrapper"
-                  >
+                  <div class="product-image-wrapper">
+
                     <div
                       style="
                         width:100%;
@@ -1561,28 +2007,23 @@ function renderProducts(
                     >
                       Sin imagen
                     </div>
+
                   </div>
                 `
             }
 
-
             <div class="product-info">
 
-              <h4
-                class="product-name"
-              >
+              <h4 class="product-name">
                 ${escapeHtml(
                   product.name
                 )}
               </h4>
 
-
               ${
                 product.variant
                   ? `
-                    <p
-                      class="product-meta"
-                    >
+                    <p class="product-meta">
                       Variante:
                       ${escapeHtml(
                         product.variant
@@ -1592,13 +2033,11 @@ function renderProducts(
                   : ""
               }
 
-
               ${
                 product.code
                   ? `
-                    <p
-                      class="product-meta"
-                    >
+                    <p class="product-meta">
+
                       <strong>
                         Código:
                       </strong>
@@ -1606,18 +2045,16 @@ function renderProducts(
                       ${escapeHtml(
                         product.code
                       )}
+
                     </p>
                   `
                   : ""
               }
 
-
               ${
                 product.sku
                   ? `
-                    <p
-                      class="product-meta"
-                    >
+                    <p class="product-meta">
                       SKU:
                       ${escapeHtml(
                         product.sku
@@ -1627,20 +2064,15 @@ function renderProducts(
                   : ""
               }
 
-
-              <span
-                class="product-quantity"
-              >
+              <span class="product-quantity">
                 Cantidad:
                 ${product.quantity}
               </span>
-
 
               ${renderWarehouseProductStatus(
                 order,
                 product
               )}
-
 
               ${renderProductIncident(
                 order,
@@ -1654,9 +2086,15 @@ function renderProducts(
       )
       .join("");
 
+  bindProductButtons();
+}
 
-  // IMÁGENES
 
+// ==========================================================
+// EVENTOS PRODUCTOS
+// ==========================================================
+
+function bindProductButtons() {
   modalProducts
     .querySelectorAll(
       ".product-image-button"
@@ -1675,9 +2113,6 @@ function renderProducts(
       );
     });
 
-
-  // INCIDENCIA
-
   modalProducts
     .querySelectorAll(
       ".incident-report-button"
@@ -1694,9 +2129,6 @@ function renderProducts(
         }
       );
     });
-
-
-  // RESOLVER INCIDENCIA
 
   modalProducts
     .querySelectorAll(
@@ -1715,9 +2147,6 @@ function renderProducts(
       );
     });
 
-
-  // PRODUCTO BAJADO / RECIBIDO
-
   modalProducts
     .querySelectorAll(
       ".warehouse-product-ready-button"
@@ -1735,9 +2164,6 @@ function renderProducts(
       );
     });
 
-
-  // NO HAY AQUÍ
-
   modalProducts
     .querySelectorAll(
       ".warehouse-product-missing-button"
@@ -1754,9 +2180,6 @@ function renderProducts(
         }
       );
     });
-
-
-  // DESHACER
 
   modalProducts
     .querySelectorAll(
@@ -1778,7 +2201,7 @@ function renderProducts(
 
 
 // ==========================================================
-// ESTADO DE BODEGA POR PRODUCTO
+// ESTADO PRODUCTO
 // ==========================================================
 
 function renderWarehouseProductStatus(
@@ -1810,7 +2233,6 @@ function renderWarehouseProductStatus(
     `;
   }
 
-
   if (
     status ===
     "traslado"
@@ -1840,11 +2262,8 @@ function renderWarehouseProductStatus(
     `;
   }
 
-
   return `
-    <div
-      class="warehouse-product-actions"
-    >
+    <div class="warehouse-product-actions">
 
       <button
         type="button"
@@ -1868,7 +2287,7 @@ function renderWarehouseProductStatus(
 
 
 // ==========================================================
-// PRODUCTO BAJADO / RECIBIDO
+// PRODUCTO LISTO
 // ==========================================================
 
 async function markProductReady(
@@ -1910,15 +2329,12 @@ async function markProductReady(
       product
     );
 
-    const historyText =
+    await addRemoteHistory(
+      order,
       oldStatus ===
         "traslado"
         ? `Producto recibido y listo: ${product.name}`
-        : `Producto bajado: ${product.name}`;
-
-    await addRemoteHistory(
-      order,
-      historyText
+        : `Producto bajado: ${product.name}`
     );
 
     refreshOpenOrder();
@@ -1931,8 +2347,6 @@ async function markProductReady(
     );
 
   } catch (error) {
-    console.error(error);
-
     product.warehouseStatus =
       oldStatus;
 
@@ -1949,7 +2363,7 @@ async function markProductReady(
 
 
 // ==========================================================
-// NO HAY EN ESTA SUCURSAL
+// NO HAY AQUÍ
 // ==========================================================
 
 async function markProductMissing(
@@ -2025,8 +2439,6 @@ async function markProductMissing(
     );
 
   } catch (error) {
-    console.error(error);
-
     product.warehouseStatus =
       oldStatus;
 
@@ -2043,7 +2455,7 @@ async function markProductMissing(
 
 
 // ==========================================================
-// DESHACER ESTADO PRODUCTO
+// DESHACER PRODUCTO
 // ==========================================================
 
 async function resetProductWarehouseStatus(
@@ -2097,8 +2509,6 @@ async function resetProductWarehouseStatus(
     );
 
   } catch (error) {
-    console.error(error);
-
     product.warehouseStatus =
       oldStatus;
 
@@ -2115,7 +2525,7 @@ async function resetProductWarehouseStatus(
 
 
 // ==========================================================
-// INCIDENCIA PRODUCTO
+// INCIDENCIAS
 // ==========================================================
 
 function renderProductIncident(
@@ -2137,17 +2547,15 @@ function renderProductIncident(
         class="product-incident active"
       >
 
-        <div
-          class="incident-header"
-        >
+        <div class="incident-header">
+
           <strong>
             ⚠ Reemplazo pendiente
           </strong>
+
         </div>
 
-        <div
-          class="incident-details"
-        >
+        <div class="incident-details">
 
           <span>
             ${escapeHtml(
@@ -2157,7 +2565,6 @@ function renderProductIncident(
 
           <span>
             Cantidad:
-
             <strong>
               ${incident.quantity}
             </strong>
@@ -2165,9 +2572,7 @@ function renderProductIncident(
 
         </div>
 
-        <span
-          class="incident-time"
-        >
+        <span class="incident-time">
           Reportado:
           ${escapeHtml(
             formatStoredDate(
@@ -2188,7 +2593,6 @@ function renderProductIncident(
     `;
   }
 
-
   const resolvedIncident =
     order.incidents
       ?.slice()
@@ -2201,7 +2605,6 @@ function renderProductIncident(
             "resuelto"
       );
 
-
   return `
     ${
       resolvedIncident
@@ -2211,7 +2614,6 @@ function renderProductIncident(
           >
             ✓ Último reemplazo completado
             · ${resolvedIncident.quantity}
-
             ${
               resolvedIncident.quantity ===
               1
@@ -2235,7 +2637,7 @@ function renderProductIncident(
 
 
 // ==========================================================
-// ABRIR MODAL INCIDENCIA
+// ABRIR INCIDENCIA
 // ==========================================================
 
 function reportProductIncident(
@@ -2323,10 +2725,6 @@ function reportProductIncident(
 }
 
 
-// ==========================================================
-// MOTIVO INCIDENCIA
-// ==========================================================
-
 function selectIncidentReason(
   reason,
   button
@@ -2355,10 +2753,6 @@ function selectIncidentReason(
   updateIncidentQuantity();
 }
 
-
-// ==========================================================
-// CANTIDAD INCIDENCIA
-// ==========================================================
 
 function updateIncidentQuantity() {
   if (
@@ -2391,7 +2785,7 @@ function updateIncidentQuantity() {
 
 
 // ==========================================================
-// CREAR INCIDENCIA EN D1
+// CREAR INCIDENCIA
 // ==========================================================
 
 async function confirmProductIncident() {
@@ -2478,8 +2872,6 @@ async function confirmProductIncident() {
     );
 
   } catch (error) {
-    console.error(error);
-
     showToast(
       `Error: ${error.message}`
     );
@@ -2492,13 +2884,11 @@ async function confirmProductIncident() {
 
 
 // ==========================================================
-// CERRAR MODAL INCIDENCIA
+// CERRAR INCIDENCIA
 // ==========================================================
 
 function closeIncidentModal() {
-  if (
-    !incidentModal
-  ) {
+  if (!incidentModal) {
     return;
   }
 
@@ -2537,7 +2927,7 @@ function closeIncidentModal() {
 
 
 // ==========================================================
-// RESOLVER INCIDENCIA EN D1
+// RESOLVER INCIDENCIA
 // ==========================================================
 
 async function resolveProductIncident(
@@ -2610,18 +3000,12 @@ async function resolveProductIncident(
     );
 
   } catch (error) {
-    console.error(error);
-
     showToast(
       `Error: ${error.message}`
     );
   }
 }
 
-
-// ==========================================================
-// INCIDENCIAS
-// ==========================================================
 
 function getPendingIncidentCount(
   order
@@ -2649,51 +3033,6 @@ function hasPendingIncidents(
 
 
 // ==========================================================
-// VISOR IMAGEN
-// ==========================================================
-
-function openImageViewer(
-  image,
-  productName
-) {
-  if (
-    !imageViewer ||
-    !imageViewerImg
-  ) {
-    return;
-  }
-
-  imageViewerImg.src =
-    image;
-
-  imageViewerImg.alt =
-    productName ||
-    "Producto";
-
-  imageViewer.classList.remove(
-    "hidden"
-  );
-}
-
-
-function closeImageViewer() {
-  if (
-    !imageViewer ||
-    !imageViewerImg
-  ) {
-    return;
-  }
-
-  imageViewer.classList.add(
-    "hidden"
-  );
-
-  imageViewerImg.src =
-    "";
-}
-
-
-// ==========================================================
 // HISTORIAL
 // ==========================================================
 
@@ -2706,9 +3045,7 @@ function renderHistory(
       0
   ) {
     historyList.innerHTML = `
-      <div
-        class="history-item"
-      >
+      <div class="history-item">
         Sin movimientos registrados.
       </div>
     `;
@@ -2722,17 +3059,13 @@ function renderHistory(
       .reverse()
       .map(
         item => `
-          <div
-            class="history-item"
-          >
+          <div class="history-item">
 
             ${escapeHtml(
               item.text
             )}
 
-            <span
-              class="history-time"
-            >
+            <span class="history-time">
               ${escapeHtml(
                 formatStoredDate(
                   item.time
@@ -2748,7 +3081,7 @@ function renderHistory(
 
 
 // ==========================================================
-// ESTADO GENERAL
+// BOTONES ESTADO PEDIDO
 // ==========================================================
 
 function updateModalButtons(
@@ -2888,7 +3221,6 @@ async function advanceSelectedOrder() {
     return;
   }
 
-
   const nextStatusMap = {
     pendiente:
       "bodega",
@@ -2899,7 +3231,6 @@ async function advanceSelectedOrder() {
     armando:
       "enviado"
   };
-
 
   const nextStatus =
     nextStatusMap[
@@ -2940,8 +3271,6 @@ async function advanceSelectedOrder() {
     );
 
   } catch (error) {
-    console.error(error);
-
     order.status =
       oldStatus;
 
@@ -3087,6 +3416,581 @@ async function saveNotes() {
 
 
 // ==========================================================
+// USUARIOS ADMIN
+// ==========================================================
+
+async function loadUsers() {
+  if (
+    currentUser?.role !==
+    "admin"
+  ) {
+    return;
+  }
+
+  usersList.innerHTML = `
+    <div
+      style="
+        padding:30px;
+        color:#64748b;
+      "
+    >
+      Cargando usuarios...
+    </div>
+  `;
+
+  try {
+    const data =
+      await apiRequest(
+        "/api/users"
+      );
+
+    users =
+      data.users ||
+      [];
+
+    renderUsers();
+
+  } catch (error) {
+    usersList.innerHTML = `
+      <div class="login-error">
+        ${escapeHtml(
+          error.message
+        )}
+      </div>
+    `;
+  }
+}
+
+
+// ==========================================================
+// RENDER USUARIOS
+// ==========================================================
+
+function renderUsers() {
+  if (
+    users.length ===
+    0
+  ) {
+    usersList.innerHTML = `
+      <div class="empty-state">
+        <h3>
+          No hay usuarios
+        </h3>
+
+        <p>
+          Crea la primera cuenta del equipo.
+        </p>
+      </div>
+    `;
+
+    return;
+  }
+
+  usersList.innerHTML =
+    users
+      .map(user => {
+        return `
+          <article class="user-card">
+
+            <div class="user-card-top">
+
+              <div class="user-card-identity">
+
+                <div class="user-card-avatar">
+                  ${escapeHtml(
+                    getInitials(
+                      user.name
+                    )
+                  )}
+                </div>
+
+                <div>
+
+                  <h3 class="user-card-name">
+                    ${escapeHtml(
+                      user.name
+                    )}
+                  </h3>
+
+                  <div class="user-card-username">
+                    @${escapeHtml(
+                      user.username
+                    )}
+                  </div>
+
+                </div>
+
+              </div>
+
+              <span
+                class="
+                  user-status-badge
+                  ${
+                    user.active
+                      ? "user-status-active"
+                      : "user-status-inactive"
+                  }
+                "
+              >
+                ${
+                  user.active
+                    ? "Activo"
+                    : "Inactivo"
+                }
+              </span>
+
+            </div>
+
+            <div class="user-card-meta">
+
+              <span class="user-role-badge">
+                ${escapeHtml(
+                  getUserRoleLabel(
+                    user.role
+                  )
+                )}
+              </span>
+
+              <span class="user-location-badge">
+                ${
+                  user.location
+                    ? escapeHtml(
+                        getAssemblyLocationLabel(
+                          user.location
+                        )
+                      )
+                    : "Sin sucursal"
+                }
+              </span>
+
+            </div>
+
+            <div class="user-card-actions">
+
+              <button
+                type="button"
+                class="user-edit-button"
+                data-user-id="${user.id}"
+              >
+                Editar
+              </button>
+
+            </div>
+
+          </article>
+        `;
+      })
+      .join("");
+
+  usersList
+    .querySelectorAll(
+      ".user-edit-button"
+    )
+    .forEach(button => {
+      button.addEventListener(
+        "click",
+        () => {
+          openEditUserModal(
+            button.dataset.userId
+          );
+        }
+      );
+    });
+}
+
+
+// ==========================================================
+// MODAL CREAR USUARIO
+// ==========================================================
+
+function openCreateUserModal() {
+  userForm.reset();
+
+  userIdInput.value =
+    "";
+
+  userModalTitle.textContent =
+    "Crear usuario";
+
+  userSaveButton.textContent =
+    "Crear usuario";
+
+  userPasswordInput.required =
+    true;
+
+  userPasswordHelp.textContent =
+    "Mínimo 8 caracteres.";
+
+  userActiveInput.checked =
+    true;
+
+  userRoleInput.value =
+    "bodega";
+
+  userLocationInput.value =
+    "";
+
+  hideUserFormError();
+
+  userModal.classList.remove(
+    "hidden"
+  );
+
+  document.body.style.overflow =
+    "hidden";
+
+  setTimeout(
+    () => {
+      userNameInput.focus();
+    },
+    50
+  );
+}
+
+
+// ==========================================================
+// MODAL EDITAR USUARIO
+// ==========================================================
+
+function openEditUserModal(
+  userId
+) {
+  const user =
+    users.find(
+      item =>
+        item.id ===
+        userId
+    );
+
+  if (!user) {
+    return;
+  }
+
+  userForm.reset();
+
+  userIdInput.value =
+    user.id;
+
+  userNameInput.value =
+    user.name;
+
+  userUsernameInput.value =
+    user.username;
+
+  userPasswordInput.value =
+    "";
+
+  userRoleInput.value =
+    user.role;
+
+  userLocationInput.value =
+    user.location ||
+    "";
+
+  userActiveInput.checked =
+    Boolean(
+      user.active
+    );
+
+  userModalTitle.textContent =
+    "Editar usuario";
+
+  userSaveButton.textContent =
+    "Guardar cambios";
+
+  userPasswordInput.required =
+    false;
+
+  userPasswordHelp.textContent =
+    "Déjala vacía para mantener la contraseña actual.";
+
+  hideUserFormError();
+
+  userModal.classList.remove(
+    "hidden"
+  );
+
+  document.body.style.overflow =
+    "hidden";
+}
+
+
+// ==========================================================
+// CERRAR MODAL USUARIO
+// ==========================================================
+
+function closeUserModal() {
+  if (!userModal) {
+    return;
+  }
+
+  userModal.classList.add(
+    "hidden"
+  );
+
+  if (
+    modal.classList.contains(
+      "hidden"
+    )
+  ) {
+    document.body.style.overflow =
+      "";
+  }
+
+  hideUserFormError();
+}
+
+
+// ==========================================================
+// GUARDAR USUARIO
+// ==========================================================
+
+async function saveUser(
+  event
+) {
+  event.preventDefault();
+
+  if (
+    currentUser?.role !==
+    "admin"
+  ) {
+    return;
+  }
+
+  const userId =
+    userIdInput.value
+      .trim();
+
+  const editing =
+    Boolean(
+      userId
+    );
+
+  const name =
+    userNameInput.value
+      .trim();
+
+  const username =
+    userUsernameInput.value
+      .trim()
+      .toLowerCase();
+
+  const password =
+    userPasswordInput.value;
+
+  const role =
+    userRoleInput.value;
+
+  const location =
+    userLocationInput.value ||
+    null;
+
+  const active =
+    userActiveInput.checked;
+
+  if (
+    !name ||
+    !username
+  ) {
+    showUserFormError(
+      "Completa nombre y usuario."
+    );
+
+    return;
+  }
+
+  if (
+    !editing &&
+    password.length <
+      8
+  ) {
+    showUserFormError(
+      "La contraseña debe tener al menos 8 caracteres."
+    );
+
+    return;
+  }
+
+  if (
+    editing &&
+    password &&
+    password.length <
+      8
+  ) {
+    showUserFormError(
+      "La nueva contraseña debe tener al menos 8 caracteres."
+    );
+
+    return;
+  }
+
+  userSaveButton.disabled =
+    true;
+
+  userSaveButton.textContent =
+    editing
+      ? "Guardando..."
+      : "Creando...";
+
+  hideUserFormError();
+
+  try {
+    const body = {
+      name,
+      username,
+      role,
+      location,
+      active
+    };
+
+    if (
+      password
+    ) {
+      body.password =
+        password;
+    }
+
+    if (
+      editing
+    ) {
+      await apiRequest(
+        `/api/users/${encodeURIComponent(
+          userId
+        )}`,
+        {
+          method:
+            "PUT",
+
+          body:
+            JSON.stringify(
+              body
+            )
+        }
+      );
+
+      showToast(
+        "Usuario actualizado"
+      );
+
+    } else {
+      await apiRequest(
+        "/api/users",
+        {
+          method:
+            "POST",
+
+          body:
+            JSON.stringify({
+              ...body,
+              password
+            })
+        }
+      );
+
+      showToast(
+        "Usuario creado"
+      );
+    }
+
+    closeUserModal();
+
+    await loadUsers();
+
+    if (
+      editing &&
+      userId ===
+        currentUser.id
+    ) {
+      await restoreSession();
+
+      updateCurrentUserUI();
+    }
+
+  } catch (error) {
+    showUserFormError(
+      error.message
+    );
+
+  } finally {
+    userSaveButton.disabled =
+      false;
+
+    userSaveButton.textContent =
+      editing
+        ? "Guardar cambios"
+        : "Crear usuario";
+  }
+}
+
+
+function showUserFormError(
+  message
+) {
+  userFormError.textContent =
+    message;
+
+  userFormError.classList.remove(
+    "hidden"
+  );
+}
+
+
+function hideUserFormError() {
+  userFormError.textContent =
+    "";
+
+  userFormError.classList.add(
+    "hidden"
+  );
+}
+
+
+// ==========================================================
+// VISOR IMAGEN
+// ==========================================================
+
+function openImageViewer(
+  image,
+  productName
+) {
+  if (
+    !imageViewer ||
+    !imageViewerImg
+  ) {
+    return;
+  }
+
+  imageViewerImg.src =
+    image;
+
+  imageViewerImg.alt =
+    productName ||
+    "Producto";
+
+  imageViewer.classList.remove(
+    "hidden"
+  );
+}
+
+
+function closeImageViewer() {
+  if (
+    !imageViewer ||
+    !imageViewerImg
+  ) {
+    return;
+  }
+
+  imageViewer.classList.add(
+    "hidden"
+  );
+
+  imageViewerImg.src =
+    "";
+}
+
+
+// ==========================================================
 // HELPERS
 // ==========================================================
 
@@ -3185,28 +4089,65 @@ function getHistoryText(
 }
 
 
-function getCurrentDateTime() {
-  return new Intl.DateTimeFormat(
-    "es-CL",
-    {
-      day:
-        "2-digit",
+function getUserRoleLabel(
+  role
+) {
+  const labels = {
+    admin:
+      "Administrador",
 
-      month:
-        "short",
+    bodega:
+      "Bodega",
 
-      year:
-        "numeric",
+    armado:
+      "Armado",
 
-      hour:
-        "2-digit",
+    despacho:
+      "Despacho"
+  };
 
-      minute:
-        "2-digit"
-    }
-  ).format(
-    new Date()
+  return (
+    labels[role] ||
+    role
   );
+}
+
+
+function getInitials(
+  name = ""
+) {
+  const parts =
+    String(name)
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+
+  if (
+    parts.length ===
+    0
+  ) {
+    return "--";
+  }
+
+  if (
+    parts.length ===
+    1
+  ) {
+    return parts[0]
+      .slice(
+        0,
+        2
+      )
+      .toUpperCase();
+  }
+
+  return (
+    parts[0][0] +
+    parts[
+      parts.length -
+      1
+    ][0]
+  ).toUpperCase();
 }
 
 
@@ -3359,6 +4300,85 @@ function escapeHtml(
 
 
 // ==========================================================
+// LOGIN EVENTS
+// ==========================================================
+
+loginForm.addEventListener(
+  "submit",
+  handleLogin
+);
+
+
+logoutButton.addEventListener(
+  "click",
+  logout
+);
+
+
+// ==========================================================
+// NAVEGACIÓN
+// ==========================================================
+
+ordersNavButton.addEventListener(
+  "click",
+  showOrdersPage
+);
+
+
+incidentsNavButton.addEventListener(
+  "click",
+  showIncidentsPage
+);
+
+
+usersNavButton.addEventListener(
+  "click",
+  showUsersPage
+);
+
+
+// ==========================================================
+// USUARIOS
+// ==========================================================
+
+createUserButton.addEventListener(
+  "click",
+  openCreateUserModal
+);
+
+
+userForm.addEventListener(
+  "submit",
+  saveUser
+);
+
+
+userModalClose.addEventListener(
+  "click",
+  closeUserModal
+);
+
+
+userModalCancel.addEventListener(
+  "click",
+  closeUserModal
+);
+
+
+userModal.addEventListener(
+  "click",
+  event => {
+    if (
+      event.target ===
+      userModal
+    ) {
+      closeUserModal();
+    }
+  }
+);
+
+
+// ==========================================================
 // FILTROS ZONA
 // ==========================================================
 
@@ -3431,7 +4451,7 @@ document
 
 
 // ==========================================================
-// FILTRO LUGAR DE ARMADO
+// FILTRO SUCURSAL
 // ==========================================================
 
 document
@@ -3474,8 +4494,7 @@ searchOrder.addEventListener(
   "input",
   event => {
     searchTerm =
-      event.target
-        .value
+      event.target.value
         .trim();
 
     renderOrders();
@@ -3484,7 +4503,7 @@ searchOrder.addEventListener(
 
 
 // ==========================================================
-// CERRAR PEDIDO
+// PEDIDO
 // ==========================================================
 
 closeModalButton.addEventListener(
@@ -3512,56 +4531,6 @@ modal.addEventListener(
 );
 
 
-// ==========================================================
-// ESCAPE
-// ==========================================================
-
-document.addEventListener(
-  "keydown",
-  event => {
-    if (
-      event.key ===
-        "Escape" &&
-      incidentModal &&
-      incidentModal.classList.contains(
-        "is-open"
-      )
-    ) {
-      closeIncidentModal();
-
-      return;
-    }
-
-    if (
-      event.key ===
-        "Escape" &&
-      imageViewer &&
-      !imageViewer.classList.contains(
-        "hidden"
-      )
-    ) {
-      closeImageViewer();
-
-      return;
-    }
-
-    if (
-      event.key ===
-        "Escape" &&
-      !modal.classList.contains(
-        "hidden"
-      )
-    ) {
-      closeModal();
-    }
-  }
-);
-
-
-// ==========================================================
-// BOTONES GENERALES
-// ==========================================================
-
 nextStatusButton.addEventListener(
   "click",
   advanceSelectedOrder
@@ -3580,16 +4549,10 @@ saveNotesButton.addEventListener(
 );
 
 
-// ==========================================================
-// OCULTAR DEMO
-// ==========================================================
-
-if (
-  resetDemoButton
-) {
-  resetDemoButton.style.display =
-    "none";
-}
+assemblyLocationSelect.addEventListener(
+  "change",
+  changeAssemblyLocation
+);
 
 
 // ==========================================================
@@ -3624,7 +4587,7 @@ if (
 
 
 // ==========================================================
-// MODAL INCIDENCIA
+// INCIDENCIA
 // ==========================================================
 
 incidentReasonButtons.forEach(
@@ -3687,13 +4650,71 @@ incidentModalBackdrop.addEventListener(
 
 
 // ==========================================================
-// LUGAR DE ARMADO
+// ESCAPE
 // ==========================================================
 
-assemblyLocationSelect.addEventListener(
-  "change",
-  changeAssemblyLocation
+document.addEventListener(
+  "keydown",
+  event => {
+    if (
+      event.key !==
+      "Escape"
+    ) {
+      return;
+    }
+
+    if (
+      !userModal.classList.contains(
+        "hidden"
+      )
+    ) {
+      closeUserModal();
+
+      return;
+    }
+
+    if (
+      incidentModal.classList.contains(
+        "is-open"
+      )
+    ) {
+      closeIncidentModal();
+
+      return;
+    }
+
+    if (
+      imageViewer &&
+      !imageViewer.classList.contains(
+        "hidden"
+      )
+    ) {
+      closeImageViewer();
+
+      return;
+    }
+
+    if (
+      !modal.classList.contains(
+        "hidden"
+      )
+    ) {
+      closeModal();
+    }
+  }
 );
+
+
+// ==========================================================
+// OCULTAR DEMO
+// ==========================================================
+
+if (
+  resetDemoButton
+) {
+  resetDemoButton.style.display =
+    "none";
+}
 
 
 // ==========================================================
