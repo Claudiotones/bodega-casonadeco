@@ -3113,3 +3113,190 @@ img {
 .order-card.location-card-patronato::before {
   background: #8b5cf6;
 }
+
+/* =========================================================
+   ESTADO DE BODEGA POR PRODUCTO
+========================================================= */
+
+.warehouse-product-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin-top: 10px;
+
+  flex-wrap: wrap;
+}
+
+
+/* =========================================================
+   BOTÓN: BAJADO
+========================================================= */
+
+.warehouse-product-ready-button {
+  min-height: 32px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+
+  background: #f0fdf4;
+
+  color: #15803d;
+
+  padding: 6px 10px;
+
+  font-size: 10px;
+  font-weight: 900;
+
+  transition:
+    background 0.15s ease,
+    border 0.15s ease,
+    transform 0.15s ease;
+}
+
+.warehouse-product-ready-button:hover {
+  background: #dcfce7;
+  border-color: #86efac;
+
+  transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   BOTÓN: NO HAY AQUÍ
+========================================================= */
+
+.warehouse-product-missing-button {
+  min-height: 32px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+
+  background: #fff7ed;
+
+  color: #c2410c;
+
+  padding: 6px 10px;
+
+  font-size: 10px;
+  font-weight: 900;
+
+  transition:
+    background 0.15s ease,
+    border 0.15s ease,
+    transform 0.15s ease;
+}
+
+.warehouse-product-missing-button:hover {
+  background: #ffedd5;
+  border-color: #fdba74;
+
+  transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   PRODUCTO YA BAJADO
+========================================================= */
+
+.warehouse-product-status {
+  margin-top: 10px;
+
+  border-radius: 9px;
+
+  padding: 8px 10px;
+
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.warehouse-product-status.ready {
+  border: 1px solid #bbf7d0;
+
+  background: #f0fdf4;
+
+  color: #15803d;
+}
+
+
+/* =========================================================
+   PRODUCTO EN TRASLADO
+========================================================= */
+
+.warehouse-product-status.transfer {
+  border: 1px solid #fed7aa;
+
+  background: #fff7ed;
+
+  color: #c2410c;
+}
+
+.warehouse-product-status.transfer strong {
+  font-weight: 900;
+}
+
+
+/* =========================================================
+   BOTÓN DESHACER
+========================================================= */
+
+.warehouse-reset-button {
+  margin-top: 7px;
+
+  border: 0;
+
+  background: transparent;
+
+  color: var(--muted);
+
+  padding: 3px 0;
+
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.warehouse-reset-button:hover {
+  color: var(--text);
+}
+
+
+/* =========================================================
+   SEPARAR ACCIONES DE INCIDENCIA
+========================================================= */
+
+.incident-report-button {
+  margin-top: 10px;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 520px) {
+
+  .warehouse-product-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    width: 100%;
+  }
+
+  .warehouse-product-ready-button,
+  .warehouse-product-missing-button {
+    width: 100%;
+
+    min-height: 38px;
+  }
+
+}
