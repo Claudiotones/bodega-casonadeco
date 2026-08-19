@@ -1,13 +1,13 @@
 const SHOPIFY_API_VERSION = "2026-07";
 
+const SESSION_COOKIE_NAME = "casona_session";
+const SESSION_DURATION_SECONDS = 60 * 60 * 24 * 7;
+const PASSWORD_ITERATIONS = 210000;
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const pathname = url.pathname;
-
-    // ======================================================
-    // PREFLIGHT
-    // ======================================================
 
     if (request.method === "OPTIONS") {
       return new Response(null, {
@@ -22,340 +22,1883 @@ export default {
       });
     }
 
+    try {
 
-    // ======================================================
-    // API: PEDIDOS SHOPIFY
-    // ======================================================
+      // ======================================================
+      // CREAR PRIMER ADMINISTRADOR
+      // ======================================================
 
-    if (
-      pathname === "/api/orders"
-    ) {
       if (
-        request.method !== "GET"
+        pathname ===
+        "/api/setup-admin"
       ) {
+        if (
+          request.method !==
+          "POST"
+        ) {
+          return methodNotAllowed();
+        }
+
+        return await setupFirstAdmin(
+          request,
+          env
+        );
+      }
+
+
+      // ======================================================
+      // LOGIN
+      // ======================================================
+
+      if (
+        pathname ===
+        "/api/auth/login"
+      ) {
+        if (
+          request.method !==
+          "POST"
+        ) {
+          return methodNotAllowed();
+        }
+
+        return await loginUser(
+          request,
+          env
+        );
+      }
+
+
+      // ======================================================
+      // USUARIO ACTUAL
+      // ======================================================
+
+      if (
+        pathname ===
+        "/api/auth/me"
+      ) {
+        if (
+          request.method !==
+          "GET"
+        ) {
+          return methodNotAllowed();
+        }
+
+        return await getAuthMe(
+          request,
+          env
+        );
+      }
+
+
+      // ======================================================
+      // LOGOUT
+      // ======================================================
+
+      if (
+        pathname ===
+        "/api/auth/logout"
+      ) {
+        if (
+          request.method !==
+          "POST"
+        ) {
+          return methodNotAllowed();
+        }
+
+        return await logoutUser(
+          request,
+          env
+        );
+      }
+
+
+      // ======================================================
+      // USUARIOS
+      // GET /api/users
+      // POST /api/users
+      // ======================================================
+
+      if (
+        pathname ===
+        "/api/users"
+      ) {
+        if (
+          request.method ===
+          "GET"
+        ) {
+          return await listUsers(
+            request,
+            env
+          );
+        }
+
+        if (
+          request.method ===
+          "POST"
+        ) {
+          return await createUser(
+            request,
+            env
+          );
+        }
+
         return methodNotAllowed();
       }
 
-      try {
+
+      // ======================================================
+      // EDITAR USUARIO
+      // PUT /api/users/:id
+      // ======================================================
+
+      const userUpdateMatch =
+        pathname.match(
+          /^\/api\/users\/([^/]+)$/
+        );
+
+      if (
+        userUpdateMatch
+      ) {
+        if (
+          request.method !==
+          "PUT"
+        ) {
+          return methodNotAllowed();
+        }
+
+        return await updateUser(
+          request,
+          env,
+          decodeURIComponent(
+            userUpdateMatch[1]
+          )
+        );
+      }
+
+
+      // ======================================================
+      // PEDIDOS SHOPIFY
+      // ======================================================
+
+      if (
+        pathname ===
+        "/api/orders"
+      ) {
+        if (
+          request.method !==
+          "GET"
+        ) {
+          return methodNotAllowed();
+        }
+
         return await getShopifyOrders(
           env
         );
-      } catch (error) {
-        console.error(
-          "Shopify error:",
-          error
-        );
-
-        return jsonResponse(
-          {
-            success: false,
-            error:
-              "No se pudieron obtener los pedidos de Shopify.",
-            detail:
-              error.message
-          },
-          500
-        );
       }
-    }
 
 
-    // ======================================================
-    // API: TODOS LOS ESTADOS OPERATIVOS
-    // ======================================================
+      // ======================================================
+      // ESTADOS D1
+      // ======================================================
 
-    if (
-      pathname === "/api/states"
-    ) {
       if (
-        request.method !== "GET"
+        pathname ===
+        "/api/states"
       ) {
-        return methodNotAllowed();
-      }
+        if (
+          request.method !==
+          "GET"
+        ) {
+          return methodNotAllowed();
+        }
 
-      try {
         return await getAllStates(
           env
         );
-      } catch (error) {
-        console.error(
-          "D1 states error:",
-          error
-        );
-
-        return jsonResponse(
-          {
-            success: false,
-            error:
-              "No se pudieron obtener los estados.",
-            detail:
-              error.message
-          },
-          500
-        );
       }
-    }
 
 
-    // ======================================================
-    // API:
-    // PUT /api/orders/:orderNumber/state
-    // ======================================================
+      // ======================================================
+      // ESTADO PEDIDO
+      // ======================================================
 
-    const orderStateMatch =
-      pathname.match(
-        /^\/api\/orders\/([^/]+)\/state$/
-      );
+      const orderStateMatch =
+        pathname.match(
+          /^\/api\/orders\/([^/]+)\/state$/
+        );
 
-    if (orderStateMatch) {
       if (
-        request.method !== "PUT"
+        orderStateMatch
       ) {
-        return methodNotAllowed();
-      }
-
-      try {
-        const orderNumber =
-          decodeURIComponent(
-            orderStateMatch[1]
-          );
+        if (
+          request.method !==
+          "PUT"
+        ) {
+          return methodNotAllowed();
+        }
 
         return await updateOrderState(
           request,
           env,
-          orderNumber
-        );
-      } catch (error) {
-        console.error(
-          "D1 order state error:",
-          error
-        );
-
-        return jsonResponse(
-          {
-            success: false,
-            error:
-              "No se pudo actualizar el pedido.",
-            detail:
-              error.message
-          },
-          500
+          decodeURIComponent(
+            orderStateMatch[1]
+          )
         );
       }
-    }
 
 
-    // ======================================================
-    // API:
-    // PUT /api/orders/:orderNumber/products/:productId
-    // ======================================================
+      // ======================================================
+      // ESTADO PRODUCTO
+      // ======================================================
 
-    const productStateMatch =
-      pathname.match(
-        /^\/api\/orders\/([^/]+)\/products\/([^/]+)$/
-      );
+      const productStateMatch =
+        pathname.match(
+          /^\/api\/orders\/([^/]+)\/products\/([^/]+)$/
+        );
 
-    if (productStateMatch) {
       if (
-        request.method !== "PUT"
+        productStateMatch
       ) {
-        return methodNotAllowed();
-      }
-
-      try {
-        const orderNumber =
-          decodeURIComponent(
-            productStateMatch[1]
-          );
-
-        const productId =
-          decodeURIComponent(
-            productStateMatch[2]
-          );
+        if (
+          request.method !==
+          "PUT"
+        ) {
+          return methodNotAllowed();
+        }
 
         return await updateProductState(
           request,
           env,
-          orderNumber,
-          productId
-        );
-      } catch (error) {
-        console.error(
-          "D1 product state error:",
-          error
-        );
-
-        return jsonResponse(
-          {
-            success: false,
-            error:
-              "No se pudo actualizar el producto.",
-            detail:
-              error.message
-          },
-          500
-        );
-      }
-    }
-
-
-    // ======================================================
-    // API:
-    // POST /api/orders/:orderNumber/incidents
-    // ======================================================
-
-    const incidentCreateMatch =
-      pathname.match(
-        /^\/api\/orders\/([^/]+)\/incidents$/
-      );
-
-    if (incidentCreateMatch) {
-      if (
-        request.method !== "POST"
-      ) {
-        return methodNotAllowed();
-      }
-
-      try {
-        const orderNumber =
           decodeURIComponent(
-            incidentCreateMatch[1]
-          );
+            productStateMatch[1]
+          ),
+          decodeURIComponent(
+            productStateMatch[2]
+          )
+        );
+      }
+
+
+      // ======================================================
+      // CREAR INCIDENCIA
+      // ======================================================
+
+      const incidentCreateMatch =
+        pathname.match(
+          /^\/api\/orders\/([^/]+)\/incidents$/
+        );
+
+      if (
+        incidentCreateMatch
+      ) {
+        if (
+          request.method !==
+          "POST"
+        ) {
+          return methodNotAllowed();
+        }
 
         return await createIncident(
           request,
           env,
-          orderNumber
-        );
-      } catch (error) {
-        console.error(
-          "D1 incident create error:",
-          error
-        );
-
-        return jsonResponse(
-          {
-            success: false,
-            error:
-              "No se pudo crear la incidencia.",
-            detail:
-              error.message
-          },
-          500
-        );
-      }
-    }
-
-
-    // ======================================================
-    // API:
-    // PUT /api/incidents/:id/resolve
-    // ======================================================
-
-    const incidentResolveMatch =
-      pathname.match(
-        /^\/api\/incidents\/([^/]+)\/resolve$/
-      );
-
-    if (incidentResolveMatch) {
-      if (
-        request.method !== "PUT"
-      ) {
-        return methodNotAllowed();
-      }
-
-      try {
-        const incidentId =
           decodeURIComponent(
-            incidentResolveMatch[1]
-          );
+            incidentCreateMatch[1]
+          )
+        );
+      }
+
+
+      // ======================================================
+      // RESOLVER INCIDENCIA
+      // ======================================================
+
+      const incidentResolveMatch =
+        pathname.match(
+          /^\/api\/incidents\/([^/]+)\/resolve$/
+        );
+
+      if (
+        incidentResolveMatch
+      ) {
+        if (
+          request.method !==
+          "PUT"
+        ) {
+          return methodNotAllowed();
+        }
 
         return await resolveIncident(
           env,
-          incidentId
-        );
-      } catch (error) {
-        console.error(
-          "D1 incident resolve error:",
-          error
-        );
-
-        return jsonResponse(
-          {
-            success: false,
-            error:
-              "No se pudo resolver la incidencia.",
-            detail:
-              error.message
-          },
-          500
-        );
-      }
-    }
-
-
-    // ======================================================
-    // API:
-    // POST /api/orders/:orderNumber/history
-    // ======================================================
-
-    const historyMatch =
-      pathname.match(
-        /^\/api\/orders\/([^/]+)\/history$/
-      );
-
-    if (historyMatch) {
-      if (
-        request.method !== "POST"
-      ) {
-        return methodNotAllowed();
-      }
-
-      try {
-        const orderNumber =
           decodeURIComponent(
-            historyMatch[1]
-          );
+            incidentResolveMatch[1]
+          )
+        );
+      }
+
+
+      // ======================================================
+      // HISTORIAL
+      // ======================================================
+
+      const historyMatch =
+        pathname.match(
+          /^\/api\/orders\/([^/]+)\/history$/
+        );
+
+      if (
+        historyMatch
+      ) {
+        if (
+          request.method !==
+          "POST"
+        ) {
+          return methodNotAllowed();
+        }
 
         return await addOrderHistory(
           request,
           env,
-          orderNumber
-        );
-      } catch (error) {
-        console.error(
-          "D1 history error:",
-          error
-        );
-
-        return jsonResponse(
-          {
-            success: false,
-            error:
-              "No se pudo guardar el historial.",
-            detail:
-              error.message
-          },
-          500
+          decodeURIComponent(
+            historyMatch[1]
+          )
         );
       }
+
+
+      // ======================================================
+      // ARCHIVOS ESTÁTICOS
+      // ======================================================
+
+      return env.ASSETS.fetch(
+        request
+      );
+
+    } catch (error) {
+
+      console.error(
+        "Worker error:",
+        error
+      );
+
+      return jsonResponse(
+        {
+          success:
+            false,
+
+          error:
+            error.publicMessage ||
+            "Ocurrió un error en el servidor.",
+
+          detail:
+            error.message
+        },
+        error.status ||
+        500
+      );
     }
-
-
-    // ======================================================
-    // RESTO → ARCHIVOS ESTÁTICOS
-    // ======================================================
-
-    return env.ASSETS.fetch(
-      request
-    );
   }
 };
 
 
 // ==========================================================
-// SHOPIFY
-// OBTENER PEDIDOS
+// PRIMER ADMIN
+// ==========================================================
+
+async function setupFirstAdmin(
+  request,
+  env
+) {
+  validateD1(
+    env
+  );
+
+  const existing =
+    await env.DB
+      .prepare(
+        "SELECT COUNT(*) AS total FROM users"
+      )
+      .first();
+
+  if (
+    Number(
+      existing?.total ||
+      0
+    ) > 0
+  ) {
+    return jsonResponse(
+      {
+        success:
+          false,
+
+        error:
+          "La configuración inicial ya fue realizada."
+      },
+      409
+    );
+  }
+
+  const body =
+    await readJsonBody(
+      request
+    );
+
+  const username =
+    normalizeUsername(
+      body.username
+    );
+
+  const name =
+    String(
+      body.name ||
+      ""
+    ).trim();
+
+  const password =
+    String(
+      body.password ||
+      ""
+    );
+
+  validateUsername(
+    username
+  );
+
+  validateDisplayName(
+    name
+  );
+
+  validatePassword(
+    password
+  );
+
+  const {
+    hash,
+    salt
+  } =
+    await createPasswordHash(
+      password
+    );
+
+  const id =
+    crypto.randomUUID();
+
+  const createdAt =
+    new Date()
+      .toISOString();
+
+  await env.DB
+    .prepare(`
+      INSERT INTO users (
+        id,
+        username,
+        name,
+        password_hash,
+        password_salt,
+        role,
+        location,
+        active,
+        created_at
+      )
+      VALUES (?, ?, ?, ?, ?, 'admin', NULL, 1, ?)
+    `)
+    .bind(
+      id,
+      username,
+      name,
+      hash,
+      salt,
+      createdAt
+    )
+    .run();
+
+  const session =
+    await createSession(
+      env,
+      id
+    );
+
+  return jsonResponse(
+    {
+      success:
+        true,
+
+      user: {
+        id,
+        username,
+        name,
+
+        role:
+          "admin",
+
+        location:
+          null,
+
+        active:
+          true,
+
+        createdAt
+      }
+    },
+    201,
+    {
+      "Set-Cookie":
+        buildSessionCookie(
+          session.id,
+          SESSION_DURATION_SECONDS
+        )
+    }
+  );
+}
+
+
+// ==========================================================
+// LOGIN
+// ==========================================================
+
+async function loginUser(
+  request,
+  env
+) {
+  validateD1(
+    env
+  );
+
+  const body =
+    await readJsonBody(
+      request
+    );
+
+  const username =
+    normalizeUsername(
+      body.username
+    );
+
+  const password =
+    String(
+      body.password ||
+      ""
+    );
+
+  if (
+    !username ||
+    !password
+  ) {
+    return jsonResponse(
+      {
+        success:
+          false,
+
+        error:
+          "Usuario o contraseña incorrectos."
+      },
+      401
+    );
+  }
+
+  const user =
+    await env.DB
+      .prepare(`
+        SELECT
+          id,
+          username,
+          name,
+          password_hash,
+          password_salt,
+          role,
+          location,
+          active,
+          created_at
+        FROM users
+        WHERE username = ?
+      `)
+      .bind(
+        username
+      )
+      .first();
+
+  if (
+    !user ||
+    Number(
+      user.active
+    ) !== 1
+  ) {
+    return jsonResponse(
+      {
+        success:
+          false,
+
+        error:
+          "Usuario o contraseña incorrectos."
+      },
+      401
+    );
+  }
+
+  const valid =
+    await verifyPassword(
+      password,
+      user.password_salt,
+      user.password_hash
+    );
+
+  if (!valid) {
+    return jsonResponse(
+      {
+        success:
+          false,
+
+        error:
+          "Usuario o contraseña incorrectos."
+      },
+      401
+    );
+  }
+
+  const session =
+    await createSession(
+      env,
+      user.id
+    );
+
+  return jsonResponse(
+    {
+      success:
+        true,
+
+      user:
+        publicUserFromRow(
+          user
+        )
+    },
+    200,
+    {
+      "Set-Cookie":
+        buildSessionCookie(
+          session.id,
+          SESSION_DURATION_SECONDS
+        )
+    }
+  );
+}
+
+
+// ==========================================================
+// USUARIO ACTUAL
+// ==========================================================
+
+async function getAuthMe(
+  request,
+  env
+) {
+  validateD1(
+    env
+  );
+
+  const user =
+    await getCurrentUser(
+      request,
+      env
+    );
+
+  if (!user) {
+    return jsonResponse(
+      {
+        success:
+          false,
+
+        authenticated:
+          false,
+
+        error:
+          "No hay una sesión activa."
+      },
+      401
+    );
+  }
+
+  return jsonResponse({
+    success:
+      true,
+
+    authenticated:
+      true,
+
+    user
+  });
+}
+
+
+// ==========================================================
+// LOGOUT
+// ==========================================================
+
+async function logoutUser(
+  request,
+  env
+) {
+  validateD1(
+    env
+  );
+
+  const sessionId =
+    getCookieValue(
+      request,
+      SESSION_COOKIE_NAME
+    );
+
+  if (
+    sessionId
+  ) {
+    await env.DB
+      .prepare(
+        "DELETE FROM sessions WHERE id = ?"
+      )
+      .bind(
+        sessionId
+      )
+      .run();
+  }
+
+  return jsonResponse(
+    {
+      success:
+        true
+    },
+    200,
+    {
+      "Set-Cookie":
+        buildExpiredSessionCookie()
+    }
+  );
+}
+
+
+// ==========================================================
+// LISTAR USUARIOS
+// ==========================================================
+
+async function listUsers(
+  request,
+  env
+) {
+  validateD1(
+    env
+  );
+
+  await requireAdmin(
+    request,
+    env
+  );
+
+  const result =
+    await env.DB
+      .prepare(`
+        SELECT
+          id,
+          username,
+          name,
+          role,
+          location,
+          active,
+          created_at
+        FROM users
+        ORDER BY name COLLATE NOCASE ASC
+      `)
+      .all();
+
+  return jsonResponse({
+    success:
+      true,
+
+    users:
+      (
+        result.results ||
+        []
+      ).map(
+        publicUserFromRow
+      )
+  });
+}
+
+
+// ==========================================================
+// CREAR USUARIO
+// ==========================================================
+
+async function createUser(
+  request,
+  env
+) {
+  validateD1(
+    env
+  );
+
+  await requireAdmin(
+    request,
+    env
+  );
+
+  const body =
+    await readJsonBody(
+      request
+    );
+
+  const username =
+    normalizeUsername(
+      body.username
+    );
+
+  const name =
+    String(
+      body.name ||
+      ""
+    ).trim();
+
+  const password =
+    String(
+      body.password ||
+      ""
+    );
+
+  const role =
+    String(
+      body.role ||
+      "bodega"
+    ).trim();
+
+  const location =
+    normalizeUserLocation(
+      body.location
+    );
+
+  validateUsername(
+    username
+  );
+
+  validateDisplayName(
+    name
+  );
+
+  validatePassword(
+    password
+  );
+
+  validateUserRole(
+    role
+  );
+
+  validateUserLocation(
+    location
+  );
+
+  const duplicate =
+    await env.DB
+      .prepare(
+        "SELECT id FROM users WHERE username = ?"
+      )
+      .bind(
+        username
+      )
+      .first();
+
+  if (
+    duplicate
+  ) {
+    return jsonResponse(
+      {
+        success:
+          false,
+
+        error:
+          "Ese nombre de usuario ya existe."
+      },
+      409
+    );
+  }
+
+  const {
+    hash,
+    salt
+  } =
+    await createPasswordHash(
+      password
+    );
+
+  const id =
+    crypto.randomUUID();
+
+  const createdAt =
+    new Date()
+      .toISOString();
+
+  await env.DB
+    .prepare(`
+      INSERT INTO users (
+        id,
+        username,
+        name,
+        password_hash,
+        password_salt,
+        role,
+        location,
+        active,
+        created_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)
+    `)
+    .bind(
+      id,
+      username,
+      name,
+      hash,
+      salt,
+      role,
+      location,
+      createdAt
+    )
+    .run();
+
+  return jsonResponse(
+    {
+      success:
+        true,
+
+      user: {
+        id,
+        username,
+        name,
+        role,
+        location,
+
+        active:
+          true,
+
+        createdAt
+      }
+    },
+    201
+  );
+}
+
+
+// ==========================================================
+// EDITAR USUARIO
+// ==========================================================
+
+async function updateUser(
+  request,
+  env,
+  userId
+) {
+  validateD1(
+    env
+  );
+
+  const admin =
+    await requireAdmin(
+      request,
+      env
+    );
+
+  const existing =
+    await env.DB
+      .prepare(`
+        SELECT
+          id,
+          username,
+          name,
+          role,
+          location,
+          active,
+          created_at
+        FROM users
+        WHERE id = ?
+      `)
+      .bind(
+        userId
+      )
+      .first();
+
+  if (
+    !existing
+  ) {
+    return jsonResponse(
+      {
+        success:
+          false,
+
+        error:
+          "Usuario no encontrado."
+      },
+      404
+    );
+  }
+
+  const body =
+    await readJsonBody(
+      request
+    );
+
+  const username =
+    body.username ===
+    undefined
+      ? existing.username
+      : normalizeUsername(
+          body.username
+        );
+
+  const name =
+    body.name ===
+    undefined
+      ? existing.name
+      : String(
+          body.name ||
+          ""
+        ).trim();
+
+  const role =
+    body.role ===
+    undefined
+      ? existing.role
+      : String(
+          body.role ||
+          ""
+        ).trim();
+
+  const location =
+    body.location ===
+    undefined
+      ? existing.location
+      : normalizeUserLocation(
+          body.location
+        );
+
+  const active =
+    body.active ===
+    undefined
+      ? Number(
+          existing.active
+        ) === 1
+      : Boolean(
+          body.active
+        );
+
+  validateUsername(
+    username
+  );
+
+  validateDisplayName(
+    name
+  );
+
+  validateUserRole(
+    role
+  );
+
+  validateUserLocation(
+    location
+  );
+
+  if (
+    admin.id ===
+      userId &&
+    !active
+  ) {
+    return jsonResponse(
+      {
+        success:
+          false,
+
+        error:
+          "No puedes desactivar tu propia cuenta."
+      },
+      400
+    );
+  }
+
+  if (
+    admin.id ===
+      userId &&
+    role !==
+      "admin"
+  ) {
+    return jsonResponse(
+      {
+        success:
+          false,
+
+        error:
+          "No puedes quitarte a ti mismo el rol de administrador."
+      },
+      400
+    );
+  }
+
+  const duplicate =
+    await env.DB
+      .prepare(`
+        SELECT id
+        FROM users
+        WHERE username = ?
+          AND id <> ?
+      `)
+      .bind(
+        username,
+        userId
+      )
+      .first();
+
+  if (
+    duplicate
+  ) {
+    return jsonResponse(
+      {
+        success:
+          false,
+
+        error:
+          "Ese nombre de usuario ya existe."
+      },
+      409
+    );
+  }
+
+  if (
+    body.password !==
+    undefined
+  ) {
+    const password =
+      String(
+        body.password ||
+        ""
+      );
+
+    validatePassword(
+      password
+    );
+
+    const {
+      hash,
+      salt
+    } =
+      await createPasswordHash(
+        password
+      );
+
+    await env.DB
+      .prepare(`
+        UPDATE users
+        SET
+          username = ?,
+          name = ?,
+          role = ?,
+          location = ?,
+          active = ?,
+          password_hash = ?,
+          password_salt = ?
+        WHERE id = ?
+      `)
+      .bind(
+        username,
+        name,
+        role,
+        location,
+        active
+          ? 1
+          : 0,
+        hash,
+        salt,
+        userId
+      )
+      .run();
+
+  } else {
+
+    await env.DB
+      .prepare(`
+        UPDATE users
+        SET
+          username = ?,
+          name = ?,
+          role = ?,
+          location = ?,
+          active = ?
+        WHERE id = ?
+      `)
+      .bind(
+        username,
+        name,
+        role,
+        location,
+        active
+          ? 1
+          : 0,
+        userId
+      )
+      .run();
+  }
+
+  if (
+    !active
+  ) {
+    await env.DB
+      .prepare(
+        "DELETE FROM sessions WHERE user_id = ?"
+      )
+      .bind(
+        userId
+      )
+      .run();
+  }
+
+  return jsonResponse({
+    success:
+      true,
+
+    user: {
+      id:
+        userId,
+
+      username,
+      name,
+      role,
+      location,
+      active,
+
+      createdAt:
+        existing.created_at ||
+        null
+    }
+  });
+}
+
+
+// ==========================================================
+// USUARIO DESDE SESIÓN
+// ==========================================================
+
+async function getCurrentUser(
+  request,
+  env
+) {
+  const sessionId =
+    getCookieValue(
+      request,
+      SESSION_COOKIE_NAME
+    );
+
+  if (
+    !sessionId
+  ) {
+    return null;
+  }
+
+  const now =
+    new Date()
+      .toISOString();
+
+  const row =
+    await env.DB
+      .prepare(`
+        SELECT
+          users.id,
+          users.username,
+          users.name,
+          users.role,
+          users.location,
+          users.active,
+          users.created_at,
+          sessions.expires_at
+        FROM sessions
+
+        INNER JOIN users
+          ON users.id =
+             sessions.user_id
+
+        WHERE sessions.id = ?
+          AND sessions.expires_at > ?
+          AND users.active = 1
+      `)
+      .bind(
+        sessionId,
+        now
+      )
+      .first();
+
+  if (
+    !row
+  ) {
+    await env.DB
+      .prepare(
+        "DELETE FROM sessions WHERE id = ?"
+      )
+      .bind(
+        sessionId
+      )
+      .run();
+
+    return null;
+  }
+
+  return publicUserFromRow(
+    row
+  );
+}
+
+
+// ==========================================================
+// EXIGIR ADMIN
+// ==========================================================
+
+async function requireAdmin(
+  request,
+  env
+) {
+  const user =
+    await getCurrentUser(
+      request,
+      env
+    );
+
+  if (
+    !user
+  ) {
+    const error =
+      new Error(
+        "Debes iniciar sesión."
+      );
+
+    error.status =
+      401;
+
+    error.publicMessage =
+      error.message;
+
+    throw error;
+  }
+
+  if (
+    user.role !==
+    "admin"
+  ) {
+    const error =
+      new Error(
+        "Se requiere rol de administrador."
+      );
+
+    error.status =
+      403;
+
+    error.publicMessage =
+      error.message;
+
+    throw error;
+  }
+
+  return user;
+}
+
+
+// ==========================================================
+// SESIONES
+// ==========================================================
+
+async function createSession(
+  env,
+  userId
+) {
+  const id =
+    crypto.randomUUID();
+
+  const createdAt =
+    new Date();
+
+  const expiresAt =
+    new Date(
+      createdAt.getTime() +
+      SESSION_DURATION_SECONDS *
+      1000
+    );
+
+  await env.DB
+    .prepare(
+      "DELETE FROM sessions WHERE expires_at <= ?"
+    )
+    .bind(
+      createdAt
+        .toISOString()
+    )
+    .run();
+
+  await env.DB
+    .prepare(`
+      INSERT INTO sessions (
+        id,
+        user_id,
+        expires_at,
+        created_at
+      )
+      VALUES (?, ?, ?, ?)
+    `)
+    .bind(
+      id,
+      userId,
+      expiresAt
+        .toISOString(),
+      createdAt
+        .toISOString()
+    )
+    .run();
+
+  return {
+    id,
+
+    expiresAt:
+      expiresAt
+        .toISOString()
+  };
+}
+
+
+// ==========================================================
+// COOKIE SESIÓN
+// ==========================================================
+
+function buildSessionCookie(
+  sessionId,
+  maxAge
+) {
+  return [
+    `${SESSION_COOKIE_NAME}=${encodeURIComponent(
+      sessionId
+    )}`,
+    "Path=/",
+    "HttpOnly",
+    "Secure",
+    "SameSite=Lax",
+    `Max-Age=${maxAge}`
+  ].join(
+    "; "
+  );
+}
+
+
+function buildExpiredSessionCookie() {
+  return [
+    `${SESSION_COOKIE_NAME}=`,
+    "Path=/",
+    "HttpOnly",
+    "Secure",
+    "SameSite=Lax",
+    "Max-Age=0"
+  ].join(
+    "; "
+  );
+}
+
+
+function getCookieValue(
+  request,
+  name
+) {
+  const cookieHeader =
+    request.headers.get(
+      "Cookie"
+    ) ||
+    "";
+
+  for (
+    const part of
+    cookieHeader.split(
+      ";"
+    )
+  ) {
+    const trimmed =
+      part.trim();
+
+    const index =
+      trimmed.indexOf(
+        "="
+      );
+
+    if (
+      index < 0
+    ) {
+      continue;
+    }
+
+    const key =
+      trimmed.slice(
+        0,
+        index
+      );
+
+    if (
+      key !==
+      name
+    ) {
+      continue;
+    }
+
+    return decodeURIComponent(
+      trimmed.slice(
+        index + 1
+      )
+    );
+  }
+
+  return null;
+}
+
+
+// ==========================================================
+// HASH CONTRASEÑA
+// ==========================================================
+
+async function createPasswordHash(
+  password
+) {
+  const saltBytes =
+    crypto.getRandomValues(
+      new Uint8Array(
+        16
+      )
+    );
+
+  const hashBytes =
+    await derivePasswordBytes(
+      password,
+      saltBytes
+    );
+
+  return {
+    salt:
+      bytesToBase64(
+        saltBytes
+      ),
+
+    hash:
+      bytesToBase64(
+        hashBytes
+      )
+  };
+}
+
+
+async function verifyPassword(
+  password,
+  saltBase64,
+  expectedHashBase64
+) {
+  const saltBytes =
+    base64ToBytes(
+      saltBase64
+    );
+
+  const actualHash =
+    await derivePasswordBytes(
+      password,
+      saltBytes
+    );
+
+  const expectedHash =
+    base64ToBytes(
+      expectedHashBase64
+    );
+
+  return constantTimeEqual(
+    actualHash,
+    expectedHash
+  );
+}
+
+
+async function derivePasswordBytes(
+  password,
+  saltBytes
+) {
+  const encoder =
+    new TextEncoder();
+
+  const keyMaterial =
+    await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(
+        password
+      ),
+      "PBKDF2",
+      false,
+      [
+        "deriveBits"
+      ]
+    );
+
+  const bits =
+    await crypto.subtle.deriveBits(
+      {
+        name:
+          "PBKDF2",
+
+        salt:
+          saltBytes,
+
+        iterations:
+          PASSWORD_ITERATIONS,
+
+        hash:
+          "SHA-256"
+      },
+      keyMaterial,
+      256
+    );
+
+  return new Uint8Array(
+    bits
+  );
+}
+
+
+function constantTimeEqual(
+  left,
+  right
+) {
+  if (
+    left.length !==
+    right.length
+  ) {
+    return false;
+  }
+
+  let difference =
+    0;
+
+  for (
+    let i = 0;
+    i < left.length;
+    i++
+  ) {
+    difference |=
+      left[i] ^
+      right[i];
+  }
+
+  return difference ===
+    0;
+}
+
+
+function bytesToBase64(
+  bytes
+) {
+  let binary =
+    "";
+
+  for (
+    const byte of
+    bytes
+  ) {
+    binary +=
+      String.fromCharCode(
+        byte
+      );
+  }
+
+  return btoa(
+    binary
+  );
+}
+
+
+function base64ToBytes(
+  value
+) {
+  const binary =
+    atob(
+      value
+    );
+
+  const bytes =
+    new Uint8Array(
+      binary.length
+    );
+
+  for (
+    let i = 0;
+    i < binary.length;
+    i++
+  ) {
+    bytes[i] =
+      binary.charCodeAt(
+        i
+      );
+  }
+
+  return bytes;
+}
+
+
+// ==========================================================
+// VALIDACIONES USUARIOS
+// ==========================================================
+
+function normalizeUsername(
+  value
+) {
+  return String(
+    value ||
+    ""
+  )
+    .trim()
+    .toLowerCase();
+}
+
+
+function normalizeUserLocation(
+  value
+) {
+  if (
+    value ===
+      null ||
+    value ===
+      undefined ||
+    value ===
+      "" ||
+    value ===
+      "ninguna"
+  ) {
+    return null;
+  }
+
+  return String(
+    value
+  ).trim();
+}
+
+
+function validateUsername(
+  username
+) {
+  if (
+    !/^[a-z0-9._-]{3,30}$/.test(
+      username
+    )
+  ) {
+    throw new Error(
+      "El usuario debe tener entre 3 y 30 caracteres y usar solo letras minúsculas, números, punto, guion o guion bajo."
+    );
+  }
+}
+
+
+function validateDisplayName(
+  name
+) {
+  if (
+    name.length <
+      2 ||
+    name.length >
+      80
+  ) {
+    throw new Error(
+      "El nombre debe tener entre 2 y 80 caracteres."
+    );
+  }
+}
+
+
+function validatePassword(
+  password
+) {
+  if (
+    password.length <
+      8 ||
+    password.length >
+      128
+  ) {
+    throw new Error(
+      "La contraseña debe tener entre 8 y 128 caracteres."
+    );
+  }
+}
+
+
+function validateUserRole(
+  role
+) {
+  const allowed = [
+    "admin",
+    "bodega",
+    "armado",
+    "despacho"
+  ];
+
+  if (
+    !allowed.includes(
+      role
+    )
+  ) {
+    throw new Error(
+      `Rol de usuario inválido: ${role}`
+    );
+  }
+}
+
+
+function validateUserLocation(
+  location
+) {
+  const allowed = [
+    null,
+    "las-condes",
+    "patronato"
+  ];
+
+  if (
+    !allowed.includes(
+      location
+    )
+  ) {
+    throw new Error(
+      `Sucursal de usuario inválida: ${location}`
+    );
+  }
+}
+
+
+function publicUserFromRow(
+  row
+) {
+  return {
+    id:
+      row.id,
+
+    username:
+      row.username,
+
+    name:
+      row.name,
+
+    role:
+      row.role,
+
+    location:
+      row.location ||
+      null,
+
+    active:
+      Number(
+        row.active
+      ) === 1,
+
+    createdAt:
+      row.created_at ||
+      null
+  };
+}
+
+
+// ==========================================================
+// SHOPIFY PEDIDOS
 // ==========================================================
 
 async function getShopifyOrders(
@@ -471,20 +2014,26 @@ async function getShopifyOrders(
   const data =
     await response.json();
 
-  if (!response.ok) {
+  if (
+    !response.ok
+  ) {
     throw new Error(
       `Shopify respondió HTTP ${response.status}`
     );
   }
 
-  if (data.errors) {
+  if (
+    data.errors
+  ) {
     throw new Error(
       data.errors
         .map(
           error =>
             error.message
         )
-        .join(" | ")
+        .join(
+          " | "
+        )
     );
   }
 
@@ -509,27 +2058,29 @@ async function getShopifyOrders(
         shipping: {
           city:
             order.shippingAddress
-              ?.city || "",
+              ?.city ||
+            "",
 
           province:
             order.shippingAddress
-              ?.province || "",
+              ?.province ||
+            "",
 
           provinceCode:
             order.shippingAddress
-              ?.provinceCode || "",
+              ?.provinceCode ||
+            "",
 
           country:
             order.shippingAddress
-              ?.country || "",
+              ?.country ||
+            "",
 
           methods:
-            order.shippingLines
-              .nodes
-              .map(
-                shippingLine =>
-                  shippingLine.title
-              )
+            order.shippingLines.nodes.map(
+              line =>
+                line.title
+            )
         },
 
         products:
@@ -545,7 +2096,8 @@ async function getShopifyOrders(
                 item.quantity,
 
               sku:
-                item.sku || "",
+                item.sku ||
+                "",
 
               code:
                 getProductCode(
@@ -555,7 +2107,7 @@ async function getShopifyOrders(
               variant:
                 item.variant?.title &&
                 item.variant.title !==
-                  "Default Title"
+                "Default Title"
                   ? item.variant.title
                   : "",
 
@@ -581,8 +2133,7 @@ async function getShopifyOrders(
 
 
 // ==========================================================
-// D1
-// OBTENER TODO EL ESTADO OPERATIVO
+// D1 ESTADOS
 // ==========================================================
 
 async function getAllStates(
@@ -656,28 +2207,13 @@ async function getAllStates(
         .all()
     ]);
 
-  const orderStates =
-    orderStatesResult.results ||
-    [];
-
-  const productStates =
-    productStatesResult.results ||
-    [];
-
-  const incidents =
-    incidentsResult.results ||
-    [];
-
-  const history =
-    historyResult.results ||
-    [];
-
   const stateMap =
     {};
 
   for (
     const row of
-    orderStates
+    orderStatesResult.results ||
+    []
   ) {
     stateMap[
       row.order_number
@@ -698,7 +2234,8 @@ async function getAllStates(
         row.assembly_location,
 
       notes:
-        row.notes || "",
+        row.notes ||
+        "",
 
       updatedAt:
         row.updated_at,
@@ -716,7 +2253,8 @@ async function getAllStates(
 
   for (
     const row of
-    productStates
+    productStatesResult.results ||
+    []
   ) {
     ensureOrderStateContainer(
       stateMap,
@@ -742,7 +2280,8 @@ async function getAllStates(
 
   for (
     const row of
-    incidents
+    incidentsResult.results ||
+    []
   ) {
     ensureOrderStateContainer(
       stateMap,
@@ -762,7 +2301,8 @@ async function getAllStates(
         row.product_name,
 
       productCode:
-        row.product_code || "",
+        row.product_code ||
+        "",
 
       reason:
         row.reason,
@@ -783,7 +2323,8 @@ async function getAllStates(
 
   for (
     const row of
-    history
+    historyResult.results ||
+    []
   ) {
     ensureOrderStateContainer(
       stateMap,
@@ -815,8 +2356,7 @@ async function getAllStates(
 
 
 // ==========================================================
-// D1
-// ACTUALIZAR ESTADO GENERAL DEL PEDIDO
+// ESTADO GENERAL PEDIDO
 // ==========================================================
 
 async function updateOrderState(
@@ -853,8 +2393,7 @@ async function updateOrderState(
 
   const shopifyOrderId =
     body.shopifyOrderId ??
-    existing
-      ?.shopify_order_id ??
+    existing?.shopify_order_id ??
     null;
 
   const status =
@@ -864,14 +2403,12 @@ async function updateOrderState(
 
   const previousStatus =
     body.previousStatus ??
-    existing
-      ?.previous_status ??
+    existing?.previous_status ??
     null;
 
   const assemblyLocation =
     body.assemblyLocation ??
-    existing
-      ?.assembly_location ??
+    existing?.assembly_location ??
     "sin-asignar";
 
   const notes =
@@ -954,8 +2491,7 @@ async function updateOrderState(
 
 
 // ==========================================================
-// D1
-// ACTUALIZAR ESTADO DE UN PRODUCTO
+// ESTADO PRODUCTO
 // ==========================================================
 
 async function updateProductState(
@@ -992,15 +2528,15 @@ async function updateProductState(
 
   const warehouseStatus =
     body.warehouseStatus ??
-    existing
-      ?.warehouse_status ??
+    existing?.warehouse_status ??
     "pendiente";
 
   const transferFrom =
-    body.transferFrom ??
-    existing
-      ?.transfer_from ??
-    null;
+    body.transferFrom ===
+    undefined
+      ? existing?.transfer_from ??
+        null
+      : body.transferFrom;
 
   validateWarehouseStatus(
     warehouseStatus
@@ -1070,7 +2606,6 @@ async function updateProductState(
 
 
 // ==========================================================
-// D1
 // CREAR INCIDENCIA
 // ==========================================================
 
@@ -1118,13 +2653,17 @@ async function createIncident(
       10
     );
 
-  if (!productId) {
+  if (
+    !productId
+  ) {
     throw new Error(
       "Falta productId."
     );
   }
 
-  if (!reason) {
+  if (
+    !reason
+  ) {
     throw new Error(
       "Falta el motivo de la incidencia."
     );
@@ -1223,7 +2762,6 @@ async function createIncident(
 
 
 // ==========================================================
-// D1
 // RESOLVER INCIDENCIA
 // ==========================================================
 
@@ -1249,7 +2787,9 @@ async function resolveIncident(
       )
       .first();
 
-  if (!incident) {
+  if (
+    !incident
+  ) {
     return jsonResponse(
       {
         success:
@@ -1269,6 +2809,14 @@ async function resolveIncident(
     return jsonResponse({
       success:
         true,
+
+      incident: {
+        id:
+          incidentId,
+
+        status:
+          "resuelto"
+      },
 
       message:
         "La incidencia ya estaba resuelta."
@@ -1311,8 +2859,7 @@ async function resolveIncident(
 
 
 // ==========================================================
-// D1
-// AGREGAR HISTORIAL
+// HISTORIAL
 // ==========================================================
 
 async function addOrderHistory(
@@ -1335,7 +2882,9 @@ async function addOrderHistory(
       ""
     ).trim();
 
-  if (!text) {
+  if (
+    !text
+  ) {
     throw new Error(
       "El texto del historial está vacío."
     );
@@ -1386,7 +2935,7 @@ async function addOrderHistory(
 
 
 // ==========================================================
-// CREAR CONTENEDOR VACÍO PARA /api/states
+// CONTENEDOR ESTADO
 // ==========================================================
 
 function ensureOrderStateContainer(
@@ -1437,8 +2986,7 @@ function ensureOrderStateContainer(
 
 
 // ==========================================================
-// SHOPIFY
-// OBTENER CÓDIGO DEL PRODUCTO
+// CÓDIGO PRODUCTO
 // ==========================================================
 
 function getProductCode(
@@ -1448,14 +2996,11 @@ function getProductCode(
     item.variant
       ?.product;
 
-  if (!product) {
+  if (
+    !product
+  ) {
     return "";
   }
-
-
-  // ------------------------------------------------------
-  // 1. METACAMPO custom.codigo
-  // ------------------------------------------------------
 
   const metafieldCode =
     product.codigo
@@ -1468,26 +3013,14 @@ function getProductCode(
     return metafieldCode;
   }
 
-
-  // ------------------------------------------------------
-  // 2. DESCRIPCIÓN
-  // ------------------------------------------------------
-
-  const description =
+  return extractCodeFromDescription(
     stripHtml(
       product.descriptionHtml ||
       ""
-    );
-
-  return extractCodeFromDescription(
-    description
+    )
   );
 }
 
-
-// ==========================================================
-// EXTRAER CÓDIGO DE DESCRIPCIÓN
-// ==========================================================
 
 function extractCodeFromDescription(
   description
@@ -1514,8 +3047,7 @@ function extractCodeFromDescription(
       );
 
     if (
-      match &&
-      match[1]
+      match?.[1]
     ) {
       return match[
         1
@@ -1527,14 +3059,12 @@ function extractCodeFromDescription(
 }
 
 
-// ==========================================================
-// QUITAR HTML DE DESCRIPCIÓN
-// ==========================================================
-
 function stripHtml(
   html
 ) {
-  if (!html) {
+  if (
+    !html
+  ) {
     return "";
   }
 
@@ -1591,8 +3121,7 @@ function stripHtml(
 
 
 // ==========================================================
-// SHOPIFY
-// ACCESS TOKEN
+// SHOPIFY TOKEN
 // ==========================================================
 
 async function getShopifyAccessToken(
@@ -1644,8 +3173,7 @@ async function getShopifyAccessToken(
 
 
 // ==========================================================
-// SHOPIFY
-// IMAGEN DEL PRODUCTO
+// IMAGEN PRODUCTO
 // ==========================================================
 
 function getLineItemImage(
@@ -1684,15 +3212,12 @@ function getLineItemImage(
 }
 
 
-// ==========================================================
-// SHOPIFY
-// QUITAR _160x160, ETC.
-// ==========================================================
-
 function getFullSizeShopifyImage(
   url
 ) {
-  if (!url) {
+  if (
+    !url
+  ) {
     return "";
   }
 
@@ -1704,7 +3229,7 @@ function getFullSizeShopifyImage(
 
 
 // ==========================================================
-// VALIDACIÓN SHOPIFY
+// VALIDACIONES
 // ==========================================================
 
 function validateShopifyEnvironment(
@@ -1733,10 +3258,6 @@ function validateShopifyEnvironment(
 }
 
 
-// ==========================================================
-// VALIDACIÓN D1
-// ==========================================================
-
 function validateD1(
   env
 ) {
@@ -1749,10 +3270,6 @@ function validateD1(
   }
 }
 
-
-// ==========================================================
-// VALIDAR ESTADO GENERAL
-// ==========================================================
 
 function validateOrderStatus(
   status
@@ -1777,10 +3294,6 @@ function validateOrderStatus(
 }
 
 
-// ==========================================================
-// VALIDAR SUCURSAL
-// ==========================================================
-
 function validateAssemblyLocation(
   location
 ) {
@@ -1801,10 +3314,6 @@ function validateAssemblyLocation(
   }
 }
 
-
-// ==========================================================
-// VALIDAR ESTADO PRODUCTO
-// ==========================================================
 
 function validateWarehouseStatus(
   status
@@ -1827,10 +3336,6 @@ function validateWarehouseStatus(
 }
 
 
-// ==========================================================
-// VALIDAR ORIGEN DE TRASLADO
-// ==========================================================
-
 function validateTransferLocation(
   location
 ) {
@@ -1852,7 +3357,7 @@ function validateTransferLocation(
 
 
 // ==========================================================
-// LEER JSON
+// JSON REQUEST
 // ==========================================================
 
 async function readJsonBody(
@@ -1861,7 +3366,8 @@ async function readJsonBody(
   const contentType =
     request.headers.get(
       "content-type"
-    ) || "";
+    ) ||
+    "";
 
   if (
     !contentType.includes(
@@ -1875,6 +3381,7 @@ async function readJsonBody(
 
   try {
     return await request.json();
+
   } catch {
     throw new Error(
       "JSON inválido."
@@ -1907,7 +3414,8 @@ function methodNotAllowed() {
 
 function jsonResponse(
   data,
-  status = 200
+  status = 200,
+  extraHeaders = {}
 ) {
   return new Response(
     JSON.stringify(
@@ -1926,7 +3434,9 @@ function jsonResponse(
           "no-store",
 
         "Access-Control-Allow-Origin":
-          "*"
+          "*",
+
+        ...extraHeaders
       }
     }
   );
