@@ -8,6 +8,7 @@ let activeStatus = "todos";
 let activeLocation = "todos";
 let searchTerm = "";
 
+
 // ==========================================================
 // INCIDENCIA ACTUAL
 // ==========================================================
@@ -136,54 +137,34 @@ const incidentModalClose =
   document.getElementById("incidentModalClose");
 
 const incidentModalBackdrop =
-  document.querySelector(
-    ".incident-modal-backdrop"
-  );
+  document.querySelector(".incident-modal-backdrop");
 
 const incidentProductName =
-  document.getElementById(
-    "incidentProductName"
-  );
+  document.getElementById("incidentProductName");
 
 const incidentQuantitySection =
-  document.getElementById(
-    "incidentQuantitySection"
-  );
+  document.getElementById("incidentQuantitySection");
 
 const incidentQuantityValue =
-  document.getElementById(
-    "incidentQuantity"
-  );
+  document.getElementById("incidentQuantity");
 
 const incidentQuantityAvailable =
-  document.getElementById(
-    "incidentQuantityAvailable"
-  );
+  document.getElementById("incidentQuantityAvailable");
 
 const incidentQuantityMinus =
-  document.getElementById(
-    "incidentQuantityMinus"
-  );
+  document.getElementById("incidentQuantityMinus");
 
 const incidentQuantityPlus =
-  document.getElementById(
-    "incidentQuantityPlus"
-  );
+  document.getElementById("incidentQuantityPlus");
 
 const incidentConfirmButton =
-  document.getElementById(
-    "incidentConfirmButton"
-  );
+  document.getElementById("incidentConfirmButton");
 
 const incidentCancelButton =
-  document.getElementById(
-    "incidentCancelButton"
-  );
+  document.getElementById("incidentCancelButton");
 
 const incidentReasonButtons =
-  document.querySelectorAll(
-    ".incident-reason-button"
-  );
+  document.querySelectorAll(".incident-reason-button");
 
 
 // ==========================================================
@@ -231,6 +212,7 @@ async function init() {
     applySavedStates();
 
     render();
+
   } catch (error) {
     console.error(error);
 
@@ -262,8 +244,10 @@ async function init() {
 // ==========================================================
 
 function shopifyOrderToLocalOrder(order) {
+
   const shippingMethod =
-    order.shipping?.methods?.[0] || "";
+    order.shipping?.methods?.[0] ||
+    "";
 
   const zone =
     classifyZone(
@@ -283,16 +267,16 @@ function shopifyOrderToLocalOrder(order) {
         order.createdAt
       ),
 
-status:
-  "pendiente",
+    status:
+      "pendiente",
 
-previousStatus:
-  null,
+    previousStatus:
+      null,
 
-assemblyLocation:
-  "sin-asignar",
+    assemblyLocation:
+      "sin-asignar",
 
-zone,
+    zone,
 
     shipping:
       shippingMethod ||
@@ -300,16 +284,20 @@ zone,
 
     shippingDetails: {
       city:
-        order.shipping?.city || "",
+        order.shipping?.city ||
+        "",
 
       province:
-        order.shipping?.province || "",
+        order.shipping?.province ||
+        "",
 
       provinceCode:
-        order.shipping?.provinceCode || "",
+        order.shipping?.provinceCode ||
+        "",
 
       country:
-        order.shipping?.country || ""
+        order.shipping?.country ||
+        ""
     },
 
     notes:
@@ -331,16 +319,26 @@ zone,
             product.quantity,
 
           code:
-            product.code || "",
+            product.code ||
+            "",
 
           sku:
-            product.sku || "",
+            product.sku ||
+            "",
 
           variant:
-            product.variant || "",
+            product.variant ||
+            "",
 
           image:
-            product.image || ""
+            product.image ||
+            "",
+
+          warehouseStatus:
+            "pendiente",
+
+          transferFrom:
+            null
         })
       ),
 
@@ -367,9 +365,11 @@ function classifyZone(
   shippingMethod,
   shipping
 ) {
+
   const method =
     String(
-      shippingMethod || ""
+      shippingMethod ||
+      ""
     ).toLowerCase();
 
   if (
@@ -389,6 +389,7 @@ function classifyZone(
 // ==========================================================
 
 function getSavedStates() {
+
   const saved =
     localStorage.getItem(
       STORAGE_KEY
@@ -407,11 +408,13 @@ function getSavedStates() {
 
 
 function applySavedStates() {
+
   const savedStates =
     getSavedStates();
 
   orders =
     orders.map(order => {
+
       const saved =
         savedStates[
           order.number
@@ -421,20 +424,27 @@ function applySavedStates() {
         return order;
       }
 
+      const savedProducts =
+        Array.isArray(
+          saved.products
+        )
+          ? saved.products
+          : [];
+
       return {
         ...order,
 
         status:
-  saved.status ||
-  order.status,
+          saved.status ||
+          order.status,
 
-previousStatus:
-  saved.previousStatus ||
-  null,
+        previousStatus:
+          saved.previousStatus ||
+          null,
 
-assemblyLocation:
-  saved.assemblyLocation ||
-  "sin-asignar",
+        assemblyLocation:
+          saved.assemblyLocation ||
+          "sin-asignar",
 
         notes:
           typeof saved.notes ===
@@ -454,38 +464,87 @@ assemblyLocation:
             saved.incidents
           )
             ? saved.incidents
-            : []
+            : [],
+
+        products:
+          order.products.map(
+            product => {
+
+              const savedProduct =
+                savedProducts.find(
+                  item =>
+                    item.id ===
+                    product.id
+                );
+
+              return {
+                ...product,
+
+                warehouseStatus:
+                  savedProduct
+                    ?.warehouseStatus ||
+                  "pendiente",
+
+                transferFrom:
+                  savedProduct
+                    ?.transferFrom ||
+                  null
+              };
+            }
+          )
       };
     });
 }
 
 
 function saveOrderStates() {
+
   const states = {};
 
   orders.forEach(order => {
+
     states[
       order.number
     ] = {
+
       status:
-  order.status,
+        order.status,
 
-previousStatus:
-  order.previousStatus ||
-  null,
+      previousStatus:
+        order.previousStatus ||
+        null,
 
-assemblyLocation:
-  order.assemblyLocation ||
-  "sin-asignar",
+      assemblyLocation:
+        order.assemblyLocation ||
+        "sin-asignar",
 
       notes:
-        order.notes || "",
+        order.notes ||
+        "",
 
       history:
-        order.history || [],
+        order.history ||
+        [],
 
       incidents:
-        order.incidents || []
+        order.incidents ||
+        [],
+
+      products:
+        order.products.map(
+          product => ({
+            id:
+              product.id,
+
+            warehouseStatus:
+              product.warehouseStatus ||
+              "pendiente",
+
+            transferFrom:
+              product.transferFrom ||
+              null
+          })
+        )
     };
   });
 
@@ -511,6 +570,7 @@ function render() {
 // ==========================================================
 
 function renderStats() {
+
   statPendiente.textContent =
     orders.filter(
       order =>
@@ -546,8 +606,10 @@ function renderStats() {
 // ==========================================================
 
 function renderOrders() {
+
   const filteredOrders =
     orders.filter(order => {
+
       const matchesZone =
         activeZone ===
           "todos" ||
@@ -568,10 +630,12 @@ function renderOrders() {
           "todos" ||
         order.status ===
           activeStatus;
-      
+
       const matchesLocation =
-  activeLocation === "todos" ||
-  order.assemblyLocation === activeLocation;
+        activeLocation ===
+          "todos" ||
+        order.assemblyLocation ===
+          activeLocation;
 
       const normalizedSearch =
         searchTerm.toLowerCase();
@@ -592,7 +656,8 @@ function renderOrders() {
               ) ||
 
             String(
-              product.code || ""
+              product.code ||
+              ""
             )
               .toLowerCase()
               .includes(
@@ -600,7 +665,8 @@ function renderOrders() {
               ) ||
 
             String(
-              product.sku || ""
+              product.sku ||
+              ""
             )
               .toLowerCase()
               .includes(
@@ -609,17 +675,19 @@ function renderOrders() {
         );
 
       return (
-  matchesZone &&
-  matchesStatus &&
-  matchesLocation &&
-  matchesSearch
-);
+        matchesZone &&
+        matchesStatus &&
+        matchesLocation &&
+        matchesSearch
+      );
     });
 
-  ordersGrid.innerHTML = "";
+  ordersGrid.innerHTML =
+    "";
 
   if (
-    filteredOrders.length === 0
+    filteredOrders.length ===
+    0
   ) {
     emptyState.classList.remove(
       "hidden"
@@ -634,6 +702,7 @@ function renderOrders() {
 
   filteredOrders.forEach(
     order => {
+
       const card =
         createOrderCard(
           order
@@ -652,13 +721,14 @@ function renderOrders() {
 // ==========================================================
 
 function createOrderCard(order) {
+
   const article =
     document.createElement(
       "article"
     );
 
   article.className =
-      `order-card location-card-${order.assemblyLocation || "sin-asignar"}`;
+    `order-card location-card-${order.assemblyLocation || "sin-asignar"}`;
 
   const visibleProducts =
     order.products.slice(
@@ -729,6 +799,7 @@ function createOrderCard(order) {
           ${
             visibleProducts
               .map(product => {
+
                 if (
                   !product.image
                 ) {
@@ -783,6 +854,7 @@ function createOrderCard(order) {
                   "
                 >
                   ⚠ ${pendingIncidents}
+
                   ${
                     pendingIncidents ===
                     1
@@ -804,6 +876,7 @@ function createOrderCard(order) {
         <span
           class="status-badge status-${order.status}"
         >
+
           <span
             class="status-dot"
           ></span>
@@ -811,7 +884,9 @@ function createOrderCard(order) {
           ${getStatusLabel(
             order.status
           )}
+
         </span>
+
 
         <button
           class="order-view-button"
@@ -828,6 +903,7 @@ function createOrderCard(order) {
   article.addEventListener(
     "click",
     () => {
+
       openOrder(
         order.id
       );
@@ -843,6 +919,7 @@ function createOrderCard(order) {
 // ==========================================================
 
 function openOrder(orderId) {
+
   selectedOrderId =
     orderId;
 
@@ -875,14 +952,28 @@ function openOrder(orderId) {
     );
 
   orderNotesInput.value =
-    order.notes || "";
+    order.notes ||
+    "";
 
-  updateAssemblyLocationUI(order);
+  updateAssemblyLocationUI(
+    order
+  );
 
-  renderProgress(order);
-  renderProducts(order);
-  renderHistory(order);
-  updateModalButtons(order);
+  renderProgress(
+    order
+  );
+
+  renderProducts(
+    order
+  );
+
+  renderHistory(
+    order
+  );
+
+  updateModalButtons(
+    order
+  );
 
   modal.classList.remove(
     "hidden"
@@ -893,11 +984,28 @@ function openOrder(orderId) {
 }
 
 
+function closeModal() {
+
+  modal.classList.add(
+    "hidden"
+  );
+
+  document.body.style.overflow =
+    "";
+
+  selectedOrderId =
+    null;
+}
+
+
 // ==========================================================
 // LUGAR DE ARMADO
 // ==========================================================
 
-function updateAssemblyLocationUI(order) {
+function updateAssemblyLocationUI(
+  order
+) {
+
   const location =
     order.assemblyLocation ||
     "sin-asignar";
@@ -912,6 +1020,7 @@ function updateAssemblyLocationUI(order) {
     location ===
     "las-condes"
   ) {
+
     assemblyLocationBadge.textContent =
       "Las Condes";
 
@@ -923,6 +1032,7 @@ function updateAssemblyLocationUI(order) {
     location ===
     "patronato"
   ) {
+
     assemblyLocationBadge.textContent =
       "Patronato";
 
@@ -931,6 +1041,7 @@ function updateAssemblyLocationUI(order) {
     );
 
   } else {
+
     assemblyLocationBadge.textContent =
       "Sin asignar";
 
@@ -942,6 +1053,7 @@ function updateAssemblyLocationUI(order) {
 
 
 function changeAssemblyLocation() {
+
   const order =
     getSelectedOrder();
 
@@ -964,7 +1076,9 @@ function changeAssemblyLocation() {
 
   order.history.push({
     text:
-      `Lugar de armado: ${getAssemblyLocationLabel(newLocation)}`,
+      `Lugar de armado: ${getAssemblyLocationLabel(
+        newLocation
+      )}`,
 
     time:
       getCurrentDateTime()
@@ -972,17 +1086,24 @@ function changeAssemblyLocation() {
 
   saveOrderStates();
 
-  updateAssemblyLocationUI(order);
+  updateAssemblyLocationUI(
+    order
+  );
 
   render();
 
   showToast(
-    `Pedido asignado a ${getAssemblyLocationLabel(newLocation)}`
+    `Pedido asignado a ${getAssemblyLocationLabel(
+      newLocation
+    )}`
   );
 }
 
 
-function getAssemblyLocationLabel(location) {
+function getAssemblyLocationLabel(
+  location
+) {
+
   const labels = {
     "las-condes":
       "Las Condes",
@@ -1000,24 +1121,13 @@ function getAssemblyLocationLabel(location) {
   );
 }
 
-function closeModal() {
-  modal.classList.add(
-    "hidden"
-  );
-
-  document.body.style.overflow =
-    "";
-
-  selectedOrderId =
-    null;
-}
-
 
 // ==========================================================
 // PROGRESO
 // ==========================================================
 
 function renderProgress(order) {
+
   const statuses = [
     {
       key:
@@ -1078,6 +1188,7 @@ function renderProgress(order) {
           status,
           index
         ) => {
+
           let className =
             "progress-step";
 
@@ -1144,6 +1255,7 @@ function renderProgress(order) {
 // ==========================================================
 
 function renderProducts(order) {
+
   const totalUnits =
     order.products.reduce(
       (
@@ -1282,6 +1394,12 @@ function renderProducts(order) {
               </span>
 
 
+              ${renderWarehouseProductStatus(
+                order,
+                product
+              )}
+
+
               ${renderProductIncident(
                 order,
                 product
@@ -1304,9 +1422,11 @@ function renderProducts(order) {
       ".product-image-button"
     )
     .forEach(button => {
+
       button.addEventListener(
         "click",
         event => {
+
           event.stopPropagation();
 
           openImageViewer(
@@ -1327,9 +1447,11 @@ function renderProducts(order) {
       ".incident-report-button"
     )
     .forEach(button => {
+
       button.addEventListener(
         "click",
         event => {
+
           event.stopPropagation();
 
           reportProductIncident(
@@ -1349,9 +1471,11 @@ function renderProducts(order) {
       ".incident-resolve-button"
     )
     .forEach(button => {
+
       button.addEventListener(
         "click",
         event => {
+
           event.stopPropagation();
 
           resolveProductIncident(
@@ -1360,6 +1484,345 @@ function renderProducts(order) {
         }
       );
     });
+
+
+  // ========================================================
+  // PRODUCTO BAJADO / RECIBIDO
+  // ========================================================
+
+  modalProducts
+    .querySelectorAll(
+      ".warehouse-product-ready-button"
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        event => {
+
+          event.stopPropagation();
+
+          markProductReady(
+            button.dataset.productId
+          );
+        }
+      );
+    });
+
+
+  // ========================================================
+  // NO HAY AQUÍ
+  // ========================================================
+
+  modalProducts
+    .querySelectorAll(
+      ".warehouse-product-missing-button"
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        event => {
+
+          event.stopPropagation();
+
+          markProductMissing(
+            button.dataset.productId
+          );
+        }
+      );
+    });
+
+
+  // ========================================================
+  // DESHACER ESTADO
+  // ========================================================
+
+  modalProducts
+    .querySelectorAll(
+      ".warehouse-reset-button"
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        event => {
+
+          event.stopPropagation();
+
+          resetProductWarehouseStatus(
+            button.dataset.productId
+          );
+        }
+      );
+    });
+}
+
+
+// ==========================================================
+// ESTADO DE BODEGA POR PRODUCTO
+// ==========================================================
+
+function renderWarehouseProductStatus(
+  order,
+  product
+) {
+
+  const status =
+    product.warehouseStatus ||
+    "pendiente";
+
+  if (
+    status ===
+    "bajado"
+  ) {
+
+    return `
+      <div
+        class="warehouse-product-status ready"
+      >
+        ✓ Producto bajado
+      </div>
+
+      <button
+        type="button"
+        class="warehouse-reset-button"
+        data-product-id="${product.id}"
+      >
+        Deshacer
+      </button>
+    `;
+  }
+
+
+  if (
+    status ===
+    "traslado"
+  ) {
+
+    return `
+      <div
+        class="warehouse-product-status transfer"
+      >
+        ↔ Solicitado desde
+
+        <strong>
+          ${escapeHtml(
+            getAssemblyLocationLabel(
+              product.transferFrom
+            )
+          )}
+        </strong>
+      </div>
+
+      <button
+        type="button"
+        class="warehouse-product-ready-button"
+        data-product-id="${product.id}"
+      >
+        ✓ Marcar como recibido
+      </button>
+    `;
+  }
+
+
+  return `
+    <div
+      class="warehouse-product-actions"
+    >
+
+      <button
+        type="button"
+        class="warehouse-product-ready-button"
+        data-product-id="${product.id}"
+      >
+        ✓ Bajado
+      </button>
+
+      <button
+        type="button"
+        class="warehouse-product-missing-button"
+        data-product-id="${product.id}"
+      >
+        ↔ No hay aquí
+      </button>
+
+    </div>
+  `;
+}
+
+
+// ==========================================================
+// MARCAR PRODUCTO COMO BAJADO / RECIBIDO
+// ==========================================================
+
+function markProductReady(
+  productId
+) {
+
+  const order =
+    getSelectedOrder();
+
+  if (!order) {
+    return;
+  }
+
+  const product =
+    order.products.find(
+      item =>
+        item.id ===
+        productId
+    );
+
+  if (!product) {
+    return;
+  }
+
+  const previousStatus =
+    product.warehouseStatus;
+
+  product.warehouseStatus =
+    "bajado";
+
+  product.transferFrom =
+    null;
+
+  order.history.push({
+    text:
+      previousStatus ===
+        "traslado"
+        ? `Producto recibido y listo: ${product.name}`
+        : `Producto bajado: ${product.name}`,
+
+    time:
+      getCurrentDateTime()
+  });
+
+  saveOrderStates();
+
+  refreshOpenOrder();
+
+  showToast(
+    previousStatus ===
+      "traslado"
+      ? "Producto recibido"
+      : "Producto marcado como bajado"
+  );
+}
+
+
+// ==========================================================
+// PRODUCTO NO DISPONIBLE EN LA SUCURSAL
+// ==========================================================
+
+function markProductMissing(
+  productId
+) {
+
+  const order =
+    getSelectedOrder();
+
+  if (!order) {
+    return;
+  }
+
+  if (
+    !order.assemblyLocation ||
+    order.assemblyLocation ===
+      "sin-asignar"
+  ) {
+
+    showToast(
+      "Primero asigna Las Condes o Patronato"
+    );
+
+    return;
+  }
+
+  const product =
+    order.products.find(
+      item =>
+        item.id ===
+        productId
+    );
+
+  if (!product) {
+    return;
+  }
+
+  const transferFrom =
+    order.assemblyLocation ===
+      "patronato"
+      ? "las-condes"
+      : "patronato";
+
+  product.warehouseStatus =
+    "traslado";
+
+  product.transferFrom =
+    transferFrom;
+
+  order.history.push({
+    text:
+      `Producto solicitado desde ${getAssemblyLocationLabel(
+        transferFrom
+      )}: ${product.name}`,
+
+    time:
+      getCurrentDateTime()
+  });
+
+  saveOrderStates();
+
+  refreshOpenOrder();
+
+  showToast(
+    `Solicitado desde ${getAssemblyLocationLabel(
+      transferFrom
+    )}`
+  );
+}
+
+
+// ==========================================================
+// RESTABLECER ESTADO DEL PRODUCTO
+// ==========================================================
+
+function resetProductWarehouseStatus(
+  productId
+) {
+
+  const order =
+    getSelectedOrder();
+
+  if (!order) {
+    return;
+  }
+
+  const product =
+    order.products.find(
+      item =>
+        item.id ===
+        productId
+    );
+
+  if (!product) {
+    return;
+  }
+
+  product.warehouseStatus =
+    "pendiente";
+
+  product.transferFrom =
+    null;
+
+  saveOrderStates();
+
+  refreshOpenOrder();
+
+  showToast(
+    "Estado del producto restablecido"
+  );
 }
 
 
@@ -1371,6 +1834,7 @@ function renderProductIncident(
   order,
   product
 ) {
+
   const incident =
     order.incidents?.find(
       item =>
@@ -1381,6 +1845,7 @@ function renderProductIncident(
     );
 
   if (incident) {
+
     return `
       <div
         class="product-incident active"
@@ -1461,6 +1926,7 @@ function renderProductIncident(
           >
             ✓ Último reemplazo completado
             · ${resolvedIncident.quantity}
+
             ${
               resolvedIncident.quantity ===
               1
@@ -1490,6 +1956,7 @@ function renderProductIncident(
 function reportProductIncident(
   productId
 ) {
+
   const order =
     getSelectedOrder();
 
@@ -1519,6 +1986,7 @@ function reportProductIncident(
     );
 
   if (existingIncident) {
+
     showToast(
       "Este producto ya tiene una incidencia pendiente"
     );
@@ -1560,6 +2028,7 @@ function reportProductIncident(
 
   incidentReasonButtons.forEach(
     button => {
+
       button.classList.remove(
         "selected"
       );
@@ -1587,11 +2056,13 @@ function selectIncidentReason(
   reason,
   button
 ) {
+
   incidentReason =
     reason;
 
   incidentReasonButtons.forEach(
     item => {
+
       item.classList.remove(
         "selected"
       );
@@ -1617,8 +2088,10 @@ function selectIncidentReason(
 // ==========================================================
 
 function updateIncidentQuantity() {
+
   if (
-    incidentQuantity < 1
+    incidentQuantity <
+    1
   ) {
     incidentQuantity =
       1;
@@ -1638,7 +2111,8 @@ function updateIncidentQuantity() {
 
 
   incidentQuantityMinus.disabled =
-    incidentQuantity <= 1;
+    incidentQuantity <=
+    1;
 
 
   incidentQuantityPlus.disabled =
@@ -1652,6 +2126,7 @@ function updateIncidentQuantity() {
 // ==========================================================
 
 function confirmProductIncident() {
+
   const order =
     getSelectedOrder();
 
@@ -1659,11 +2134,16 @@ function confirmProductIncident() {
     return;
   }
 
-  if (!incidentProductId) {
+  if (
+    !incidentProductId
+  ) {
     return;
   }
 
-  if (!incidentReason) {
+  if (
+    !incidentReason
+  ) {
+
     showToast(
       "Selecciona Dañado o Quebrado"
     );
@@ -1689,7 +2169,8 @@ function confirmProductIncident() {
       order.incidents
     )
   ) {
-    order.incidents = [];
+    order.incidents =
+      [];
   }
 
 
@@ -1704,7 +2185,8 @@ function confirmProductIncident() {
       product.name,
 
     productCode:
-      product.code || "",
+      product.code ||
+      "",
 
     reason:
       incidentReason,
@@ -1749,7 +2231,10 @@ function confirmProductIncident() {
 // ==========================================================
 
 function closeIncidentModal() {
-  if (!incidentModal) {
+
+  if (
+    !incidentModal
+  ) {
     return;
   }
 
@@ -1782,6 +2267,7 @@ function closeIncidentModal() {
 
   incidentReasonButtons.forEach(
     button => {
+
       button.classList.remove(
         "selected"
       );
@@ -1797,6 +2283,7 @@ function closeIncidentModal() {
 function resolveProductIncident(
   productId
 ) {
+
   const order =
     getSelectedOrder();
 
@@ -1866,12 +2353,14 @@ function resolveProductIncident(
 function getPendingIncidentCount(
   order
 ) {
+
   return (
     order.incidents?.filter(
       incident =>
         incident.status ===
         "pendiente"
-    ).length || 0
+    ).length ||
+    0
   );
 }
 
@@ -1879,6 +2368,7 @@ function getPendingIncidentCount(
 function hasPendingIncidents(
   order
 ) {
+
   return (
     getPendingIncidentCount(
       order
@@ -1895,6 +2385,7 @@ function openImageViewer(
   image,
   productName
 ) {
+
   if (
     !imageViewer ||
     !imageViewerImg
@@ -1919,6 +2410,7 @@ function openImageViewer(
 
 
 function closeImageViewer() {
+
   if (
     !imageViewer ||
     !imageViewerImg
@@ -1942,10 +2434,13 @@ function closeImageViewer() {
 // ==========================================================
 
 function renderHistory(order) {
+
   if (
     !order.history ||
-    order.history.length === 0
+    order.history.length ===
+    0
   ) {
+
     historyList.innerHTML = `
       <div
         class="history-item"
@@ -1992,10 +2487,12 @@ function renderHistory(order) {
 // ==========================================================
 
 function updateModalButtons(order) {
+
   if (
     order.status ===
     "enviado"
   ) {
+
     nextStatusButton.textContent =
       "Pedido ya enviado";
 
@@ -2004,7 +2501,9 @@ function updateModalButtons(order) {
 
     nextStatusButton.style.opacity =
       "0.5";
+
   } else {
+
     nextStatusButton.disabled =
       false;
 
@@ -2015,9 +2514,12 @@ function updateModalButtons(order) {
       order.status ===
       "problema"
     ) {
+
       nextStatusButton.textContent =
         "Resolver problema";
+
     } else {
+
       nextStatusButton.textContent =
         getNextButtonLabel(
           order.status
@@ -2030,6 +2532,7 @@ function updateModalButtons(order) {
     order.status ===
     "problema"
   ) {
+
     problemButton.textContent =
       "✓ Problema registrado";
 
@@ -2038,7 +2541,9 @@ function updateModalButtons(order) {
 
     problemButton.style.opacity =
       "0.5";
+
   } else {
+
     problemButton.textContent =
       "⚠ Reportar incidencia";
 
@@ -2056,6 +2561,7 @@ function updateModalButtons(order) {
 // ==========================================================
 
 function advanceSelectedOrder() {
+
   const order =
     getSelectedOrder();
 
@@ -2069,6 +2575,7 @@ function advanceSelectedOrder() {
       order
     )
   ) {
+
     showToast(
       "El pedido tiene incidencias pendientes"
     );
@@ -2081,6 +2588,7 @@ function advanceSelectedOrder() {
     order.status ===
     "problema"
   ) {
+
     order.status =
       order.previousStatus ||
       "pendiente";
@@ -2166,6 +2674,7 @@ function advanceSelectedOrder() {
 // ==========================================================
 
 function markProblem() {
+
   const order =
     getSelectedOrder();
 
@@ -2184,6 +2693,7 @@ function markProblem() {
     order.status ===
     "enviado"
   ) {
+
     showToast(
       "Un pedido enviado no puede marcarse como problema"
     );
@@ -2223,6 +2733,7 @@ function markProblem() {
 // ==========================================================
 
 function saveNotes() {
+
   const order =
     getSelectedOrder();
 
@@ -2250,7 +2761,9 @@ function saveNotes() {
 
   saveOrderStates();
 
-  renderHistory(order);
+  renderHistory(
+    order
+  );
 
   render();
 
@@ -2265,14 +2778,17 @@ function saveNotes() {
 // ==========================================================
 
 function refreshOpenOrder() {
+
   const orderId =
     selectedOrderId;
 
   render();
 
   if (
-    orderId !== null
+    orderId !==
+    null
   ) {
+
     openOrder(
       orderId
     );
@@ -2281,6 +2797,7 @@ function refreshOpenOrder() {
 
 
 function getSelectedOrder() {
+
   return orders.find(
     order =>
       order.id ===
@@ -2290,6 +2807,7 @@ function getSelectedOrder() {
 
 
 function getStatusLabel(status) {
+
   const labels = {
     pendiente:
       "Pendiente",
@@ -2315,6 +2833,7 @@ function getStatusLabel(status) {
 
 
 function getNextButtonLabel(status) {
+
   const labels = {
     pendiente:
       "Marcar como bajado de bodega",
@@ -2334,6 +2853,7 @@ function getNextButtonLabel(status) {
 
 
 function getHistoryText(status) {
+
   const labels = {
     bodega:
       "Pedido bajado de bodega",
@@ -2353,6 +2873,7 @@ function getHistoryText(status) {
 
 
 function getCurrentDateTime() {
+
   return new Intl.DateTimeFormat(
     "es-CL",
     {
@@ -2380,6 +2901,7 @@ function getCurrentDateTime() {
 function formatShopifyDate(
   dateString
 ) {
+
   if (!dateString) {
     return "";
   }
@@ -2409,11 +2931,14 @@ function formatShopifyDate(
       minute:
         "2-digit"
     }
-  ).format(date);
+  ).format(
+    date
+  );
 }
 
 
 function showToast(message) {
+
   toastMessage.textContent =
     message;
 
@@ -2431,9 +2956,11 @@ function showToast(message) {
   showToast.timeout =
     setTimeout(
       () => {
+
         toast.classList.add(
           "hidden"
         );
+
       },
       2300
     );
@@ -2441,6 +2968,7 @@ function showToast(message) {
 
 
 function showLoadingState() {
+
   ordersGrid.innerHTML = `
     <div
       style="
@@ -2459,6 +2987,7 @@ function showLoadingState() {
 function escapeHtml(
   value = ""
 ) {
+
   return String(value)
     .replaceAll(
       "&",
@@ -2492,9 +3021,11 @@ document
     ".filter-button"
   )
   .forEach(button => {
+
     button.addEventListener(
       "click",
       () => {
+
         document
           .querySelectorAll(
             ".filter-button"
@@ -2531,9 +3062,11 @@ document
     ".status-filter"
   )
   .forEach(button => {
+
     button.addEventListener(
       "click",
       () => {
+
         document
           .querySelectorAll(
             ".status-filter"
@@ -2560,6 +3093,7 @@ document
     );
   });
 
+
 // ==========================================================
 // FILTROS POR LUGAR DE ARMADO
 // ==========================================================
@@ -2569,9 +3103,11 @@ document
     ".location-filter"
   )
   .forEach(button => {
+
     button.addEventListener(
       "click",
       () => {
+
         document
           .querySelectorAll(
             ".location-filter"
@@ -2583,17 +3119,21 @@ document
               )
           );
 
+
         button.classList.add(
           "active"
         );
 
+
         activeLocation =
           button.dataset.location;
+
 
         renderOrders();
       }
     );
   });
+
 
 // ==========================================================
 // BUSCADOR
@@ -2602,6 +3142,7 @@ document
 searchOrder.addEventListener(
   "input",
   event => {
+
     searchTerm =
       event.target
         .value
@@ -2632,10 +3173,12 @@ closeModalXButton.addEventListener(
 modal.addEventListener(
   "click",
   event => {
+
     if (
       event.target ===
       modal
     ) {
+
       closeModal();
     }
   }
@@ -2649,6 +3192,7 @@ modal.addEventListener(
 document.addEventListener(
   "keydown",
   event => {
+
     if (
       event.key ===
         "Escape" &&
@@ -2657,6 +3201,7 @@ document.addEventListener(
         "is-open"
       )
     ) {
+
       closeIncidentModal();
 
       return;
@@ -2671,6 +3216,7 @@ document.addEventListener(
         "hidden"
       )
     ) {
+
       closeImageViewer();
 
       return;
@@ -2684,6 +3230,7 @@ document.addEventListener(
         "hidden"
       )
     ) {
+
       closeModal();
     }
   }
@@ -2716,7 +3263,10 @@ saveNotesButton.addEventListener(
 // OCULTAR REINICIAR DEMO
 // ==========================================================
 
-if (resetDemoButton) {
+if (
+  resetDemoButton
+) {
+
   resetDemoButton.style.display =
     "none";
 }
@@ -2729,6 +3279,7 @@ if (resetDemoButton) {
 if (
   closeImageViewerButton
 ) {
+
   closeImageViewerButton.addEventListener(
     "click",
     closeImageViewer
@@ -2736,14 +3287,19 @@ if (
 }
 
 
-if (imageViewer) {
+if (
+  imageViewer
+) {
+
   imageViewer.addEventListener(
     "click",
     event => {
+
       if (
         event.target ===
         imageViewer
       ) {
+
         closeImageViewer();
       }
     }
@@ -2757,9 +3313,11 @@ if (imageViewer) {
 
 incidentReasonButtons.forEach(
   button => {
+
     button.addEventListener(
       "click",
       () => {
+
         selectIncidentReason(
           button.dataset.reason,
           button
@@ -2777,6 +3335,7 @@ incidentReasonButtons.forEach(
 incidentQuantityMinus.addEventListener(
   "click",
   () => {
+
     incidentQuantity--;
 
     updateIncidentQuantity();
@@ -2787,6 +3346,7 @@ incidentQuantityMinus.addEventListener(
 incidentQuantityPlus.addEventListener(
   "click",
   () => {
+
     incidentQuantity++;
 
     updateIncidentQuantity();
@@ -2824,7 +3384,6 @@ incidentModalBackdrop.addEventListener(
   "click",
   closeIncidentModal
 );
-
 
 
 // ==========================================================
