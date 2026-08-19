@@ -2,7 +2,7 @@ const SHOPIFY_API_VERSION = "2026-07";
 
 const SESSION_COOKIE_NAME = "casona_session";
 const SESSION_DURATION_SECONDS = 60 * 60 * 24 * 7;
-const PASSWORD_ITERATIONS = 210000;
+const PASSWORD_ITERATIONS = 100000;
 
 export default {
   async fetch(request, env) {
