@@ -1267,8 +1267,80 @@ function renderProducts(order) {
       0
     );
 
+    const readyUnits =
+    order.products.reduce(
+      (sum, product) => {
+        if (
+          product.warehouseStatus === "bajado"
+        ) {
+          return sum + product.quantity;
+        }
+
+        return sum;
+      },
+      0
+    );
+
+  const transferUnits =
+    order.products.reduce(
+      (sum, product) => {
+        if (
+          product.warehouseStatus === "traslado"
+        ) {
+          return sum + product.quantity;
+        }
+
+        return sum;
+      },
+      0
+    );
+
+  const pendingUnits =
+    totalUnits -
+    readyUnits -
+    transferUnits;
+
+
+  let progressText =
+    `${readyUnits} de ${totalUnits} listos`;
+
+
+  if (transferUnits > 0) {
+    progressText +=
+      ` · ${transferUnits} en traslado`;
+  }
+
+
+  if (pendingUnits > 0) {
+    progressText +=
+      ` · ${pendingUnits} pendientes`;
+  }
+
+
+  if (
+    readyUnits === totalUnits &&
+    totalUnits > 0
+  ) {
+    progressText =
+      `✓ ${totalUnits} de ${totalUnits} listos`;
+  }
+
+
   modalProductCount.textContent =
-    `${order.products.length} productos · ${totalUnits} unidades`;
+    progressText;
+
+
+  modalProductCount.classList.toggle(
+    "products-complete",
+    readyUnits === totalUnits &&
+    totalUnits > 0
+  );
+
+
+  modalProductCount.classList.toggle(
+    "products-pending",
+    readyUnits < totalUnits
+  );
 
   modalProducts.innerHTML =
     order.products
