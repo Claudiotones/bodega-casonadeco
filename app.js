@@ -1,5 +1,3 @@
-const STORAGE_KEY = "casona_deco_order_states_v2";
-
 let orders = [];
 let selectedOrderId = null;
 
@@ -68,22 +66,30 @@ const modalOrderDate =
   document.getElementById("modal-order-date");
 
 const assemblyLocationSelect =
-  document.getElementById("assembly-location-select");
+  document.getElementById(
+    "assembly-location-select"
+  );
 
 const assemblyLocationBadge =
-  document.getElementById("assembly-location-badge");
+  document.getElementById(
+    "assembly-location-badge"
+  );
 
 const progressSteps =
   document.getElementById("progress-steps");
 
 const modalProductCount =
-  document.getElementById("modal-product-count");
+  document.getElementById(
+    "modal-product-count"
+  );
 
 const modalProducts =
   document.getElementById("modal-products");
 
 const orderNotesInput =
-  document.getElementById("order-notes-input");
+  document.getElementById(
+    "order-notes-input"
+  );
 
 const saveNotesButton =
   document.getElementById("save-notes");
@@ -95,7 +101,9 @@ const problemButton =
   document.getElementById("problem-button");
 
 const nextStatusButton =
-  document.getElementById("next-status-button");
+  document.getElementById(
+    "next-status-button"
+  );
 
 const resetDemoButton =
   document.getElementById("reset-demo");
@@ -113,17 +121,21 @@ const toastMessage =
 
 
 // ==========================================================
-// VISOR IMAGEN
+// VISOR DE IMAGEN
 // ==========================================================
 
 const imageViewer =
   document.getElementById("image-viewer");
 
 const imageViewerImg =
-  document.getElementById("image-viewer-img");
+  document.getElementById(
+    "image-viewer-img"
+  );
 
 const closeImageViewerButton =
-  document.getElementById("close-image-viewer");
+  document.getElementById(
+    "close-image-viewer"
+  );
 
 
 // ==========================================================
@@ -134,37 +146,111 @@ const incidentModal =
   document.getElementById("incidentModal");
 
 const incidentModalClose =
-  document.getElementById("incidentModalClose");
+  document.getElementById(
+    "incidentModalClose"
+  );
 
 const incidentModalBackdrop =
-  document.querySelector(".incident-modal-backdrop");
+  document.querySelector(
+    ".incident-modal-backdrop"
+  );
 
 const incidentProductName =
-  document.getElementById("incidentProductName");
+  document.getElementById(
+    "incidentProductName"
+  );
 
 const incidentQuantitySection =
-  document.getElementById("incidentQuantitySection");
+  document.getElementById(
+    "incidentQuantitySection"
+  );
 
 const incidentQuantityValue =
-  document.getElementById("incidentQuantity");
+  document.getElementById(
+    "incidentQuantity"
+  );
 
 const incidentQuantityAvailable =
-  document.getElementById("incidentQuantityAvailable");
+  document.getElementById(
+    "incidentQuantityAvailable"
+  );
 
 const incidentQuantityMinus =
-  document.getElementById("incidentQuantityMinus");
+  document.getElementById(
+    "incidentQuantityMinus"
+  );
 
 const incidentQuantityPlus =
-  document.getElementById("incidentQuantityPlus");
+  document.getElementById(
+    "incidentQuantityPlus"
+  );
 
 const incidentConfirmButton =
-  document.getElementById("incidentConfirmButton");
+  document.getElementById(
+    "incidentConfirmButton"
+  );
 
 const incidentCancelButton =
-  document.getElementById("incidentCancelButton");
+  document.getElementById(
+    "incidentCancelButton"
+  );
 
 const incidentReasonButtons =
-  document.querySelectorAll(".incident-reason-button");
+  document.querySelectorAll(
+    ".incident-reason-button"
+  );
+
+
+// ==========================================================
+// API
+// ==========================================================
+
+async function apiRequest(
+  url,
+  options = {}
+) {
+  const config = {
+    ...options,
+    headers: {
+      ...(options.body
+        ? {
+            "Content-Type":
+              "application/json"
+          }
+        : {}),
+      ...(options.headers || {})
+    }
+  };
+
+  const response =
+    await fetch(
+      url,
+      config
+    );
+
+  let data;
+
+  try {
+    data =
+      await response.json();
+  } catch {
+    data =
+      null;
+  }
+
+  if (
+    !response.ok ||
+    data?.success === false
+  ) {
+    throw new Error(
+      data?.detail ||
+      data?.error ||
+      `Error HTTP ${response.status}`
+    );
+  }
+
+  return data;
+}
 
 
 // ==========================================================
@@ -175,41 +261,38 @@ async function init() {
   try {
     showLoadingState();
 
-    const response =
-      await fetch(
-        "/api/orders",
-        {
-          cache: "no-store"
-        }
-      );
+    const [
+      shopifyData,
+      statesData
+    ] =
+      await Promise.all([
+        apiRequest(
+          "/api/orders"
+        ),
 
-    const data =
-      await response.json();
-
-    if (
-      !response.ok ||
-      !data.success
-    ) {
-      throw new Error(
-        data.detail ||
-        data.error ||
-        "No se pudieron cargar los pedidos."
-      );
-    }
+        apiRequest(
+          "/api/states"
+        )
+      ]);
 
     orders =
-      data.orders
+      shopifyData.orders
         .filter(order => {
           return (
-            order.financialStatus === "PAID" &&
-            order.fulfillmentStatus !== "FULFILLED"
+            order.financialStatus ===
+              "PAID" &&
+            order.fulfillmentStatus !==
+              "FULFILLED"
           );
         })
         .map(
           shopifyOrderToLocalOrder
         );
 
-    applySavedStates();
+    applyRemoteStates(
+      statesData.states ||
+      {}
+    );
 
     render();
 
@@ -231,7 +314,9 @@ async function init() {
         </strong>
 
         <p style="margin-bottom:0;">
-          ${escapeHtml(error.message)}
+          ${escapeHtml(
+            error.message
+          )}
         </p>
       </div>
     `;
@@ -240,11 +325,12 @@ async function init() {
 
 
 // ==========================================================
-// SHOPIFY → FORMATO DEL PANEL
+// SHOPIFY → FORMATO LOCAL
 // ==========================================================
 
-function shopifyOrderToLocalOrder(order) {
-
+function shopifyOrderToLocalOrder(
+  order
+) {
   const shippingMethod =
     order.shipping?.methods?.[0] ||
     "";
@@ -358,65 +444,16 @@ function shopifyOrderToLocalOrder(order) {
 
 
 // ==========================================================
-// CLASIFICAR SANTIAGO / REGIONES
+// MEZCLAR ESTADOS D1 + SHOPIFY
 // ==========================================================
 
-function classifyZone(
-  shippingMethod,
-  shipping
+function applyRemoteStates(
+  stateMap
 ) {
-
-  const method =
-    String(
-      shippingMethod ||
-      ""
-    ).toLowerCase();
-
-  if (
-    method.includes(
-      "santiago"
-    )
-  ) {
-    return "santiago";
-  }
-
-  return "regiones";
-}
-
-
-// ==========================================================
-// ESTADOS LOCALES
-// ==========================================================
-
-function getSavedStates() {
-
-  const saved =
-    localStorage.getItem(
-      STORAGE_KEY
-    );
-
-  if (!saved) {
-    return {};
-  }
-
-  try {
-    return JSON.parse(saved);
-  } catch {
-    return {};
-  }
-}
-
-
-function applySavedStates() {
-
-  const savedStates =
-    getSavedStates();
-
   orders =
     orders.map(order => {
-
       const saved =
-        savedStates[
+        stateMap[
           order.number
         ];
 
@@ -429,6 +466,13 @@ function applySavedStates() {
           saved.products
         )
           ? saved.products
+          : [];
+
+      const remoteHistory =
+        Array.isArray(
+          saved.history
+        )
+          ? saved.history
           : [];
 
       return {
@@ -450,14 +494,7 @@ function applySavedStates() {
           typeof saved.notes ===
           "string"
             ? saved.notes
-            : order.notes,
-
-        history:
-          Array.isArray(
-            saved.history
-          )
-            ? saved.history
-            : order.history,
+            : "",
 
         incidents:
           Array.isArray(
@@ -469,7 +506,6 @@ function applySavedStates() {
         products:
           order.products.map(
             product => {
-
               const savedProduct =
                 savedProducts.find(
                   item =>
@@ -491,67 +527,158 @@ function applySavedStates() {
                   null
               };
             }
-          )
+          ),
+
+        history:
+          remoteHistory.length > 0
+            ? remoteHistory
+            : order.history
       };
     });
 }
 
 
-function saveOrderStates() {
+// ==========================================================
+// CLASIFICAR SANTIAGO / REGIONES
+// ==========================================================
 
-  const states = {};
+function classifyZone(
+  shippingMethod,
+  shipping
+) {
+  const method =
+    String(
+      shippingMethod ||
+      ""
+    ).toLowerCase();
 
-  orders.forEach(order => {
+  if (
+    method.includes(
+      "santiago"
+    )
+  ) {
+    return "santiago";
+  }
 
-    states[
+  return "regiones";
+}
+
+
+// ==========================================================
+// GUARDAR ESTADO GENERAL EN D1
+// ==========================================================
+
+async function saveRemoteOrderState(
+  order
+) {
+  return apiRequest(
+    `/api/orders/${encodeURIComponent(
       order.number
-    ] = {
+    )}/state`,
+    {
+      method:
+        "PUT",
 
-      status:
-        order.status,
+      body:
+        JSON.stringify({
+          shopifyOrderId:
+            order.id,
 
-      previousStatus:
-        order.previousStatus ||
-        null,
+          status:
+            order.status,
 
-      assemblyLocation:
-        order.assemblyLocation ||
-        "sin-asignar",
+          previousStatus:
+            order.previousStatus,
 
-      notes:
-        order.notes ||
-        "",
+          assemblyLocation:
+            order.assemblyLocation ||
+            "sin-asignar",
 
-      history:
-        order.history ||
-        [],
-
-      incidents:
-        order.incidents ||
-        [],
-
-      products:
-        order.products.map(
-          product => ({
-            id:
-              product.id,
-
-            warehouseStatus:
-              product.warehouseStatus ||
-              "pendiente",
-
-            transferFrom:
-              product.transferFrom ||
-              null
-          })
-        )
-    };
-  });
-
-  localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify(states)
+          notes:
+            order.notes ||
+            ""
+        })
+    }
   );
+}
+
+
+// ==========================================================
+// GUARDAR PRODUCTO EN D1
+// ==========================================================
+
+async function saveRemoteProductState(
+  order,
+  product
+) {
+  return apiRequest(
+    `/api/orders/${encodeURIComponent(
+      order.number
+    )}/products/${encodeURIComponent(
+      product.id
+    )}`,
+    {
+      method:
+        "PUT",
+
+      body:
+        JSON.stringify({
+          warehouseStatus:
+            product.warehouseStatus ||
+            "pendiente",
+
+          transferFrom:
+            product.transferFrom ||
+            null
+        })
+    }
+  );
+}
+
+
+// ==========================================================
+// HISTORIAL D1
+// ==========================================================
+
+async function addRemoteHistory(
+  order,
+  text
+) {
+  const data =
+    await apiRequest(
+      `/api/orders/${encodeURIComponent(
+        order.number
+      )}/history`,
+      {
+        method:
+          "POST",
+
+        body:
+          JSON.stringify({
+            text
+          })
+      }
+    );
+
+  const item = {
+    text:
+      data.history?.text ||
+      text,
+
+    time:
+      formatStoredDate(
+        data.history
+          ?.createdAt ||
+        new Date()
+          .toISOString()
+      )
+  };
+
+  order.history.push(
+    item
+  );
+
+  return item;
 }
 
 
@@ -570,7 +697,6 @@ function render() {
 // ==========================================================
 
 function renderStats() {
-
   statPendiente.textContent =
     orders.filter(
       order =>
@@ -606,10 +732,8 @@ function renderStats() {
 // ==========================================================
 
 function renderOrders() {
-
   const filteredOrders =
     orders.filter(order => {
-
       const matchesZone =
         activeZone ===
           "todos" ||
@@ -702,14 +826,10 @@ function renderOrders() {
 
   filteredOrders.forEach(
     order => {
-
-      const card =
+      ordersGrid.appendChild(
         createOrderCard(
           order
-        );
-
-      ordersGrid.appendChild(
-        card
+        )
       );
     }
   );
@@ -717,11 +837,12 @@ function renderOrders() {
 
 
 // ==========================================================
-// TARJETA DE PEDIDO
+// TARJETA PEDIDO
 // ==========================================================
 
-function createOrderCard(order) {
-
+function createOrderCard(
+  order
+) {
   const article =
     document.createElement(
       "article"
@@ -799,7 +920,6 @@ function createOrderCard(order) {
           ${
             visibleProducts
               .map(product => {
-
                 if (
                   !product.image
                 ) {
@@ -838,7 +958,8 @@ function createOrderCard(order) {
           ${totalUnits}
 
           ${
-            totalUnits === 1
+            totalUnits ===
+            1
               ? "unidad"
               : "unidades"
           }
@@ -887,7 +1008,6 @@ function createOrderCard(order) {
 
         </span>
 
-
         <button
           class="order-view-button"
           type="button"
@@ -903,7 +1023,6 @@ function createOrderCard(order) {
   article.addEventListener(
     "click",
     () => {
-
       openOrder(
         order.id
       );
@@ -915,11 +1034,12 @@ function createOrderCard(order) {
 
 
 // ==========================================================
-// DETALLE DEL PEDIDO
+// ABRIR PEDIDO
 // ==========================================================
 
-function openOrder(orderId) {
-
+function openOrder(
+  orderId
+) {
   selectedOrderId =
     orderId;
 
@@ -985,7 +1105,6 @@ function openOrder(orderId) {
 
 
 function closeModal() {
-
   modal.classList.add(
     "hidden"
   );
@@ -1005,7 +1124,6 @@ function closeModal() {
 function updateAssemblyLocationUI(
   order
 ) {
-
   const location =
     order.assemblyLocation ||
     "sin-asignar";
@@ -1020,7 +1138,6 @@ function updateAssemblyLocationUI(
     location ===
     "las-condes"
   ) {
-
     assemblyLocationBadge.textContent =
       "Las Condes";
 
@@ -1032,7 +1149,6 @@ function updateAssemblyLocationUI(
     location ===
     "patronato"
   ) {
-
     assemblyLocationBadge.textContent =
       "Patronato";
 
@@ -1041,7 +1157,6 @@ function updateAssemblyLocationUI(
     );
 
   } else {
-
     assemblyLocationBadge.textContent =
       "Sin asignar";
 
@@ -1052,8 +1167,7 @@ function updateAssemblyLocationUI(
 }
 
 
-function changeAssemblyLocation() {
-
+async function changeAssemblyLocation() {
   const order =
     getSelectedOrder();
 
@@ -1061,49 +1175,77 @@ function changeAssemblyLocation() {
     return;
   }
 
+  const oldLocation =
+    order.assemblyLocation;
+
   const newLocation =
     assemblyLocationSelect.value;
 
   if (
-    newLocation ===
-    order.assemblyLocation
+    oldLocation ===
+    newLocation
   ) {
     return;
   }
 
-  order.assemblyLocation =
-    newLocation;
+  assemblyLocationSelect.disabled =
+    true;
 
-  order.history.push({
-    text:
+  try {
+    order.assemblyLocation =
+      newLocation;
+
+    await saveRemoteOrderState(
+      order
+    );
+
+    await addRemoteHistory(
+      order,
       `Lugar de armado: ${getAssemblyLocationLabel(
         newLocation
-      )}`,
+      )}`
+    );
 
-    time:
-      getCurrentDateTime()
-  });
+    updateAssemblyLocationUI(
+      order
+    );
 
-  saveOrderStates();
+    render();
 
-  updateAssemblyLocationUI(
-    order
-  );
+    renderHistory(
+      order
+    );
 
-  render();
+    showToast(
+      `Pedido asignado a ${getAssemblyLocationLabel(
+        newLocation
+      )}`
+    );
 
-  showToast(
-    `Pedido asignado a ${getAssemblyLocationLabel(
-      newLocation
-    )}`
-  );
+  } catch (error) {
+    console.error(error);
+
+    order.assemblyLocation =
+      oldLocation;
+
+    updateAssemblyLocationUI(
+      order
+    );
+
+    showToast(
+      `Error: ${error.message}`
+    );
+
+  } finally {
+    assemblyLocationSelect.disabled =
+      false;
+  }
 }
 
 
 function getAssemblyLocationLabel(
   location
 ) {
-
   const labels = {
     "las-condes":
       "Las Condes",
@@ -1123,11 +1265,12 @@ function getAssemblyLocationLabel(
 
 
 // ==========================================================
-// PROGRESO
+// PROGRESO GENERAL
 // ==========================================================
 
-function renderProgress(order) {
-
+function renderProgress(
+  order
+) {
   const statuses = [
     {
       key:
@@ -1188,7 +1331,6 @@ function renderProgress(order) {
           status,
           index
         ) => {
-
           let className =
             "progress-step";
 
@@ -1254,8 +1396,9 @@ function renderProgress(order) {
 // PRODUCTOS
 // ==========================================================
 
-function renderProducts(order) {
-
+function renderProducts(
+  order
+) {
   const totalUnits =
     order.products.reduce(
       (
@@ -1267,33 +1410,50 @@ function renderProducts(order) {
       0
     );
 
-    const readyUnits =
+
+  const readyUnits =
     order.products.reduce(
-      (sum, product) => {
+      (
+        sum,
+        product
+      ) => {
         if (
-          product.warehouseStatus === "bajado"
+          product.warehouseStatus ===
+          "bajado"
         ) {
-          return sum + product.quantity;
+          return (
+            sum +
+            product.quantity
+          );
         }
 
         return sum;
       },
       0
     );
+
 
   const transferUnits =
     order.products.reduce(
-      (sum, product) => {
+      (
+        sum,
+        product
+      ) => {
         if (
-          product.warehouseStatus === "traslado"
+          product.warehouseStatus ===
+          "traslado"
         ) {
-          return sum + product.quantity;
+          return (
+            sum +
+            product.quantity
+          );
         }
 
         return sum;
       },
       0
     );
+
 
   const pendingUnits =
     totalUnits -
@@ -1305,20 +1465,25 @@ function renderProducts(order) {
     `${readyUnits} de ${totalUnits} listos`;
 
 
-  if (transferUnits > 0) {
+  if (
+    transferUnits > 0
+  ) {
     progressText +=
       ` · ${transferUnits} en traslado`;
   }
 
 
-  if (pendingUnits > 0) {
+  if (
+    pendingUnits > 0
+  ) {
     progressText +=
       ` · ${pendingUnits} pendientes`;
   }
 
 
   if (
-    readyUnits === totalUnits &&
+    readyUnits ===
+      totalUnits &&
     totalUnits > 0
   ) {
     progressText =
@@ -1330,17 +1495,24 @@ function renderProducts(order) {
     progressText;
 
 
-  modalProductCount.classList.toggle(
-    "products-complete",
-    readyUnits === totalUnits &&
-    totalUnits > 0
-  );
+  modalProductCount
+    .classList
+    .toggle(
+      "products-complete",
+      readyUnits ===
+        totalUnits &&
+      totalUnits > 0
+    );
 
 
-  modalProductCount.classList.toggle(
-    "products-pending",
-    readyUnits < totalUnits
-  );
+  modalProductCount
+    .classList
+    .toggle(
+      "products-pending",
+      readyUnits <
+        totalUnits
+    );
+
 
   modalProducts.innerHTML =
     order.products
@@ -1374,7 +1546,6 @@ function renderProducts(order) {
                   <div
                     class="product-image-wrapper"
                   >
-
                     <div
                       style="
                         width:100%;
@@ -1390,7 +1561,6 @@ function renderProducts(order) {
                     >
                       Sin imagen
                     </div>
-
                   </div>
                 `
             }
@@ -1485,20 +1655,16 @@ function renderProducts(order) {
       .join("");
 
 
-  // ========================================================
-  // ABRIR IMAGEN
-  // ========================================================
+  // IMÁGENES
 
   modalProducts
     .querySelectorAll(
       ".product-image-button"
     )
     .forEach(button => {
-
       button.addEventListener(
         "click",
         event => {
-
           event.stopPropagation();
 
           openImageViewer(
@@ -1510,20 +1676,16 @@ function renderProducts(order) {
     });
 
 
-  // ========================================================
-  // REPORTAR INCIDENCIA
-  // ========================================================
+  // INCIDENCIA
 
   modalProducts
     .querySelectorAll(
       ".incident-report-button"
     )
     .forEach(button => {
-
       button.addEventListener(
         "click",
         event => {
-
           event.stopPropagation();
 
           reportProductIncident(
@@ -1534,20 +1696,16 @@ function renderProducts(order) {
     });
 
 
-  // ========================================================
   // RESOLVER INCIDENCIA
-  // ========================================================
 
   modalProducts
     .querySelectorAll(
       ".incident-resolve-button"
     )
     .forEach(button => {
-
       button.addEventListener(
         "click",
         event => {
-
           event.stopPropagation();
 
           resolveProductIncident(
@@ -1558,20 +1716,16 @@ function renderProducts(order) {
     });
 
 
-  // ========================================================
   // PRODUCTO BAJADO / RECIBIDO
-  // ========================================================
 
   modalProducts
     .querySelectorAll(
       ".warehouse-product-ready-button"
     )
     .forEach(button => {
-
       button.addEventListener(
         "click",
         event => {
-
           event.stopPropagation();
 
           markProductReady(
@@ -1582,20 +1736,16 @@ function renderProducts(order) {
     });
 
 
-  // ========================================================
   // NO HAY AQUÍ
-  // ========================================================
 
   modalProducts
     .querySelectorAll(
       ".warehouse-product-missing-button"
     )
     .forEach(button => {
-
       button.addEventListener(
         "click",
         event => {
-
           event.stopPropagation();
 
           markProductMissing(
@@ -1606,20 +1756,16 @@ function renderProducts(order) {
     });
 
 
-  // ========================================================
-  // DESHACER ESTADO
-  // ========================================================
+  // DESHACER
 
   modalProducts
     .querySelectorAll(
       ".warehouse-reset-button"
     )
     .forEach(button => {
-
       button.addEventListener(
         "click",
         event => {
-
           event.stopPropagation();
 
           resetProductWarehouseStatus(
@@ -1639,7 +1785,6 @@ function renderWarehouseProductStatus(
   order,
   product
 ) {
-
   const status =
     product.warehouseStatus ||
     "pendiente";
@@ -1648,7 +1793,6 @@ function renderWarehouseProductStatus(
     status ===
     "bajado"
   ) {
-
     return `
       <div
         class="warehouse-product-status ready"
@@ -1671,7 +1815,6 @@ function renderWarehouseProductStatus(
     status ===
     "traslado"
   ) {
-
     return `
       <div
         class="warehouse-product-status transfer"
@@ -1725,13 +1868,12 @@ function renderWarehouseProductStatus(
 
 
 // ==========================================================
-// MARCAR PRODUCTO COMO BAJADO / RECIBIDO
+// PRODUCTO BAJADO / RECIBIDO
 // ==========================================================
 
-function markProductReady(
+async function markProductReady(
   productId
 ) {
-
   const order =
     getSelectedOrder();
 
@@ -1750,8 +1892,11 @@ function markProductReady(
     return;
   }
 
-  const previousStatus =
+  const oldStatus =
     product.warehouseStatus;
+
+  const oldTransfer =
+    product.transferFrom;
 
   product.warehouseStatus =
     "bajado";
@@ -1759,38 +1904,57 @@ function markProductReady(
   product.transferFrom =
     null;
 
-  order.history.push({
-    text:
-      previousStatus ===
+  try {
+    await saveRemoteProductState(
+      order,
+      product
+    );
+
+    const historyText =
+      oldStatus ===
         "traslado"
         ? `Producto recibido y listo: ${product.name}`
-        : `Producto bajado: ${product.name}`,
+        : `Producto bajado: ${product.name}`;
 
-    time:
-      getCurrentDateTime()
-  });
+    await addRemoteHistory(
+      order,
+      historyText
+    );
 
-  saveOrderStates();
+    refreshOpenOrder();
 
-  refreshOpenOrder();
+    showToast(
+      oldStatus ===
+        "traslado"
+        ? "Producto recibido"
+        : "Producto marcado como bajado"
+    );
 
-  showToast(
-    previousStatus ===
-      "traslado"
-      ? "Producto recibido"
-      : "Producto marcado como bajado"
-  );
+  } catch (error) {
+    console.error(error);
+
+    product.warehouseStatus =
+      oldStatus;
+
+    product.transferFrom =
+      oldTransfer;
+
+    refreshOpenOrder();
+
+    showToast(
+      `Error: ${error.message}`
+    );
+  }
 }
 
 
 // ==========================================================
-// PRODUCTO NO DISPONIBLE EN LA SUCURSAL
+// NO HAY EN ESTA SUCURSAL
 // ==========================================================
 
-function markProductMissing(
+async function markProductMissing(
   productId
 ) {
-
   const order =
     getSelectedOrder();
 
@@ -1803,7 +1967,6 @@ function markProductMissing(
     order.assemblyLocation ===
       "sin-asignar"
   ) {
-
     showToast(
       "Primero asigna Las Condes o Patronato"
     );
@@ -1822,6 +1985,12 @@ function markProductMissing(
     return;
   }
 
+  const oldStatus =
+    product.warehouseStatus;
+
+  const oldTransfer =
+    product.transferFrom;
+
   const transferFrom =
     order.assemblyLocation ===
       "patronato"
@@ -1834,36 +2003,52 @@ function markProductMissing(
   product.transferFrom =
     transferFrom;
 
-  order.history.push({
-    text:
+  try {
+    await saveRemoteProductState(
+      order,
+      product
+    );
+
+    await addRemoteHistory(
+      order,
       `Producto solicitado desde ${getAssemblyLocationLabel(
         transferFrom
-      )}: ${product.name}`,
+      )}: ${product.name}`
+    );
 
-    time:
-      getCurrentDateTime()
-  });
+    refreshOpenOrder();
 
-  saveOrderStates();
+    showToast(
+      `Solicitado desde ${getAssemblyLocationLabel(
+        transferFrom
+      )}`
+    );
 
-  refreshOpenOrder();
+  } catch (error) {
+    console.error(error);
 
-  showToast(
-    `Solicitado desde ${getAssemblyLocationLabel(
-      transferFrom
-    )}`
-  );
+    product.warehouseStatus =
+      oldStatus;
+
+    product.transferFrom =
+      oldTransfer;
+
+    refreshOpenOrder();
+
+    showToast(
+      `Error: ${error.message}`
+    );
+  }
 }
 
 
 // ==========================================================
-// RESTABLECER ESTADO DEL PRODUCTO
+// DESHACER ESTADO PRODUCTO
 // ==========================================================
 
-function resetProductWarehouseStatus(
+async function resetProductWarehouseStatus(
   productId
 ) {
-
   const order =
     getSelectedOrder();
 
@@ -1882,31 +2067,61 @@ function resetProductWarehouseStatus(
     return;
   }
 
+  const oldStatus =
+    product.warehouseStatus;
+
+  const oldTransfer =
+    product.transferFrom;
+
   product.warehouseStatus =
     "pendiente";
 
   product.transferFrom =
     null;
 
-  saveOrderStates();
+  try {
+    await saveRemoteProductState(
+      order,
+      product
+    );
 
-  refreshOpenOrder();
+    await addRemoteHistory(
+      order,
+      `Estado de producto restablecido: ${product.name}`
+    );
 
-  showToast(
-    "Estado del producto restablecido"
-  );
+    refreshOpenOrder();
+
+    showToast(
+      "Estado del producto restablecido"
+    );
+
+  } catch (error) {
+    console.error(error);
+
+    product.warehouseStatus =
+      oldStatus;
+
+    product.transferFrom =
+      oldTransfer;
+
+    refreshOpenOrder();
+
+    showToast(
+      `Error: ${error.message}`
+    );
+  }
 }
 
 
 // ==========================================================
-// MOSTRAR INCIDENCIA DEL PRODUCTO
+// INCIDENCIA PRODUCTO
 // ==========================================================
 
 function renderProductIncident(
   order,
   product
 ) {
-
   const incident =
     order.incidents?.find(
       item =>
@@ -1917,7 +2132,6 @@ function renderProductIncident(
     );
 
   if (incident) {
-
     return `
       <div
         class="product-incident active"
@@ -1930,7 +2144,6 @@ function renderProductIncident(
             ⚠ Reemplazo pendiente
           </strong>
         </div>
-
 
         <div
           class="incident-details"
@@ -1952,16 +2165,16 @@ function renderProductIncident(
 
         </div>
 
-
         <span
           class="incident-time"
         >
           Reportado:
           ${escapeHtml(
-            incident.createdAt
+            formatStoredDate(
+              incident.createdAt
+            )
           )}
         </span>
-
 
         <button
           type="button"
@@ -2022,13 +2235,12 @@ function renderProductIncident(
 
 
 // ==========================================================
-// ABRIR MODAL DE INCIDENCIA
+// ABRIR MODAL INCIDENCIA
 // ==========================================================
 
 function reportProductIncident(
   productId
 ) {
-
   const order =
     getSelectedOrder();
 
@@ -2047,7 +2259,6 @@ function reportProductIncident(
     return;
   }
 
-
   const existingIncident =
     order.incidents?.find(
       item =>
@@ -2057,15 +2268,15 @@ function reportProductIncident(
           "pendiente"
     );
 
-  if (existingIncident) {
-
+  if (
+    existingIncident
+  ) {
     showToast(
       "Este producto ya tiene una incidencia pendiente"
     );
 
     return;
   }
-
 
   incidentProductId =
     product.id;
@@ -2079,39 +2290,31 @@ function reportProductIncident(
   incidentMaxQuantity =
     product.quantity;
 
-
   incidentProductName.textContent =
     product.code
       ? `${product.name} · Código ${product.code}`
       : product.name;
 
-
   incidentQuantityValue.textContent =
     "1";
-
 
   incidentQuantityAvailable.textContent =
     `Cantidad disponible en el pedido: ${product.quantity}`;
 
-
   incidentQuantitySection.hidden =
     true;
 
-
   incidentReasonButtons.forEach(
     button => {
-
       button.classList.remove(
         "selected"
       );
     }
   );
 
-
   incidentModal.classList.add(
     "is-open"
   );
-
 
   incidentModal.setAttribute(
     "aria-hidden",
@@ -2121,20 +2324,18 @@ function reportProductIncident(
 
 
 // ==========================================================
-// SELECCIONAR DAÑADO / QUEBRADO
+// MOTIVO INCIDENCIA
 // ==========================================================
 
 function selectIncidentReason(
   reason,
   button
 ) {
-
   incidentReason =
     reason;
 
   incidentReasonButtons.forEach(
     item => {
-
       item.classList.remove(
         "selected"
       );
@@ -2156,11 +2357,10 @@ function selectIncidentReason(
 
 
 // ==========================================================
-// ACTUALIZAR CANTIDAD INCIDENCIA
+// CANTIDAD INCIDENCIA
 // ==========================================================
 
 function updateIncidentQuantity() {
-
   if (
     incidentQuantity <
     1
@@ -2177,15 +2377,12 @@ function updateIncidentQuantity() {
       incidentMaxQuantity;
   }
 
-
   incidentQuantityValue.textContent =
     incidentQuantity;
-
 
   incidentQuantityMinus.disabled =
     incidentQuantity <=
     1;
-
 
   incidentQuantityPlus.disabled =
     incidentQuantity >=
@@ -2194,19 +2391,15 @@ function updateIncidentQuantity() {
 
 
 // ==========================================================
-// CONFIRMAR INCIDENCIA
+// CREAR INCIDENCIA EN D1
 // ==========================================================
 
-function confirmProductIncident() {
-
+async function confirmProductIncident() {
   const order =
     getSelectedOrder();
 
-  if (!order) {
-    return;
-  }
-
   if (
+    !order ||
     !incidentProductId
   ) {
     return;
@@ -2215,14 +2408,12 @@ function confirmProductIncident() {
   if (
     !incidentReason
   ) {
-
     showToast(
       "Selecciona Dañado o Quebrado"
     );
 
     return;
   }
-
 
   const product =
     order.products.find(
@@ -2235,66 +2426,68 @@ function confirmProductIncident() {
     return;
   }
 
+  incidentConfirmButton.disabled =
+    true;
 
-  if (
-    !Array.isArray(
-      order.incidents
-    )
-  ) {
-    order.incidents =
-      [];
+  try {
+    const data =
+      await apiRequest(
+        `/api/orders/${encodeURIComponent(
+          order.number
+        )}/incidents`,
+        {
+          method:
+            "POST",
+
+          body:
+            JSON.stringify({
+              productId:
+                product.id,
+
+              productName:
+                product.name,
+
+              productCode:
+                product.code ||
+                "",
+
+              reason:
+                incidentReason,
+
+              quantity:
+                incidentQuantity
+            })
+        }
+      );
+
+    order.incidents.push(
+      data.incident
+    );
+
+    await addRemoteHistory(
+      order,
+      `Incidencia: ${incidentReason} · ${product.name} · x${incidentQuantity}`
+    );
+
+    closeIncidentModal();
+
+    refreshOpenOrder();
+
+    showToast(
+      "Incidencia reportada"
+    );
+
+  } catch (error) {
+    console.error(error);
+
+    showToast(
+      `Error: ${error.message}`
+    );
+
+  } finally {
+    incidentConfirmButton.disabled =
+      false;
   }
-
-
-  order.incidents.push({
-    id:
-      `${Date.now()}-${product.id}`,
-
-    productId:
-      product.id,
-
-    productName:
-      product.name,
-
-    productCode:
-      product.code ||
-      "",
-
-    reason:
-      incidentReason,
-
-    quantity:
-      incidentQuantity,
-
-    status:
-      "pendiente",
-
-    createdAt:
-      getCurrentDateTime(),
-
-    resolvedAt:
-      null
-  });
-
-
-  order.history.push({
-    text:
-      `Incidencia: ${incidentReason} · ${product.name} · x${incidentQuantity}`,
-
-    time:
-      getCurrentDateTime()
-  });
-
-
-  saveOrderStates();
-
-  closeIncidentModal();
-
-  refreshOpenOrder();
-
-  showToast(
-    "Incidencia reportada"
-  );
 }
 
 
@@ -2303,7 +2496,6 @@ function confirmProductIncident() {
 // ==========================================================
 
 function closeIncidentModal() {
-
   if (
     !incidentModal
   ) {
@@ -2319,7 +2511,6 @@ function closeIncidentModal() {
     "true"
   );
 
-
   incidentProductId =
     null;
 
@@ -2332,14 +2523,11 @@ function closeIncidentModal() {
   incidentMaxQuantity =
     1;
 
-
   incidentQuantitySection.hidden =
     true;
 
-
   incidentReasonButtons.forEach(
     button => {
-
       button.classList.remove(
         "selected"
       );
@@ -2349,20 +2537,18 @@ function closeIncidentModal() {
 
 
 // ==========================================================
-// RESOLVER INCIDENCIA
+// RESOLVER INCIDENCIA EN D1
 // ==========================================================
 
-function resolveProductIncident(
+async function resolveProductIncident(
   productId
 ) {
-
   const order =
     getSelectedOrder();
 
   if (!order) {
     return;
   }
-
 
   const incident =
     order.incidents?.find(
@@ -2377,7 +2563,6 @@ function resolveProductIncident(
     return;
   }
 
-
   const confirmed =
     confirm(
       `¿Confirmas que el producto fue reemplazado?\n\n` +
@@ -2385,47 +2570,62 @@ function resolveProductIncident(
       `Cantidad: ${incident.quantity}`
     );
 
-
   if (!confirmed) {
     return;
   }
 
+  try {
+    const data =
+      await apiRequest(
+        `/api/incidents/${encodeURIComponent(
+          incident.id
+        )}/resolve`,
+        {
+          method:
+            "PUT",
 
-  incident.status =
-    "resuelto";
+          body:
+            JSON.stringify({})
+        }
+      );
 
+    incident.status =
+      "resuelto";
 
-  incident.resolvedAt =
-    getCurrentDateTime();
+    incident.resolvedAt =
+      data.incident
+        ?.resolvedAt ||
+      new Date()
+        .toISOString();
 
+    await addRemoteHistory(
+      order,
+      `Producto reemplazado: ${incident.productName} · x${incident.quantity}`
+    );
 
-  order.history.push({
-    text:
-      `Producto reemplazado: ${incident.productName} · x${incident.quantity}`,
+    refreshOpenOrder();
 
-    time:
-      getCurrentDateTime()
-  });
+    showToast(
+      "Reemplazo completado"
+    );
 
+  } catch (error) {
+    console.error(error);
 
-  saveOrderStates();
-
-  refreshOpenOrder();
-
-  showToast(
-    "Reemplazo completado"
-  );
+    showToast(
+      `Error: ${error.message}`
+    );
+  }
 }
 
 
 // ==========================================================
-// CONTADORES DE INCIDENCIAS
+// INCIDENCIAS
 // ==========================================================
 
 function getPendingIncidentCount(
   order
 ) {
-
   return (
     order.incidents?.filter(
       incident =>
@@ -2440,7 +2640,6 @@ function getPendingIncidentCount(
 function hasPendingIncidents(
   order
 ) {
-
   return (
     getPendingIncidentCount(
       order
@@ -2450,14 +2649,13 @@ function hasPendingIncidents(
 
 
 // ==========================================================
-// VISOR DE IMAGEN
+// VISOR IMAGEN
 // ==========================================================
 
 function openImageViewer(
   image,
   productName
 ) {
-
   if (
     !imageViewer ||
     !imageViewerImg
@@ -2465,15 +2663,12 @@ function openImageViewer(
     return;
   }
 
-
   imageViewerImg.src =
     image;
-
 
   imageViewerImg.alt =
     productName ||
     "Producto";
-
 
   imageViewer.classList.remove(
     "hidden"
@@ -2482,7 +2677,6 @@ function openImageViewer(
 
 
 function closeImageViewer() {
-
   if (
     !imageViewer ||
     !imageViewerImg
@@ -2490,11 +2684,9 @@ function closeImageViewer() {
     return;
   }
 
-
   imageViewer.classList.add(
     "hidden"
   );
-
 
   imageViewerImg.src =
     "";
@@ -2505,14 +2697,14 @@ function closeImageViewer() {
 // HISTORIAL
 // ==========================================================
 
-function renderHistory(order) {
-
+function renderHistory(
+  order
+) {
   if (
     !order.history ||
     order.history.length ===
-    0
+      0
   ) {
-
     historyList.innerHTML = `
       <div
         class="history-item"
@@ -2523,7 +2715,6 @@ function renderHistory(order) {
 
     return;
   }
-
 
   historyList.innerHTML =
     order.history
@@ -2543,7 +2734,9 @@ function renderHistory(order) {
               class="history-time"
             >
               ${escapeHtml(
-                item.time
+                formatStoredDate(
+                  item.time
+                )
               )}
             </span>
 
@@ -2555,16 +2748,16 @@ function renderHistory(order) {
 
 
 // ==========================================================
-// BOTONES DE ESTADO
+// ESTADO GENERAL
 // ==========================================================
 
-function updateModalButtons(order) {
-
+function updateModalButtons(
+  order
+) {
   if (
     order.status ===
     "enviado"
   ) {
-
     nextStatusButton.textContent =
       "Pedido ya enviado";
 
@@ -2575,7 +2768,6 @@ function updateModalButtons(order) {
       "0.5";
 
   } else {
-
     nextStatusButton.disabled =
       false;
 
@@ -2586,12 +2778,9 @@ function updateModalButtons(order) {
       order.status ===
       "problema"
     ) {
-
       nextStatusButton.textContent =
         "Resolver problema";
-
     } else {
-
       nextStatusButton.textContent =
         getNextButtonLabel(
           order.status
@@ -2599,12 +2788,10 @@ function updateModalButtons(order) {
     }
   }
 
-
   if (
     order.status ===
     "problema"
   ) {
-
     problemButton.textContent =
       "✓ Problema registrado";
 
@@ -2615,7 +2802,6 @@ function updateModalButtons(order) {
       "0.5";
 
   } else {
-
     problemButton.textContent =
       "⚠ Reportar incidencia";
 
@@ -2629,11 +2815,10 @@ function updateModalButtons(order) {
 
 
 // ==========================================================
-// AVANZAR ESTADO
+// AVANZAR PEDIDO
 // ==========================================================
 
-function advanceSelectedOrder() {
-
+async function advanceSelectedOrder() {
   const order =
     getSelectedOrder();
 
@@ -2641,13 +2826,11 @@ function advanceSelectedOrder() {
     return;
   }
 
-
   if (
     hasPendingIncidents(
       order
     )
   ) {
-
     showToast(
       "El pedido tiene incidencias pendientes"
     );
@@ -2655,37 +2838,52 @@ function advanceSelectedOrder() {
     return;
   }
 
-
   if (
     order.status ===
     "problema"
   ) {
+    const oldStatus =
+      order.status;
+
+    const oldPrevious =
+      order.previousStatus;
 
     order.status =
       order.previousStatus ||
       "pendiente";
 
-
-    order.history.push({
-      text:
-        "Problema resuelto",
-
-      time:
-        getCurrentDateTime()
-    });
-
-
     order.previousStatus =
       null;
 
+    try {
+      await saveRemoteOrderState(
+        order
+      );
 
-    saveOrderStates();
+      await addRemoteHistory(
+        order,
+        "Problema resuelto"
+      );
 
-    refreshOpenOrder();
+      refreshOpenOrder();
 
-    showToast(
-      "Problema resuelto"
-    );
+      showToast(
+        "Problema resuelto"
+      );
+
+    } catch (error) {
+      order.status =
+        oldStatus;
+
+      order.previousStatus =
+        oldPrevious;
+
+      refreshOpenOrder();
+
+      showToast(
+        `Error: ${error.message}`
+      );
+    }
 
     return;
   }
@@ -2708,45 +2906,63 @@ function advanceSelectedOrder() {
       order.status
     ];
 
-
   if (!nextStatus) {
     return;
   }
 
+  const oldStatus =
+    order.status;
 
   order.status =
     nextStatus;
 
+  nextStatusButton.disabled =
+    true;
 
-  order.history.push({
-    text:
+  try {
+    await saveRemoteOrderState(
+      order
+    );
+
+    await addRemoteHistory(
+      order,
       getHistoryText(
         nextStatus
-      ),
+      )
+    );
 
-    time:
-      getCurrentDateTime()
-  });
+    refreshOpenOrder();
 
+    showToast(
+      `Pedido actualizado: ${getStatusLabel(
+        nextStatus
+      )}`
+    );
 
-  saveOrderStates();
+  } catch (error) {
+    console.error(error);
 
-  refreshOpenOrder();
+    order.status =
+      oldStatus;
 
-  showToast(
-    `Pedido actualizado: ${getStatusLabel(
-      nextStatus
-    )}`
-  );
+    refreshOpenOrder();
+
+    showToast(
+      `Error: ${error.message}`
+    );
+
+  } finally {
+    nextStatusButton.disabled =
+      false;
+  }
 }
 
 
 // ==========================================================
-// PROBLEMA GENERAL DEL PEDIDO
+// PROBLEMA GENERAL
 // ==========================================================
 
-function markProblem() {
-
+async function markProblem() {
   const order =
     getSelectedOrder();
 
@@ -2756,56 +2972,59 @@ function markProblem() {
 
   if (
     order.status ===
-    "problema"
-  ) {
-    return;
-  }
-
-  if (
+      "problema" ||
     order.status ===
-    "enviado"
+      "enviado"
   ) {
-
-    showToast(
-      "Un pedido enviado no puede marcarse como problema"
-    );
-
     return;
   }
 
+  const oldStatus =
+    order.status;
 
   order.previousStatus =
-    order.status;
+    oldStatus;
 
   order.status =
     "problema";
 
+  try {
+    await saveRemoteOrderState(
+      order
+    );
 
-  order.history.push({
-    text:
-      "Problema general reportado",
+    await addRemoteHistory(
+      order,
+      "Problema general reportado"
+    );
 
-    time:
-      getCurrentDateTime()
-  });
+    refreshOpenOrder();
 
+    showToast(
+      "Problema registrado"
+    );
 
-  saveOrderStates();
+  } catch (error) {
+    order.status =
+      oldStatus;
 
-  refreshOpenOrder();
+    order.previousStatus =
+      null;
 
-  showToast(
-    "Problema registrado"
-  );
+    refreshOpenOrder();
+
+    showToast(
+      `Error: ${error.message}`
+    );
+  }
 }
 
 
 // ==========================================================
-// OBSERVACIONES
+// NOTAS
 // ==========================================================
 
-function saveNotes() {
-
+async function saveNotes() {
   const order =
     getSelectedOrder();
 
@@ -2813,35 +3032,57 @@ function saveNotes() {
     return;
   }
 
+  const oldNotes =
+    order.notes;
 
-  order.notes =
+  const newNotes =
     orderNotesInput
       .value
       .trim();
 
+  order.notes =
+    newNotes;
 
-  order.history.push({
-    text:
-      order.notes
+  saveNotesButton.disabled =
+    true;
+
+  try {
+    await saveRemoteOrderState(
+      order
+    );
+
+    await addRemoteHistory(
+      order,
+      newNotes
         ? "Observación actualizada"
-        : "Observación eliminada",
+        : "Observación eliminada"
+    );
 
-    time:
-      getCurrentDateTime()
-  });
+    renderHistory(
+      order
+    );
 
+    render();
 
-  saveOrderStates();
+    showToast(
+      "Observación guardada"
+    );
 
-  renderHistory(
-    order
-  );
+  } catch (error) {
+    order.notes =
+      oldNotes;
 
-  render();
+    orderNotesInput.value =
+      oldNotes;
 
-  showToast(
-    "Observación guardada"
-  );
+    showToast(
+      `Error: ${error.message}`
+    );
+
+  } finally {
+    saveNotesButton.disabled =
+      false;
+  }
 }
 
 
@@ -2850,7 +3091,6 @@ function saveNotes() {
 // ==========================================================
 
 function refreshOpenOrder() {
-
   const orderId =
     selectedOrderId;
 
@@ -2860,7 +3100,6 @@ function refreshOpenOrder() {
     orderId !==
     null
   ) {
-
     openOrder(
       orderId
     );
@@ -2869,7 +3108,6 @@ function refreshOpenOrder() {
 
 
 function getSelectedOrder() {
-
   return orders.find(
     order =>
       order.id ===
@@ -2878,8 +3116,9 @@ function getSelectedOrder() {
 }
 
 
-function getStatusLabel(status) {
-
+function getStatusLabel(
+  status
+) {
   const labels = {
     pendiente:
       "Pendiente",
@@ -2904,8 +3143,9 @@ function getStatusLabel(status) {
 }
 
 
-function getNextButtonLabel(status) {
-
+function getNextButtonLabel(
+  status
+) {
   const labels = {
     pendiente:
       "Marcar como bajado de bodega",
@@ -2924,8 +3164,9 @@ function getNextButtonLabel(status) {
 }
 
 
-function getHistoryText(status) {
-
+function getHistoryText(
+  status
+) {
   const labels = {
     bodega:
       "Pedido bajado de bodega",
@@ -2945,7 +3186,6 @@ function getHistoryText(status) {
 
 
 function getCurrentDateTime() {
-
   return new Intl.DateTimeFormat(
     "es-CL",
     {
@@ -2973,17 +3213,57 @@ function getCurrentDateTime() {
 function formatShopifyDate(
   dateString
 ) {
-
   if (!dateString) {
     return "";
   }
 
+  return new Intl.DateTimeFormat(
+    "es-CL",
+    {
+      day:
+        "2-digit",
+
+      month:
+        "short",
+
+      year:
+        "numeric",
+
+      hour:
+        "2-digit",
+
+      minute:
+        "2-digit"
+    }
+  ).format(
+    new Date(
+      dateString
+    )
+  );
+}
+
+
+function formatStoredDate(
+  value
+) {
+  if (!value) {
+    return "";
+  }
 
   const date =
     new Date(
-      dateString
+      value
     );
 
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+    return String(
+      value
+    );
+  }
 
   return new Intl.DateTimeFormat(
     "es-CL",
@@ -3009,38 +3289,33 @@ function formatShopifyDate(
 }
 
 
-function showToast(message) {
-
+function showToast(
+  message
+) {
   toastMessage.textContent =
     message;
-
 
   toast.classList.remove(
     "hidden"
   );
 
-
   clearTimeout(
     showToast.timeout
   );
 
-
   showToast.timeout =
     setTimeout(
       () => {
-
         toast.classList.add(
           "hidden"
         );
-
       },
-      2300
+      2500
     );
 }
 
 
 function showLoadingState() {
-
   ordersGrid.innerHTML = `
     <div
       style="
@@ -3059,7 +3334,6 @@ function showLoadingState() {
 function escapeHtml(
   value = ""
 ) {
-
   return String(value)
     .replaceAll(
       "&",
@@ -3085,7 +3359,7 @@ function escapeHtml(
 
 
 // ==========================================================
-// FILTROS POR ZONA
+// FILTROS ZONA
 // ==========================================================
 
 document
@@ -3093,11 +3367,9 @@ document
     ".filter-button"
   )
   .forEach(button => {
-
     button.addEventListener(
       "click",
       () => {
-
         document
           .querySelectorAll(
             ".filter-button"
@@ -3109,15 +3381,12 @@ document
               )
           );
 
-
         button.classList.add(
           "active"
         );
 
-
         activeZone =
           button.dataset.zone;
-
 
         renderOrders();
       }
@@ -3126,7 +3395,7 @@ document
 
 
 // ==========================================================
-// FILTROS POR ESTADO
+// FILTROS ESTADO
 // ==========================================================
 
 document
@@ -3134,11 +3403,9 @@ document
     ".status-filter"
   )
   .forEach(button => {
-
     button.addEventListener(
       "click",
       () => {
-
         document
           .querySelectorAll(
             ".status-filter"
@@ -3150,15 +3417,12 @@ document
               )
           );
 
-
         button.classList.add(
           "active"
         );
 
-
         activeStatus =
           button.dataset.status;
-
 
         renderOrders();
       }
@@ -3167,7 +3431,7 @@ document
 
 
 // ==========================================================
-// FILTROS POR LUGAR DE ARMADO
+// FILTRO LUGAR DE ARMADO
 // ==========================================================
 
 document
@@ -3175,11 +3439,9 @@ document
     ".location-filter"
   )
   .forEach(button => {
-
     button.addEventListener(
       "click",
       () => {
-
         document
           .querySelectorAll(
             ".location-filter"
@@ -3191,15 +3453,12 @@ document
               )
           );
 
-
         button.classList.add(
           "active"
         );
 
-
         activeLocation =
           button.dataset.location;
-
 
         renderOrders();
       }
@@ -3214,12 +3473,10 @@ document
 searchOrder.addEventListener(
   "input",
   event => {
-
     searchTerm =
       event.target
         .value
         .trim();
-
 
     renderOrders();
   }
@@ -3245,12 +3502,10 @@ closeModalXButton.addEventListener(
 modal.addEventListener(
   "click",
   event => {
-
     if (
       event.target ===
       modal
     ) {
-
       closeModal();
     }
   }
@@ -3258,13 +3513,12 @@ modal.addEventListener(
 
 
 // ==========================================================
-// TECLA ESCAPE
+// ESCAPE
 // ==========================================================
 
 document.addEventListener(
   "keydown",
   event => {
-
     if (
       event.key ===
         "Escape" &&
@@ -3273,12 +3527,10 @@ document.addEventListener(
         "is-open"
       )
     ) {
-
       closeIncidentModal();
 
       return;
     }
-
 
     if (
       event.key ===
@@ -3288,12 +3540,10 @@ document.addEventListener(
         "hidden"
       )
     ) {
-
       closeImageViewer();
 
       return;
     }
-
 
     if (
       event.key ===
@@ -3302,7 +3552,6 @@ document.addEventListener(
         "hidden"
       )
     ) {
-
       closeModal();
     }
   }
@@ -3310,7 +3559,7 @@ document.addEventListener(
 
 
 // ==========================================================
-// ESTADO / PROBLEMAS / NOTAS
+// BOTONES GENERALES
 // ==========================================================
 
 nextStatusButton.addEventListener(
@@ -3332,13 +3581,12 @@ saveNotesButton.addEventListener(
 
 
 // ==========================================================
-// OCULTAR REINICIAR DEMO
+// OCULTAR DEMO
 // ==========================================================
 
 if (
   resetDemoButton
 ) {
-
   resetDemoButton.style.display =
     "none";
 }
@@ -3351,7 +3599,6 @@ if (
 if (
   closeImageViewerButton
 ) {
-
   closeImageViewerButton.addEventListener(
     "click",
     closeImageViewer
@@ -3362,16 +3609,13 @@ if (
 if (
   imageViewer
 ) {
-
   imageViewer.addEventListener(
     "click",
     event => {
-
       if (
         event.target ===
         imageViewer
       ) {
-
         closeImageViewer();
       }
     }
@@ -3380,16 +3624,14 @@ if (
 
 
 // ==========================================================
-// MODAL INCIDENCIA · MOTIVOS
+// MODAL INCIDENCIA
 // ==========================================================
 
 incidentReasonButtons.forEach(
   button => {
-
     button.addEventListener(
       "click",
       () => {
-
         selectIncidentReason(
           button.dataset.reason,
           button
@@ -3400,14 +3642,9 @@ incidentReasonButtons.forEach(
 );
 
 
-// ==========================================================
-// MODAL INCIDENCIA · CANTIDAD
-// ==========================================================
-
 incidentQuantityMinus.addEventListener(
   "click",
   () => {
-
     incidentQuantity--;
 
     updateIncidentQuantity();
@@ -3418,7 +3655,6 @@ incidentQuantityMinus.addEventListener(
 incidentQuantityPlus.addEventListener(
   "click",
   () => {
-
     incidentQuantity++;
 
     updateIncidentQuantity();
@@ -3426,19 +3662,11 @@ incidentQuantityPlus.addEventListener(
 );
 
 
-// ==========================================================
-// MODAL INCIDENCIA · CONFIRMAR
-// ==========================================================
-
 incidentConfirmButton.addEventListener(
   "click",
   confirmProductIncident
 );
 
-
-// ==========================================================
-// MODAL INCIDENCIA · CERRAR
-// ==========================================================
 
 incidentModalClose.addEventListener(
   "click",
@@ -3459,7 +3687,7 @@ incidentModalBackdrop.addEventListener(
 
 
 // ==========================================================
-// CAMBIAR LUGAR DE ARMADO
+// LUGAR DE ARMADO
 // ==========================================================
 
 assemblyLocationSelect.addEventListener(
