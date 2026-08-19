@@ -9,6 +9,14 @@
 
   "keep_vars": true,
 
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "bodega-casonadeco-db",
+      "database_id": "a6d9ca44-620a-4155-b8cd-eee59b7b0b14"
+    }
+  ],
+
   "assets": {
     "directory": ".",
     "binding": "ASSETS",
