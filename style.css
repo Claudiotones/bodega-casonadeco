@@ -3300,3 +3300,25 @@ img {
   }
 
 }
+/* =========================================================
+   RESUMEN DE PREPARACIÓN DE PRODUCTOS
+========================================================= */
+
+#modal-product-count {
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+#modal-product-count.products-pending {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #c2410c;
+}
+
+#modal-product-count.products-complete {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #15803d;
+}
