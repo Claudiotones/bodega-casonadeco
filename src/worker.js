@@ -192,6 +192,7 @@ export default {
         }
 
         return await getShopifyOrders(
+          request,
           env
         );
       }
@@ -213,6 +214,7 @@ export default {
         }
 
         return await getAllStates(
+          request,
           env
         );
       }
@@ -328,6 +330,7 @@ export default {
         }
 
         return await resolveIncident(
+          request,
           env,
           decodeURIComponent(
             incidentResolveMatch[1]
@@ -1094,8 +1097,7 @@ async function updateUser(
   validateUserRole(
     role
   );
-
-  validateUserLocation(
+    validateUserLocation(
     location
   );
 
@@ -1347,10 +1349,10 @@ async function getCurrentUser(
 
 
 // ==========================================================
-// EXIGIR ADMIN
+// EXIGIR USUARIO AUTENTICADO
 // ==========================================================
 
-async function requireAdmin(
+async function requireAuth(
   request,
   env
 ) {
@@ -1376,6 +1378,24 @@ async function requireAdmin(
 
     throw error;
   }
+
+  return user;
+}
+
+
+// ==========================================================
+// EXIGIR ADMIN
+// ==========================================================
+
+async function requireAdmin(
+  request,
+  env
+) {
+  const user =
+    await requireAuth(
+      request,
+      env
+    );
 
   if (
     user.role !==
@@ -1738,7 +1758,7 @@ function base64ToBytes(
 
 
 // ==========================================================
-// VALIDACIONES USUARIOS
+// NORMALIZAR USUARIO
 // ==========================================================
 
 function normalizeUsername(
@@ -1753,6 +1773,10 @@ function normalizeUsername(
 }
 
 
+// ==========================================================
+// NORMALIZAR SUCURSAL DE USUARIO
+// ==========================================================
+
 function normalizeUserLocation(
   value
 ) {
@@ -1762,29 +1786,44 @@ function normalizeUserLocation(
     value ===
       undefined ||
     value ===
-      "" ||
-    value ===
-      "ninguna"
+      ""
   ) {
     return null;
   }
 
   return String(
     value
-  ).trim();
+  )
+    .trim()
+    .toLowerCase();
 }
 
+
+// ==========================================================
+// VALIDACIONES DE USUARIO
+// ==========================================================
 
 function validateUsername(
   username
 ) {
   if (
-    !/^[a-z0-9._-]{3,30}$/.test(
+    username.length <
+      3 ||
+    username.length >
+      40
+  ) {
+    throw new Error(
+      "El usuario debe tener entre 3 y 40 caracteres."
+    );
+  }
+
+  if (
+    !/^[a-z0-9._-]+$/.test(
       username
     )
   ) {
     throw new Error(
-      "El usuario debe tener entre 3 y 30 caracteres y usar solo letras minúsculas, números, punto, guion o guion bajo."
+      "El usuario solo puede contener letras, números, punto, guion y guion bajo."
     );
   }
 }
@@ -1902,9 +1941,15 @@ function publicUserFromRow(
 // ==========================================================
 
 async function getShopifyOrders(
+  request,
   env
 ) {
   validateShopifyEnvironment(
+    env
+  );
+
+  await requireAuth(
+    request,
     env
   );
 
@@ -1932,29 +1977,8 @@ async function getShopifyOrders(
           displayFulfillmentStatus
 
           fulfillments(first: 10) {
-  id
-  displayStatus
-}
-
-          fulfillmentOrders(first: 10) {
-            nodes {
-              id
-              status
-
-              deliveryMethod {
-                methodType
-                presentedName
-              }
-
-              assignedLocation {
-                name
-
-                location {
-                  id
-                  name
-                }
-              }
-            }
+            id
+            displayStatus
           }
 
           shippingAddress {
@@ -2014,6 +2038,7 @@ async function getShopifyOrders(
       }
     }
   `;
+
   const response =
     await fetch(
       endpoint,
@@ -2066,23 +2091,24 @@ async function getShopifyOrders(
     data.data.orders.nodes
       .filter(order => {
 
-        // ==================================================
-        // OCULTAR RETIROS QUE YA ESTÁN LISTOS PARA RETIRAR
-        // ==================================================
+        const fulfillmentNodes =
+          order.fulfillments ||
+          [];
 
-const fulfillmentNodes =
-  order.fulfillments ||
-  [];
+        const isReadyForPickup =
+          fulfillmentNodes.some(
+            fulfillment =>
+              fulfillment.displayStatus ===
+              "READY_FOR_PICKUP"
+          );
 
-const isReadyForPickup =
-  fulfillmentNodes.some(
-    fulfillment =>
-      fulfillment.displayStatus ===
-      "READY_FOR_PICKUP"
-  );
+        const isFulfilled =
+          order.displayFulfillmentStatus ===
+          "FULFILLED";
 
         if (
-          isReadyForPickup
+          isReadyForPickup ||
+          isFulfilled
         ) {
           return false;
         }
@@ -2091,38 +2117,27 @@ const isReadyForPickup =
       })
       .map(order => {
 
-        // ==================================================
-        // DATOS DE RETIRO EN TIENDA
-        // ==================================================
+        const shippingMethods =
+          (
+            order.shippingLines
+              ?.nodes ||
+            []
+          )
+            .map(
+              line =>
+                String(
+                  line.title ||
+                  ""
+                ).trim()
+            )
+            .filter(
+              Boolean
+            );
 
-        const fulfillmentOrders =
-          order.fulfillmentOrders
-            ?.nodes ||
-          [];
-
-        const pickupFulfillment =
-          fulfillmentOrders.find(
-            fulfillmentOrder =>
-              fulfillmentOrder
-                ?.deliveryMethod
-                ?.methodType ===
-              "PICK_UP"
+        const pickupInfo =
+          getPickupInfoFromShippingMethods(
+            shippingMethods
           );
-
-        const isPickup =
-          Boolean(
-            pickupFulfillment
-          );
-
-        const pickupLocation =
-          pickupFulfillment
-            ?.assignedLocation
-            ?.location
-            ?.name ||
-          pickupFulfillment
-            ?.assignedLocation
-            ?.name ||
-          "";
 
         return {
           id:
@@ -2141,10 +2156,14 @@ const isReadyForPickup =
             order.displayFulfillmentStatus,
 
           pickup: {
-            isPickup,
+            isPickup:
+              pickupInfo.isPickup,
 
             location:
-              pickupLocation
+              pickupInfo.location,
+
+            locationKey:
+              pickupInfo.locationKey
           },
 
           shipping: {
@@ -2169,14 +2188,15 @@ const isReadyForPickup =
               "",
 
             methods:
-              order.shippingLines.nodes.map(
-                line =>
-                  line.title
-              )
+              shippingMethods
           },
 
           products:
-            order.lineItems.nodes.map(
+            (
+              order.lineItems
+                ?.nodes ||
+              []
+            ).map(
               item => ({
                 id:
                   item.id,
@@ -2225,13 +2245,122 @@ const isReadyForPickup =
 
 
 // ==========================================================
-// D1 ESTADOS
+// DETECTAR RETIRO DESDE MÉTODO DE ENVÍO
+// ==========================================================
+
+function getPickupInfoFromShippingMethods(
+  methods
+) {
+  const combined =
+    (
+      methods ||
+      []
+    )
+      .join(
+        " "
+      )
+      .toLowerCase()
+      .normalize(
+        "NFD"
+      )
+      .replace(
+        /[\u0300-\u036f]/g,
+        ""
+      );
+
+  const looksLikePickup =
+    combined.includes(
+      "retiro"
+    ) ||
+    combined.includes(
+      "retira"
+    ) ||
+    combined.includes(
+      "pickup"
+    ) ||
+    combined.includes(
+      "pick up"
+    );
+
+  if (
+    !looksLikePickup
+  ) {
+    return {
+      isPickup:
+        false,
+
+      location:
+        "",
+
+      locationKey:
+        ""
+    };
+  }
+
+  if (
+    combined.includes(
+      "las condes"
+    )
+  ) {
+    return {
+      isPickup:
+        true,
+
+      location:
+        "Las Condes",
+
+      locationKey:
+        "las-condes"
+    };
+  }
+
+  if (
+    combined.includes(
+      "recoleta"
+    ) ||
+    combined.includes(
+      "patronato"
+    )
+  ) {
+    return {
+      isPickup:
+        true,
+
+      location:
+        "Recoleta",
+
+      locationKey:
+        "recoleta"
+    };
+  }
+
+  return {
+    isPickup:
+      true,
+
+    location:
+      "",
+
+    locationKey:
+      ""
+  };
+}
+
+// ==========================================================
+// ESTADOS D1
+// OBTENER TODOS LOS ESTADOS
 // ==========================================================
 
 async function getAllStates(
+  request,
   env
 ) {
   validateD1(
+    env
+  );
+
+  await requireAuth(
+    request,
     env
   );
 
@@ -2292,10 +2421,7 @@ async function getAllStates(
             id,
             order_number,
             text,
-            created_at,
-            user_id,
-            user_name,
-            user_role
+            created_at
           FROM order_history
           ORDER BY id ASC
         `)
@@ -2359,7 +2485,7 @@ async function getAllStates(
     stateMap[
       row.order_number
     ].products.push({
-      id:
+      productId:
         row.product_id,
 
       warehouseStatus:
@@ -2396,8 +2522,7 @@ async function getAllStates(
         row.product_name,
 
       productCode:
-        row.product_code ||
-        "",
+        row.product_code,
 
       reason:
         row.reason,
@@ -2436,19 +2561,7 @@ async function getAllStates(
         row.text,
 
       time:
-        row.created_at,
-
-      userId:
-        row.user_id ||
-        null,
-
-      userName:
-        row.user_name ||
-        null,
-
-      userRole:
-        row.user_role ||
-        null
+        row.created_at
     });
   }
 
@@ -2463,10 +2576,10 @@ async function getAllStates(
 
 
 // ==========================================================
-// ESTADO GENERAL PEDIDO
+// GUARDAR ESTADO GENERAL DEL PEDIDO
 // ==========================================================
 
-async function updateOrderState(
+async function saveOrderState(
   request,
   env,
   orderNumber
@@ -2475,19 +2588,45 @@ async function updateOrderState(
     env
   );
 
+  const user =
+    await requireAuth(
+      request,
+      env
+    );
+
   const body =
     await readJsonBody(
       request
     );
 
+  const shopifyOrderId =
+    body.shopifyOrderId
+      ? String(
+          body.shopifyOrderId
+        )
+      : null;
+
+  const status =
+    normalizeOrderStatus(
+      body.status
+    );
+
+  const assemblyLocation =
+    normalizeAssemblyLocation(
+      body.assemblyLocation
+    );
+
+  const notes =
+    String(
+      body.notes ||
+      ""
+    ).trim();
+
   const existing =
     await env.DB
       .prepare(`
         SELECT
-          order_number,
-          shopify_order_id,
           status,
-          previous_status,
           assembly_location,
           notes
         FROM order_states
@@ -2498,40 +2637,11 @@ async function updateOrderState(
       )
       .first();
 
-  const shopifyOrderId =
-    body.shopifyOrderId ??
-    existing?.shopify_order_id ??
-    null;
-
-  const status =
-    body.status ??
-    existing?.status ??
-    "pendiente";
-
   const previousStatus =
-    body.previousStatus ??
-    existing?.previous_status ??
+    existing?.status ||
     null;
 
-  const assemblyLocation =
-    body.assemblyLocation ??
-    existing?.assembly_location ??
-    "sin-asignar";
-
-  const notes =
-    body.notes ??
-    existing?.notes ??
-    "";
-
-  validateOrderStatus(
-    status
-  );
-
-  validateAssemblyLocation(
-    assemblyLocation
-  );
-
-  const now =
+  const updatedAt =
     new Date()
       .toISOString();
 
@@ -2553,11 +2663,11 @@ async function updateOrderState(
         shopify_order_id =
           excluded.shopify_order_id,
 
+        previous_status =
+          order_states.status,
+
         status =
           excluded.status,
-
-        previous_status =
-          excluded.previous_status,
 
         assembly_location =
           excluded.assembly_location,
@@ -2575,9 +2685,69 @@ async function updateOrderState(
       previousStatus,
       assemblyLocation,
       notes,
-      now
+      updatedAt
     )
     .run();
+
+  // --------------------------------------------------------
+  // REGISTRAR CAMBIO DE ESTADO
+  // --------------------------------------------------------
+
+  if (
+    !existing ||
+    existing.status !==
+      status
+  ) {
+    await insertAutomaticHistory(
+      env,
+      orderNumber,
+      `${user.name} cambió el estado del pedido de ${formatOrderStatusForHistory(
+        existing?.status
+      )} a ${formatOrderStatusForHistory(
+        status
+      )}.`,
+      updatedAt
+    );
+  }
+
+  // --------------------------------------------------------
+  // REGISTRAR CAMBIO DE UBICACIÓN DE ARMADO
+  // --------------------------------------------------------
+
+  if (
+    !existing ||
+    existing.assembly_location !==
+      assemblyLocation
+  ) {
+    await insertAutomaticHistory(
+      env,
+      orderNumber,
+      `${user.name} asignó el armado a ${formatAssemblyLocationForHistory(
+        assemblyLocation
+      )}.`,
+      updatedAt
+    );
+  }
+
+  // --------------------------------------------------------
+  // REGISTRAR CAMBIO DE NOTAS
+  // --------------------------------------------------------
+
+  if (
+    existing &&
+    String(
+      existing.notes ||
+      ""
+    ) !==
+      notes
+  ) {
+    await insertAutomaticHistory(
+      env,
+      orderNumber,
+      `${user.name} actualizó las notas del pedido.`,
+      updatedAt
+    );
+  }
 
   return jsonResponse({
     success:
@@ -2590,18 +2760,17 @@ async function updateOrderState(
       previousStatus,
       assemblyLocation,
       notes,
-      updatedAt:
-        now
+      updatedAt
     }
   });
 }
 
 
 // ==========================================================
-// ESTADO PRODUCTO
+// GUARDAR ESTADO DE PRODUCTO
 // ==========================================================
 
-async function updateProductState(
+async function saveProductState(
   request,
   env,
   orderNumber,
@@ -2611,9 +2780,25 @@ async function updateProductState(
     env
   );
 
+  const user =
+    await requireAuth(
+      request,
+      env
+    );
+
   const body =
     await readJsonBody(
       request
+    );
+
+  const warehouseStatus =
+    normalizeWarehouseStatus(
+      body.warehouseStatus
+    );
+
+  const transferFrom =
+    normalizeTransferFrom(
+      body.transferFrom
     );
 
   const existing =
@@ -2623,8 +2808,7 @@ async function updateProductState(
           warehouse_status,
           transfer_from
         FROM product_states
-        WHERE
-          order_number = ?
+        WHERE order_number = ?
           AND product_id = ?
       `)
       .bind(
@@ -2633,32 +2817,7 @@ async function updateProductState(
       )
       .first();
 
-  const warehouseStatus =
-    body.warehouseStatus ??
-    existing?.warehouse_status ??
-    "pendiente";
-
-  const transferFrom =
-    body.transferFrom ===
-    undefined
-      ? existing?.transfer_from ??
-        null
-      : body.transferFrom;
-
-  validateWarehouseStatus(
-    warehouseStatus
-  );
-
-  if (
-    transferFrom !==
-    null
-  ) {
-    validateTransferLocation(
-      transferFrom
-    );
-  }
-
-  const now =
+  const updatedAt =
     new Date()
       .toISOString();
 
@@ -2692,9 +2851,41 @@ async function updateProductState(
       productId,
       warehouseStatus,
       transferFrom,
-      now
+      updatedAt
     )
     .run();
+
+  if (
+    !existing ||
+    existing.warehouse_status !==
+      warehouseStatus ||
+    existing.transfer_from !==
+      transferFrom
+  ) {
+    let historyText =
+      `${user.name} actualizó un producto a ${formatWarehouseStatusForHistory(
+        warehouseStatus
+      )}`;
+
+    if (
+      transferFrom
+    ) {
+      historyText +=
+        ` (traslado desde ${formatAssemblyLocationForHistory(
+          transferFrom
+        )})`;
+    }
+
+    historyText +=
+      ".";
+
+    await insertAutomaticHistory(
+      env,
+      orderNumber,
+      historyText,
+      updatedAt
+    );
+  }
 
   return jsonResponse({
     success:
@@ -2705,8 +2896,7 @@ async function updateProductState(
       productId,
       warehouseStatus,
       transferFrom,
-      updatedAt:
-        now
+      updatedAt
     }
   });
 }
@@ -2724,6 +2914,12 @@ async function createIncident(
   validateD1(
     env
   );
+
+  const user =
+    await requireAuth(
+      request,
+      env
+    );
 
   const body =
     await readJsonBody(
@@ -2749,54 +2945,25 @@ async function createIncident(
     ).trim();
 
   const reason =
-    String(
-      body.reason ||
-      ""
-    ).trim();
+    normalizeIncidentReason(
+      body.reason
+    );
 
   const quantity =
-    Number.parseInt(
-      body.quantity,
-      10
+    Math.max(
+      1,
+      parseInt(
+        body.quantity,
+        10
+      ) ||
+      1
     );
 
   if (
     !productId
   ) {
     throw new Error(
-      "Falta productId."
-    );
-  }
-
-  if (
-    !reason
-  ) {
-    throw new Error(
-      "Falta el motivo de la incidencia."
-    );
-  }
-
-  if (
-    ![
-      "Dañado",
-      "Quebrado"
-    ].includes(
-      reason
-    )
-  ) {
-    throw new Error(
-      "El motivo debe ser Dañado o Quebrado."
-    );
-  }
-
-  if (
-    Number.isNaN(
-      quantity
-    ) ||
-    quantity < 1
-  ) {
-    throw new Error(
-      "Cantidad de incidencia inválida."
+      "Falta el ID del producto."
     );
   }
 
@@ -2821,12 +2988,7 @@ async function createIncident(
         created_at,
         resolved_at
       )
-      VALUES (
-        ?, ?, ?, ?, ?, ?, ?,
-        'pendiente',
-        ?,
-        NULL
-      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'abierta', ?, NULL)
     `)
     .bind(
       id,
@@ -2839,6 +3001,19 @@ async function createIncident(
       createdAt
     )
     .run();
+
+  await insertAutomaticHistory(
+    env,
+    orderNumber,
+    `${user.name} registró incidencia ${formatIncidentReasonForHistory(
+      reason
+    )} en ${productName || productCode || "un producto"} (${quantity} unidad${
+      quantity === 1
+        ? ""
+        : "es"
+    }).`,
+    createdAt
+  );
 
   return jsonResponse(
     {
@@ -2855,7 +3030,7 @@ async function createIncident(
         quantity,
 
         status:
-          "pendiente",
+          "abierta",
 
         createdAt,
 
@@ -2873,6 +3048,7 @@ async function createIncident(
 // ==========================================================
 
 async function resolveIncident(
+  request,
   env,
   incidentId
 ) {
@@ -2880,11 +3056,22 @@ async function resolveIncident(
     env
   );
 
+  const user =
+    await requireAuth(
+      request,
+      env
+    );
+
   const incident =
     await env.DB
       .prepare(`
         SELECT
           id,
+          order_number,
+          product_name,
+          product_code,
+          reason,
+          quantity,
           status
         FROM incidents
         WHERE id = ?
@@ -2911,22 +3098,14 @@ async function resolveIncident(
 
   if (
     incident.status ===
-    "resuelto"
+      "resuelta"
   ) {
     return jsonResponse({
       success:
         true,
 
-      incident: {
-        id:
-          incidentId,
-
-        status:
-          "resuelto"
-      },
-
-      message:
-        "La incidencia ya estaba resuelta."
+      alreadyResolved:
+        true
     });
   }
 
@@ -2938,7 +3117,7 @@ async function resolveIncident(
     .prepare(`
       UPDATE incidents
       SET
-        status = 'resuelto',
+        status = 'resuelta',
         resolved_at = ?
       WHERE id = ?
     `)
@@ -2948,25 +3127,31 @@ async function resolveIncident(
     )
     .run();
 
+  await insertAutomaticHistory(
+    env,
+    incident.order_number,
+    `${user.name} resolvió la incidencia ${formatIncidentReasonForHistory(
+      incident.reason
+    )} de ${incident.product_name || incident.product_code || "un producto"}.`,
+    resolvedAt
+  );
+
   return jsonResponse({
     success:
       true,
 
-    incident: {
-      id:
-        incidentId,
+    incidentId,
 
-      status:
-        "resuelto",
+    status:
+      "resuelta",
 
-      resolvedAt
-    }
+    resolvedAt
   });
 }
 
 
 // ==========================================================
-// HISTORIAL
+// AGREGAR HISTORIAL MANUAL
 // ==========================================================
 
 async function addOrderHistory(
@@ -2979,20 +3164,10 @@ async function addOrderHistory(
   );
 
   const user =
-    await getCurrentUser(
+    await requireAuth(
       request,
       env
     );
-
-  if (!user) {
-    return jsonResponse(
-      {
-        success: false,
-        error: "Debes iniciar sesión."
-      },
-      401
-    );
-  }
 
   const body =
     await readJsonBody(
@@ -3005,15 +3180,24 @@ async function addOrderHistory(
       ""
     ).trim();
 
-  if (!text) {
+  if (
+    !text
+  ) {
     throw new Error(
       "El texto del historial está vacío."
     );
   }
 
   const createdAt =
-    new Date()
-      .toISOString();
+    body.createdAt
+      ? String(
+          body.createdAt
+        )
+      : new Date()
+          .toISOString();
+
+  const historyText =
+    `${user.name}: ${text}`;
 
   const result =
     await env.DB
@@ -3021,20 +3205,14 @@ async function addOrderHistory(
         INSERT INTO order_history (
           order_number,
           text,
-          created_at,
-          user_id,
-          user_name,
-          user_role
+          created_at
         )
-        VALUES (?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?)
       `)
       .bind(
         orderNumber,
-        text,
-        createdAt,
-        user.id,
-        user.name,
-        user.role
+        historyText,
+        createdAt
       )
       .run();
 
@@ -3045,17 +3223,11 @@ async function addOrderHistory(
 
       history: {
         orderNumber,
-        text,
-        createdAt,
 
-        userId:
-          user.id,
+        text:
+          historyText,
 
-        userName:
-          user.name,
-
-        userRole:
-          user.role
+        createdAt
       },
 
       meta:
@@ -3067,7 +3239,37 @@ async function addOrderHistory(
 
 
 // ==========================================================
-// CONTENEDOR ESTADO
+// HISTORIAL AUTOMÁTICO
+// ==========================================================
+
+async function insertAutomaticHistory(
+  env,
+  orderNumber,
+  text,
+  createdAt =
+    new Date()
+      .toISOString()
+) {
+  await env.DB
+    .prepare(`
+      INSERT INTO order_history (
+        order_number,
+        text,
+        created_at
+      )
+      VALUES (?, ?, ?)
+    `)
+    .bind(
+      orderNumber,
+      text,
+      createdAt
+    )
+    .run();
+}
+
+
+// ==========================================================
+// CREAR CONTENEDOR DE ESTADO SI NO EXISTE
 // ==========================================================
 
 function ensureOrderStateContainer(
@@ -3118,6 +3320,296 @@ function ensureOrderStateContainer(
 
 
 // ==========================================================
+// NORMALIZAR ESTADO DEL PEDIDO
+// ==========================================================
+
+function normalizeOrderStatus(
+  value
+) {
+  const status =
+    String(
+      value ||
+      "pendiente"
+    )
+      .trim()
+      .toLowerCase();
+
+  const allowed = [
+    "pendiente",
+    "bodega",
+    "armado",
+    "listo",
+    "enviado"
+  ];
+
+  if (
+    !allowed.includes(
+      status
+    )
+  ) {
+    throw new Error(
+      `Estado de pedido inválido: ${status}`
+    );
+  }
+
+  return status;
+}
+
+
+// ==========================================================
+// NORMALIZAR UBICACIÓN DE ARMADO
+// ==========================================================
+
+function normalizeAssemblyLocation(
+  value
+) {
+  const location =
+    String(
+      value ||
+      "sin-asignar"
+    )
+      .trim()
+      .toLowerCase();
+
+  const allowed = [
+    "sin-asignar",
+    "las-condes",
+    "patronato"
+  ];
+
+  if (
+    !allowed.includes(
+      location
+    )
+  ) {
+    throw new Error(
+      `Ubicación de armado inválida: ${location}`
+    );
+  }
+
+  return location;
+}
+
+
+// ==========================================================
+// NORMALIZAR ESTADO DE PRODUCTO
+// ==========================================================
+
+function normalizeWarehouseStatus(
+  value
+) {
+  const status =
+    String(
+      value ||
+      "pendiente"
+    )
+      .trim()
+      .toLowerCase();
+
+  const allowed = [
+    "pendiente",
+    "bajado",
+    "no-hay"
+  ];
+
+  if (
+    !allowed.includes(
+      status
+    )
+  ) {
+    throw new Error(
+      `Estado de producto inválido: ${status}`
+    );
+  }
+
+  return status;
+}
+
+
+// ==========================================================
+// NORMALIZAR ORIGEN DE TRASLADO
+// ==========================================================
+
+function normalizeTransferFrom(
+  value
+) {
+  if (
+    value ===
+      null ||
+    value ===
+      undefined ||
+    value ===
+      ""
+  ) {
+    return null;
+  }
+
+  const location =
+    String(
+      value
+    )
+      .trim()
+      .toLowerCase();
+
+  const allowed = [
+    "las-condes",
+    "patronato"
+  ];
+
+  if (
+    !allowed.includes(
+      location
+    )
+  ) {
+    throw new Error(
+      `Origen de traslado inválido: ${location}`
+    );
+  }
+
+  return location;
+}
+
+
+// ==========================================================
+// NORMALIZAR MOTIVO DE INCIDENCIA
+// ==========================================================
+
+function normalizeIncidentReason(
+  value
+) {
+  const reason =
+    String(
+      value ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
+
+  const allowed = [
+    "quebrado",
+    "dañado"
+  ];
+
+  if (
+    !allowed.includes(
+      reason
+    )
+  ) {
+    throw new Error(
+      `Motivo de incidencia inválido: ${reason}`
+    );
+  }
+
+  return reason;
+}
+
+
+// ==========================================================
+// TEXTOS PARA HISTORIAL
+// ==========================================================
+
+function formatOrderStatusForHistory(
+  status
+) {
+  const labels = {
+    pendiente:
+      "Pendiente",
+
+    bodega:
+      "Bodega",
+
+    armado:
+      "Armado",
+
+    listo:
+      "Listo",
+
+    enviado:
+      "Enviado"
+  };
+
+  if (
+    !status
+  ) {
+    return "Sin estado";
+  }
+
+  return labels[
+    status
+  ] ||
+    status;
+}
+
+
+function formatAssemblyLocationForHistory(
+  location
+) {
+  const labels = {
+    "sin-asignar":
+      "Sin asignar",
+
+    "las-condes":
+      "Las Condes",
+
+    patronato:
+      "Patronato"
+  };
+
+  if (
+    !location
+  ) {
+    return "Sin asignar";
+  }
+
+  return labels[
+    location
+  ] ||
+    location;
+}
+
+
+function formatWarehouseStatusForHistory(
+  status
+) {
+  const labels = {
+    pendiente:
+      "Pendiente",
+
+    bajado:
+      "Bajado de bodega",
+
+    "no-hay":
+      "No hay"
+  };
+
+  return labels[
+    status
+  ] ||
+    status;
+}
+
+
+function formatIncidentReasonForHistory(
+  reason
+) {
+  const labels = {
+    quebrado:
+      "QUEBRADO",
+
+    "dañado":
+      "DAÑADO"
+  };
+
+  return labels[
+    reason
+  ] ||
+    String(
+      reason ||
+      ""
+    ).toUpperCase();
+}
+
+// ==========================================================
 // CÓDIGO PRODUCTO
 // ==========================================================
 
@@ -3165,7 +3657,6 @@ function extractCodeFromDescription(
 
   const patterns = [
     /\bc[oó]digo\.?\s*[:\-]?\s*([A-Z0-9][A-Z0-9._\/-]*)/i,
-
     /\bc[oó]d\.?\s*[:\-]?\s*([A-Z0-9][A-Z0-9._\/-]*)/i
   ];
 
@@ -3361,7 +3852,7 @@ function getFullSizeShopifyImage(
 
 
 // ==========================================================
-// VALIDACIONES
+// VALIDAR SHOPIFY
 // ==========================================================
 
 function validateShopifyEnvironment(
@@ -3390,6 +3881,10 @@ function validateShopifyEnvironment(
 }
 
 
+// ==========================================================
+// VALIDAR D1
+// ==========================================================
+
 function validateD1(
   env
 ) {
@@ -3398,91 +3893,6 @@ function validateD1(
   ) {
     throw new Error(
       "No existe el binding D1 DB."
-    );
-  }
-}
-
-
-function validateOrderStatus(
-  status
-) {
-  const allowed = [
-    "pendiente",
-    "bodega",
-    "armando",
-    "enviado",
-    "problema"
-  ];
-
-  if (
-    !allowed.includes(
-      status
-    )
-  ) {
-    throw new Error(
-      `Estado de pedido inválido: ${status}`
-    );
-  }
-}
-
-
-function validateAssemblyLocation(
-  location
-) {
-  const allowed = [
-    "sin-asignar",
-    "las-condes",
-    "patronato"
-  ];
-
-  if (
-    !allowed.includes(
-      location
-    )
-  ) {
-    throw new Error(
-      `Lugar de armado inválido: ${location}`
-    );
-  }
-}
-
-
-function validateWarehouseStatus(
-  status
-) {
-  const allowed = [
-    "pendiente",
-    "bajado",
-    "traslado"
-  ];
-
-  if (
-    !allowed.includes(
-      status
-    )
-  ) {
-    throw new Error(
-      `Estado de producto inválido: ${status}`
-    );
-  }
-}
-
-
-function validateTransferLocation(
-  location
-) {
-  const allowed = [
-    "las-condes",
-    "patronato"
-  ];
-
-  if (
-    !allowed.includes(
-      location
-    )
-  ) {
-    throw new Error(
-      `Sucursal de traslado inválida: ${location}`
     );
   }
 }
@@ -3512,9 +3922,11 @@ async function readJsonBody(
   }
 
   try {
+
     return await request.json();
 
   } catch {
+
     throw new Error(
       "JSON inválido."
     );
