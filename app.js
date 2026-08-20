@@ -817,11 +817,20 @@ function shopifyOrderToLocalOrder(
     order.shipping?.methods?.[0] ||
     "";
 
+  const pickup =
+    order.pickup || {
+      isPickup: false,
+      locationKey: null,
+      location: null
+    };
+
   const zone =
-    classifyZone(
-      shippingMethod,
-      order.shipping
-    );
+    pickup.isPickup
+      ? "retiro"
+      : classifyZone(
+          shippingMethod,
+          order.shipping
+        );
 
   return {
     id:
@@ -846,9 +855,32 @@ function shopifyOrderToLocalOrder(
 
     zone,
 
+    pickup: {
+      isPickup:
+        Boolean(
+          pickup.isPickup
+        ),
+
+      locationKey:
+        pickup.locationKey ||
+        null,
+
+      locationName:
+        pickup.location ||
+        null
+    },
+
     shipping:
-      shippingMethod ||
-      "Sin método de envío",
+      pickup.isPickup
+        ? (
+            pickup.locationName
+              ? `Retiro en ${pickup.locationName}`
+              : "Retiro en tienda"
+          )
+        : (
+            shippingMethod ||
+            "Sin método de envío"
+          ),
 
     shippingDetails: {
       city:
@@ -913,7 +945,9 @@ function shopifyOrderToLocalOrder(
     history: [
       {
         text:
-          "Pedido recibido desde Shopify",
+          pickup.isPickup
+            ? "Pedido de retiro recibido desde Shopify"
+            : "Pedido recibido desde Shopify",
 
         time:
           formatShopifyDate(
@@ -923,7 +957,6 @@ function shopifyOrderToLocalOrder(
     ]
   };
 }
-
 
 // ==========================================================
 // MEZCLAR D1 + SHOPIFY
@@ -1494,20 +1527,30 @@ function createOrderCard(
         </div>
 
         <span
-          class="zone-badge ${
-            order.zone ===
-              "santiago"
-              ? "zone-santiago"
-              : "zone-regiones"
-          }"
-        >
-          ${
-            order.zone ===
-              "santiago"
-              ? "Santiago"
-              : "Regiones"
-          }
-        </span>
+  class="zone-badge ${
+    order.pickup?.isPickup
+      ? "zone-pickup"
+      : order.zone ===
+          "santiago"
+        ? "zone-santiago"
+        : "zone-regiones"
+  }"
+>
+  ${
+    order.pickup?.isPickup
+      ? `RETIRO · ${
+          order.pickup.location
+            ? escapeHtml(
+                order.pickup.location.toUpperCase()
+              )
+            : "TIENDA"
+        }`
+      : order.zone ===
+          "santiago"
+        ? "Santiago"
+        : "Regiones"
+  }
+</span>
 
       </div>
 
@@ -1647,6 +1690,19 @@ function openOrder(
   modalOrderDate.textContent =
     `${order.date} · ${order.shipping}`;
 
+if (
+  order.pickup?.isPickup
+) {
+  modalZone.textContent =
+    order.pickup.location
+      ? `RETIRO · ${order.pickup.location.toUpperCase()}`
+      : "RETIRO · TIENDA";
+
+  modalZone.className =
+    "zone-badge zone-pickup";
+
+} else {
+
   modalZone.textContent =
     order.zone ===
       "santiago"
@@ -1661,6 +1717,7 @@ function openOrder(
         ? "zone-santiago"
         : "zone-regiones"
     );
+}
 
   orderNotesInput.value =
     order.notes ||
