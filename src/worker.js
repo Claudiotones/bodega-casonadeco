@@ -2200,7 +2200,10 @@ async function getAllStates(
             id,
             order_number,
             text,
-            created_at
+            created_at,
+            user_id,
+            user_name,
+            user_role
           FROM order_history
           ORDER BY id ASC
         `)
@@ -2341,7 +2344,19 @@ async function getAllStates(
         row.text,
 
       time:
-        row.created_at
+        row.created_at,
+
+      userId:
+        row.user_id ||
+        null,
+
+      userName:
+        row.user_name ||
+        null,
+
+      userRole:
+        row.user_role ||
+        null
     });
   }
 
@@ -2871,6 +2886,22 @@ async function addOrderHistory(
     env
   );
 
+  const user =
+    await getCurrentUser(
+      request,
+      env
+    );
+
+  if (!user) {
+    return jsonResponse(
+      {
+        success: false,
+        error: "Debes iniciar sesión."
+      },
+      401
+    );
+  }
+
   const body =
     await readJsonBody(
       request
@@ -2882,21 +2913,15 @@ async function addOrderHistory(
       ""
     ).trim();
 
-  if (
-    !text
-  ) {
+  if (!text) {
     throw new Error(
       "El texto del historial está vacío."
     );
   }
 
   const createdAt =
-    body.createdAt
-      ? String(
-          body.createdAt
-        )
-      : new Date()
-          .toISOString();
+    new Date()
+      .toISOString();
 
   const result =
     await env.DB
@@ -2904,14 +2929,20 @@ async function addOrderHistory(
         INSERT INTO order_history (
           order_number,
           text,
-          created_at
+          created_at,
+          user_id,
+          user_name,
+          user_role
         )
-        VALUES (?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?)
       `)
       .bind(
         orderNumber,
         text,
-        createdAt
+        createdAt,
+        user.id,
+        user.name,
+        user.role
       )
       .run();
 
@@ -2923,7 +2954,16 @@ async function addOrderHistory(
       history: {
         orderNumber,
         text,
-        createdAt
+        createdAt,
+
+        userId:
+          user.id,
+
+        userName:
+          user.name,
+
+        userRole:
+          user.role
       },
 
       meta:
