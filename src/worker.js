@@ -2070,16 +2070,16 @@ async function getShopifyOrders(
         // OCULTAR RETIROS QUE YA ESTÁN LISTOS PARA RETIRAR
         // ==================================================
 
-        const fulfillmentNodes =
-          order.fulfillments?.nodes ||
-          [];
+const fulfillmentNodes =
+  order.fulfillments ||
+  [];
 
-        const isReadyForPickup =
-          fulfillmentNodes.some(
-            fulfillment =>
-              fulfillment.displayStatus ===
-              "READY_FOR_PICKUP"
-          );
+const isReadyForPickup =
+  fulfillmentNodes.some(
+    fulfillment =>
+      fulfillment.displayStatus ===
+      "READY_FOR_PICKUP"
+  );
 
         if (
           isReadyForPickup
