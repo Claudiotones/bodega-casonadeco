@@ -1112,11 +1112,6 @@ async function addRemoteHistory(
   order,
   text
 ) {
-  const attributedText =
-    currentUser?.name
-      ? `${currentUser.name} · ${text}`
-      : text;
-
   const data =
     await apiRequest(
       `/api/orders/${encodeURIComponent(
@@ -1128,8 +1123,7 @@ async function addRemoteHistory(
 
         body:
           JSON.stringify({
-            text:
-              attributedText
+            text
           })
       }
     );
@@ -1137,15 +1131,27 @@ async function addRemoteHistory(
   const item = {
     text:
       data.history?.text ||
-      attributedText,
+      text,
 
     time:
-      formatStoredDate(
-        data.history
-          ?.createdAt ||
-        new Date()
-          .toISOString()
-      )
+      data.history?.createdAt ||
+      new Date()
+        .toISOString(),
+
+    userId:
+      data.history?.userId ||
+      currentUser?.id ||
+      null,
+
+    userName:
+      data.history?.userName ||
+      currentUser?.name ||
+      null,
+
+    userRole:
+      data.history?.userRole ||
+      currentUser?.role ||
+      null
   };
 
   order.history.push(
@@ -3061,9 +3067,22 @@ function renderHistory(
         item => `
           <div class="history-item">
 
-            ${escapeHtml(
-              item.text
-            )}
+        ${
+          item.userName
+            ? `
+              <strong>
+                ${escapeHtml(
+                  item.userName
+                )}
+              </strong>
+              ·
+            `
+            : ""
+        }
+
+        ${escapeHtml(
+          item.text
+        )}
 
             <span class="history-time">
               ${escapeHtml(
