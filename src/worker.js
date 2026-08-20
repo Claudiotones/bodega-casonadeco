@@ -1932,11 +1932,9 @@ async function getShopifyOrders(
           displayFulfillmentStatus
 
           fulfillments(first: 10) {
-            nodes {
-              id
-              displayStatus
-            }
-          }
+  id
+  displayStatus
+}
 
           fulfillmentOrders(first: 10) {
             nodes {
