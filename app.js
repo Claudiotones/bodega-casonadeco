@@ -12,6 +12,10 @@ let searchTerm = "";
 
 let currentUser = null;
 let users = [];
+let lastStatesSignature = "";
+let syncTimer = null;
+
+const SYNC_INTERVAL_MS = 5000;
 
 
 // ==========================================================
@@ -459,14 +463,23 @@ async function loadApplication() {
         shopifyOrderToLocalOrder
       );
 
-  applyRemoteStates(
+applyRemoteStates(
+  statesData.states ||
+  {}
+);
+
+updateCurrentUserUI();
+
+render();
+
+lastStatesSignature =
+  JSON.stringify(
     statesData.states ||
     {}
   );
 
-  updateCurrentUserUI();
-
-  render();
+startStateSync();
+  
 }
 
 
@@ -1159,6 +1172,112 @@ async function addRemoteHistory(
   );
 
   return item;
+}
+
+// ==========================================================
+// SINCRONIZACIÓN SILENCIOSA
+// ==========================================================
+
+async function syncRemoteStates() {
+  if (
+    !currentUser ||
+    document.hidden
+  ) {
+    return;
+  }
+
+  try {
+    const data =
+      await apiRequest(
+        "/api/states"
+      );
+
+    const states =
+      data.states ||
+      {};
+
+    const signature =
+      JSON.stringify(
+        states
+      );
+
+    if (
+      signature ===
+      lastStatesSignature
+    ) {
+      return;
+    }
+
+    lastStatesSignature =
+      signature;
+
+    applyRemoteStates(
+      states
+    );
+
+    render();
+
+    if (
+      selectedOrderId !==
+      null
+    ) {
+      const order =
+        getSelectedOrder();
+
+      if (order) {
+        updateAssemblyLocationUI(
+          order
+        );
+
+        renderProgress(
+          order
+        );
+
+        renderProducts(
+          order
+        );
+
+        renderHistory(
+          order
+        );
+
+        updateModalButtons(
+          order
+        );
+      }
+    }
+
+  } catch (error) {
+    console.error(
+      "Error sincronizando estados:",
+      error
+    );
+  }
+}
+
+
+function startStateSync() {
+  stopStateSync();
+
+  syncTimer =
+    setInterval(
+      syncRemoteStates,
+      SYNC_INTERVAL_MS
+    );
+}
+
+
+function stopStateSync() {
+  if (
+    syncTimer
+  ) {
+    clearInterval(
+      syncTimer
+    );
+
+    syncTimer =
+      null;
+  }
 }
 
 
