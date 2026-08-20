@@ -1931,6 +1931,34 @@ async function getShopifyOrders(
           displayFinancialStatus
           displayFulfillmentStatus
 
+          fulfillments(first: 10) {
+            nodes {
+              id
+              displayStatus
+            }
+          }
+
+          fulfillmentOrders(first: 10) {
+            nodes {
+              id
+              status
+
+              deliveryMethod {
+                methodType
+                presentedName
+              }
+
+              assignedLocation {
+                name
+
+                location {
+                  id
+                  name
+                }
+              }
+            }
+          }
+
           shippingAddress {
             city
             province
@@ -1988,7 +2016,6 @@ async function getShopifyOrders(
       }
     }
   `;
-
   const response =
     await fetch(
       endpoint,
