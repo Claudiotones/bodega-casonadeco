@@ -2065,87 +2065,154 @@ async function getShopifyOrders(
   }
 
   const orders =
-    data.data.orders.nodes.map(
-      order => ({
-        id:
-          order.id,
+    data.data.orders.nodes
+      .filter(order => {
 
-        number:
-          order.name,
+        // ==================================================
+        // OCULTAR RETIROS QUE YA ESTÁN LISTOS PARA RETIRAR
+        // ==================================================
 
-        createdAt:
-          order.createdAt,
+        const fulfillmentNodes =
+          order.fulfillments?.nodes ||
+          [];
 
-        financialStatus:
-          order.displayFinancialStatus,
+        const isReadyForPickup =
+          fulfillmentNodes.some(
+            fulfillment =>
+              fulfillment.displayStatus ===
+              "READY_FOR_PICKUP"
+          );
 
-        fulfillmentStatus:
-          order.displayFulfillmentStatus,
+        if (
+          isReadyForPickup
+        ) {
+          return false;
+        }
 
-        shipping: {
-          city:
-            order.shippingAddress
-              ?.city ||
-            "",
-
-          province:
-            order.shippingAddress
-              ?.province ||
-            "",
-
-          provinceCode:
-            order.shippingAddress
-              ?.provinceCode ||
-            "",
-
-          country:
-            order.shippingAddress
-              ?.country ||
-            "",
-
-          methods:
-            order.shippingLines.nodes.map(
-              line =>
-                line.title
-            )
-        },
-
-        products:
-          order.lineItems.nodes.map(
-            item => ({
-              id:
-                item.id,
-
-              name:
-                item.name,
-
-              quantity:
-                item.quantity,
-
-              sku:
-                item.sku ||
-                "",
-
-              code:
-                getProductCode(
-                  item
-                ),
-
-              variant:
-                item.variant?.title &&
-                item.variant.title !==
-                "Default Title"
-                  ? item.variant.title
-                  : "",
-
-              image:
-                getLineItemImage(
-                  item
-                )
-            })
-          )
+        return true;
       })
-    );
+      .map(order => {
+
+        // ==================================================
+        // DATOS DE RETIRO EN TIENDA
+        // ==================================================
+
+        const fulfillmentOrders =
+          order.fulfillmentOrders
+            ?.nodes ||
+          [];
+
+        const pickupFulfillment =
+          fulfillmentOrders.find(
+            fulfillmentOrder =>
+              fulfillmentOrder
+                ?.deliveryMethod
+                ?.methodType ===
+              "PICK_UP"
+          );
+
+        const isPickup =
+          Boolean(
+            pickupFulfillment
+          );
+
+        const pickupLocation =
+          pickupFulfillment
+            ?.assignedLocation
+            ?.location
+            ?.name ||
+          pickupFulfillment
+            ?.assignedLocation
+            ?.name ||
+          "";
+
+        return {
+          id:
+            order.id,
+
+          number:
+            order.name,
+
+          createdAt:
+            order.createdAt,
+
+          financialStatus:
+            order.displayFinancialStatus,
+
+          fulfillmentStatus:
+            order.displayFulfillmentStatus,
+
+          pickup: {
+            isPickup,
+
+            location:
+              pickupLocation
+          },
+
+          shipping: {
+            city:
+              order.shippingAddress
+                ?.city ||
+              "",
+
+            province:
+              order.shippingAddress
+                ?.province ||
+              "",
+
+            provinceCode:
+              order.shippingAddress
+                ?.provinceCode ||
+              "",
+
+            country:
+              order.shippingAddress
+                ?.country ||
+              "",
+
+            methods:
+              order.shippingLines.nodes.map(
+                line =>
+                  line.title
+              )
+          },
+
+          products:
+            order.lineItems.nodes.map(
+              item => ({
+                id:
+                  item.id,
+
+                name:
+                  item.name,
+
+                quantity:
+                  item.quantity,
+
+                sku:
+                  item.sku ||
+                  "",
+
+                code:
+                  getProductCode(
+                    item
+                  ),
+
+                variant:
+                  item.variant?.title &&
+                  item.variant.title !==
+                  "Default Title"
+                    ? item.variant.title
+                    : "",
+
+                image:
+                  getLineItemImage(
+                    item
+                  )
+              })
+            )
+        };
+      });
 
   return jsonResponse({
     success:
