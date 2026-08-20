@@ -2268,36 +2268,15 @@ function getPickupInfoFromShippingMethods(
         ""
       );
 
-  const looksLikePickup =
-    combined.includes(
-      "retiro"
-    ) ||
-    combined.includes(
-      "retira"
-    ) ||
-    combined.includes(
-      "pickup"
-    ) ||
-    combined.includes(
-      "pick up"
-    );
+  // ========================================================
+  // RETIRO LAS CONDES
+  // Shopify puede enviarlo como dirección de la sucursal
+  // ========================================================
 
   if (
-    !looksLikePickup
-  ) {
-    return {
-      isPickup:
-        false,
-
-      location:
-        "",
-
-      locationKey:
-        ""
-    };
-  }
-
-  if (
+    combined.includes(
+      "rosario sur 103"
+    ) ||
     combined.includes(
       "las condes"
     )
@@ -2313,6 +2292,11 @@ function getPickupInfoFromShippingMethods(
         "las-condes"
     };
   }
+
+
+  // ========================================================
+  // RETIRO RECOLETA
+  // ========================================================
 
   if (
     combined.includes(
@@ -2334,9 +2318,48 @@ function getPickupInfoFromShippingMethods(
     };
   }
 
+
+  // ========================================================
+  // OTRO MÉTODO DE RETIRO
+  // ========================================================
+
+  const looksLikePickup =
+    combined.includes(
+      "retiro"
+    ) ||
+    combined.includes(
+      "retira"
+    ) ||
+    combined.includes(
+      "pickup"
+    ) ||
+    combined.includes(
+      "pick up"
+    );
+
+  if (
+    looksLikePickup
+  ) {
+    return {
+      isPickup:
+        true,
+
+      location:
+        "",
+
+      locationKey:
+        ""
+    };
+  }
+
+
+  // ========================================================
+  // DESPACHO NORMAL
+  // ========================================================
+
   return {
     isPickup:
-      true,
+      false,
 
     location:
       "",
