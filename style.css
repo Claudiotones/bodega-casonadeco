@@ -1075,6 +1075,13 @@ img {
   color: var(--regiones);
 }
 
+.zone-pickup {
+  background: #ede9fe;
+  color: #6d28d9;
+
+  border: 1px solid #ddd6fe;
+}
+
 
 /* =========================================================
    ORDER PRODUCTS PREVIEW
