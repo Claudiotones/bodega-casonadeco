@@ -3887,3 +3887,46 @@ img {
   }
 
 }
+
+/* ==================================================
+   ESTADO DEL PRODUCTO EN BODEGA
+================================================== */
+
+.warehouse-product-status {
+  display: inline-flex;
+  align-items: center;
+
+  width: fit-content;
+
+  margin-bottom: 8px;
+  padding: 5px 9px;
+
+  border-radius: 7px;
+
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+
+/* POR BAJAR */
+
+.warehouse-product-status.pending {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+
+  color: #c2410c;
+}
+
+
+/* PRODUCTO BAJADO */
+
+.warehouse-product-status.ready {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+
+  color: #15803d;
+}
