@@ -855,20 +855,32 @@ function shopifyOrderToLocalOrder(
 
     zone,
 
-    pickup: {
-      isPickup:
-        Boolean(
+        pickup: {
+          isPickup:
+            Boolean(
+              pickup.isPickup
+            ),
+        
+          locationKey:
+            pickup.locationKey ||
+            null,
+        
+          location:
+            pickup.location ||
+            null
+        },
+        
+        shipping:
           pickup.isPickup
-        ),
-
-      locationKey:
-        pickup.locationKey ||
-        null,
-
-      locationName:
-        pickup.location ||
-        null
-    },
+            ? (
+                pickup.location
+                  ? `Retiro en ${pickup.location}`
+                  : "Retiro en tienda"
+              )
+            : (
+                shippingMethod ||
+                "Sin método de envío"
+              ),
 
     shipping:
       pickup.isPickup
@@ -1022,11 +1034,11 @@ function applyRemoteStates(
           order.products.map(
             product => {
               const savedProduct =
-                savedProducts.find(
-                  item =>
-                    item.id ===
-                    product.id
-                );
+                  savedProducts.find(
+                    item =>
+                      item.productId ===
+                      product.id
+                  );
 
               return {
                 ...product,
@@ -2470,7 +2482,7 @@ return `
     </button>
 
   </div>
-`;
+
   `;
 }
 
