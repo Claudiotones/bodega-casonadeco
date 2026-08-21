@@ -1977,9 +1977,29 @@ async function getShopifyOrders(
           displayFulfillmentStatus
 
           fulfillments(first: 10) {
-            id
-            displayStatus
-          }
+  id
+  displayStatus
+}
+
+fulfillmentOrders(first: 10) {
+  nodes {
+    id
+    status
+
+    deliveryMethod {
+      methodType
+      presentedName
+    }
+
+    fulfillments(first: 10) {
+      nodes {
+        id
+        displayStatus
+        status
+      }
+    }
+  }
+}
 
           shippingAddress {
             city
@@ -2091,27 +2111,88 @@ async function getShopifyOrders(
     data.data.orders.nodes
       .filter(order => {
 
-        const fulfillmentNodes =
-          order.fulfillments ||
-          [];
+        const orderFulfillments =
+  order.fulfillments ||
+  [];
 
-        const isReadyForPickup =
-          fulfillmentNodes.some(
-            fulfillment =>
-              fulfillment.displayStatus ===
-              "READY_FOR_PICKUP"
-          );
+const fulfillmentOrders =
+  order.fulfillmentOrders
+    ?.nodes ||
+  [];
 
-        const isFulfilled =
-          order.displayFulfillmentStatus ===
-          "FULFILLED";
 
-        if (
-          isReadyForPickup ||
-          isFulfilled
-        ) {
-          return false;
-        }
+// ==================================================
+// FULFILLMENT ORDERS QUE SON RETIRO EN TIENDA
+// ==================================================
+
+const pickupFulfillmentOrders =
+  fulfillmentOrders.filter(
+    fulfillmentOrder =>
+      fulfillmentOrder
+        ?.deliveryMethod
+        ?.methodType ===
+      "PICK_UP"
+  );
+
+
+// ==================================================
+// RETIRO LISTO O YA RETIRADO
+// ==================================================
+
+const pickupIsReady =
+  pickupFulfillmentOrders.some(
+    fulfillmentOrder =>
+      (
+        fulfillmentOrder
+          ?.fulfillments
+          ?.nodes ||
+        []
+      ).some(
+        fulfillment =>
+          fulfillment.displayStatus ===
+            "READY_FOR_PICKUP" ||
+          fulfillment.displayStatus ===
+            "PICKED_UP"
+      )
+  );
+
+
+// ==================================================
+// RESPALDO CON FULFILLMENTS DEL PEDIDO
+// ==================================================
+
+const orderPickupIsReady =
+  orderFulfillments.some(
+    fulfillment =>
+      fulfillment.displayStatus ===
+        "READY_FOR_PICKUP" ||
+      fulfillment.displayStatus ===
+        "PICKED_UP"
+  );
+
+
+// ==================================================
+// PEDIDO COMPLETAMENTE FULFILLED
+// ==================================================
+
+const isFulfilled =
+  order.displayFulfillmentStatus ===
+  "FULFILLED";
+
+
+// ==================================================
+// OCULTAR DE LA APP DE BODEGA
+// ==================================================
+
+if (
+  pickupIsReady ||
+  orderPickupIsReady ||
+  isFulfilled
+) {
+  return false;
+}
+
+return true;
 
         return true;
       })
