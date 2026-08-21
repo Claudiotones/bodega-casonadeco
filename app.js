@@ -2530,18 +2530,18 @@ async function markProductReady(
     );
 
   } catch (error) {
-    product.warehouseStatus =
-      oldStatus;
+  product.warehouseStatus =
+    oldStatus;
 
-    product.transferFrom =
-      oldTransfer;
+  product.transferFrom =
+    oldTransfer;
 
-    refreshOpenOrder();
+  refreshOpenOrder();
 
-    showToast(
-      `Error: ${error.message}`
-    );
-  }
+  showToast(
+    "Error: " + error.message
+  );
+}
 }
 
 
