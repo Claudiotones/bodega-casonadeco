@@ -2403,8 +2403,8 @@ function renderWarehouseProductStatus(
   product
 ) {
   const status =
-    product.warehouseStatus ||
-    "pendiente";
+  product.warehouseStatus ||
+  "pendiente";
 
   if (
     status ===
@@ -2414,9 +2414,9 @@ function renderWarehouseProductStatus(
       <div
         class="warehouse-product-status ready"
       >
-        ✓ Producto bajado
+        ✓ PRODUCTO BAJADO
       </div>
-
+  
       <button
         type="button"
         class="warehouse-reset-button"
@@ -2460,7 +2460,7 @@ return `
   <div
     class="warehouse-product-status pending"
   >
-    Por bajar
+    POR BAJAR
   </div>
 
   <div class="warehouse-product-actions">
@@ -2470,7 +2470,7 @@ return `
       class="warehouse-product-ready-button"
       data-product-id="${product.id}"
     >
-      ✓ Bajado de bodega
+      ✓ Marcar como bajado
     </button>
 
     <button
@@ -2482,8 +2482,7 @@ return `
     </button>
 
   </div>
-
-  `;
+`;
 }
 
 
