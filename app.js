@@ -2445,25 +2445,33 @@ function renderWarehouseProductStatus(
   }
 
   return `
-    <div class="warehouse-product-actions">
+    return `
+  <div
+    class="warehouse-product-status pending"
+  >
+    Por bajar
+  </div>
 
-      <button
-        type="button"
-        class="warehouse-product-ready-button"
-        data-product-id="${product.id}"
-      >
-        ✓ Bajado
-      </button>
+  <div class="warehouse-product-actions">
 
-      <button
-        type="button"
-        class="warehouse-product-missing-button"
-        data-product-id="${product.id}"
-      >
-        ↔ No hay aquí
-      </button>
+    <button
+      type="button"
+      class="warehouse-product-ready-button"
+      data-product-id="${product.id}"
+    >
+      ✓ Bajado de bodega
+    </button>
 
-    </div>
+    <button
+      type="button"
+      class="warehouse-product-missing-button"
+      data-product-id="${product.id}"
+    >
+      ↔ No hay aquí
+    </button>
+
+  </div>
+`;
   `;
 }
 
