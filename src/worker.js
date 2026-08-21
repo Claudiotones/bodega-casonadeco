@@ -1,3 +1,5 @@
+// Deploy actualizado
+
 const SHOPIFY_API_VERSION = "2026-07";
 
 const SESSION_COOKIE_NAME = "casona_session";
