@@ -3902,8 +3902,14 @@ async function getShopifyAccessToken(
     );
   }
 
+  console.log(
+  "SHOPIFY TOKEN SCOPES:",
+  data.scope
+);
+
   return data.access_token;
 }
+
 
 
 // ==========================================================
