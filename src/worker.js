@@ -2247,6 +2247,11 @@ return true;
               pickupInfo.locationKey
           },
 
+          debugFulfillmentOrders:
+              order.fulfillmentOrders
+              ?.nodes ||
+              [],
+
           shipping: {
             city:
               order.shippingAddress
