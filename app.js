@@ -2518,13 +2518,7 @@ async function markProductReady(
       product
     );
 
-    await addRemoteHistory(
-      order,
-      oldStatus ===
-        "traslado"
-        ? `Producto recibido y listo: ${product.name}`
-        : `Producto bajado: ${product.name}`
-    );
+    
 
     refreshOpenOrder();
 
