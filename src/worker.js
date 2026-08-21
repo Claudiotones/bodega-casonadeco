@@ -3444,13 +3444,13 @@ function normalizeOrderStatus(
       .trim()
       .toLowerCase();
 
-  const allowed = [
-    "pendiente",
-    "bodega",
-    "armado",
-    "listo",
-    "enviado"
-  ];
+const allowed = [
+  "pendiente",
+  "bodega",
+  "armando",
+  "enviado",
+  "problema"
+];
 
   if (
     !allowed.includes(
