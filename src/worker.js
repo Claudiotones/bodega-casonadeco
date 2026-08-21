@@ -2880,7 +2880,7 @@ async function saveOrderState(
 // GUARDAR ESTADO DE PRODUCTO
 // ==========================================================
 
-async function saveProductState(
+async function updateProductState(
   request,
   env,
   orderNumber,
@@ -3519,7 +3519,7 @@ function normalizeWarehouseStatus(
   const allowed = [
     "pendiente",
     "bajado",
-    "no-hay"
+    "traslado"
   ];
 
   if (
