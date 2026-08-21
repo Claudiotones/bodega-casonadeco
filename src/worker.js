@@ -2144,6 +2144,10 @@ const pickupFulfillmentOrders =
 const pickupIsReady =
   pickupFulfillmentOrders.some(
     fulfillmentOrder =>
+      fulfillmentOrder.status ===
+        "IN_PROGRESS" ||
+      fulfillmentOrder.status ===
+        "CLOSED" ||
       (
         fulfillmentOrder
           ?.fulfillments
@@ -2248,11 +2252,6 @@ return true;
             locationKey:
               pickupInfo.locationKey
           },
-
-          debugFulfillmentOrders:
-              order.fulfillmentOrders
-              ?.nodes ||
-              [],
 
           shipping: {
             city:
@@ -3902,10 +3901,7 @@ async function getShopifyAccessToken(
     );
   }
 
-  console.log(
-  "SHOPIFY TOKEN SCOPES:",
-  data.scope
-);
+
 
   return data.access_token;
 }
