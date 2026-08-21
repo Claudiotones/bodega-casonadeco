@@ -2444,8 +2444,7 @@ function renderWarehouseProductStatus(
     `;
   }
 
-  return `
-    return `
+return `
   <div
     class="warehouse-product-status pending"
   >
