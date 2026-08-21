@@ -2689,7 +2689,7 @@ async function getAllStates(
 // GUARDAR ESTADO GENERAL DEL PEDIDO
 // ==========================================================
 
-async function saveOrderState(
+async function updateOrderState(
   request,
   env,
   orderNumber
