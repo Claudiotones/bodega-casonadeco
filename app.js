@@ -2406,6 +2406,16 @@ function renderWarehouseProductStatus(
   product.warehouseStatus ||
   "pendiente";
 
+  const transferOrigin =
+  getAssemblyLocationLabel(
+    product.transferFrom
+  );
+
+const transferDestination =
+  getAssemblyLocationLabel(
+    order.assemblyLocation
+  );
+
   if (
     status ===
     "bajado"
@@ -2428,33 +2438,32 @@ function renderWarehouseProductStatus(
   }
 
   if (
-    status ===
-    "traslado"
-  ) {
-    return `
-      <div
-        class="warehouse-product-status transfer"
-      >
-        ↔ Solicitado desde
+  status ===
+  "traslado"
+) {
+  return `
+    <div
+      class="warehouse-product-status transfer"
+    >
+      ↔ TRASLADO:
+      ${escapeHtml(
+        transferOrigin.toUpperCase()
+      )}
+      →
+      ${escapeHtml(
+        transferDestination.toUpperCase()
+      )}
+    </div>
 
-        <strong>
-          ${escapeHtml(
-            getAssemblyLocationLabel(
-              product.transferFrom
-            )
-          )}
-        </strong>
-      </div>
-
-      <button
-        type="button"
-        class="warehouse-product-ready-button"
-        data-product-id="${product.id}"
-      >
-        ✓ Marcar como recibido
-      </button>
-    `;
-  }
+    <button
+      type="button"
+      class="warehouse-product-ready-button"
+      data-product-id="${product.id}"
+    >
+      ✓ Marcar como recibido
+    </button>
+  `;
+}
 
 return `
   <div
