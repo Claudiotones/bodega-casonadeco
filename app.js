@@ -1372,28 +1372,28 @@ function renderStats() {
     orders.filter(
       order =>
         order.status ===
-        "pendiente"
+        "Pendientes"
     ).length;
 
   statBodega.textContent =
     orders.filter(
       order =>
         order.status ===
-        "bodega"
+        "Bajados de bodega"
     ).length;
 
   statArmando.textContent =
     orders.filter(
       order =>
         order.status ===
-        "armando"
+        "Armado Listo"
     ).length;
 
   statEnviado.textContent =
     orders.filter(
       order =>
         order.status ===
-        "enviado"
+        "Enviado"
     ).length;
 }
 
