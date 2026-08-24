@@ -2647,28 +2647,75 @@ async function markProductMissing(
   product.transferFrom =
     transferFrom;
 
-  try {
-    await saveRemoteProductState(
-      order,
-      product
+try {
+  await saveRemoteProductState(
+    order,
+    product
+  );
+
+  const existingIncident =
+    order.incidents?.find(
+      item =>
+        item.productId ===
+          product.id &&
+        item.reason ===
+          "Falta en sucursal" &&
+        item.status ===
+          "pendiente"
     );
 
-    await addRemoteHistory(
-      order,
-      `Producto solicitado desde ${getAssemblyLocationLabel(
-        transferFrom
-      )}: ${product.name}`
+  if (!existingIncident) {
+    const incidentData =
+      await apiRequest(
+        `/api/orders/${encodeURIComponent(
+          order.number
+        )}/incidents`,
+        {
+          method:
+            "POST",
+
+          body:
+            JSON.stringify({
+              productId:
+                product.id,
+
+              productName:
+                product.name,
+
+              productCode:
+                product.code ||
+                "",
+
+              reason:
+                "Falta en sucursal",
+
+              quantity:
+                product.quantity
+            })
+        }
+      );
+
+    order.incidents.push(
+      incidentData.incident
     );
+  }
 
-    refreshOpenOrder();
+  await addRemoteHistory(
+    order,
+    `Falta en ${getAssemblyLocationLabel(
+      order.assemblyLocation
+    )}: ${product.name} · solicitado desde ${getAssemblyLocationLabel(
+      transferFrom
+    )}`
+  );
 
-    showToast(
-      `Solicitado desde ${getAssemblyLocationLabel(
-        transferFrom
-      )}`
-    );
+  refreshOpenOrder();
 
-  } catch (error) {
+  showToast(
+    "Producto marcado como falta en sucursal"
+  );
+
+} catch (error) {
     product.warehouseStatus =
       oldStatus;
 
