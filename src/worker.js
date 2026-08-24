@@ -1975,6 +1975,11 @@ async function getShopifyOrders(
           name
           createdAt
 
+          customAttributes {
+          key
+            value
+          }
+
           displayFinancialStatus
           displayFulfillmentStatus
 
@@ -2235,6 +2240,17 @@ return true;
 
           createdAt:
             order.createdAt,
+
+          documentUrl:
+  (
+    order.customAttributes ||
+    []
+  ).find(
+    attribute =>
+      attribute.key ===
+      "url_documento"
+  )?.value ||
+  "",
 
           financialStatus:
             order.displayFinancialStatus,
