@@ -1070,7 +1070,8 @@ function applyRemoteStates(
 // ==========================================================
 
 function classifyZone(
-  shippingMethod
+  shippingMethod,
+  shipping = {}
 ) {
   const method =
     String(
@@ -1078,10 +1079,36 @@ function classifyZone(
       ""
     ).toLowerCase();
 
+  const city =
+    String(
+      shipping.city ||
+      ""
+    ).toLowerCase();
+
+  const province =
+    String(
+      shipping.province ||
+      ""
+    ).toLowerCase();
+
+  const provinceCode =
+    String(
+      shipping.provinceCode ||
+      ""
+    ).toLowerCase();
+
   if (
-    method.includes(
-      "santiago"
-    )
+    method.includes("santiago") ||
+    city.includes("santiago") ||
+    city.includes("las condes") ||
+    city.includes("providencia") ||
+    city.includes("vitacura") ||
+    city.includes("ñuñoa") ||
+    city.includes("nunoa") ||
+    city.includes("recoleta") ||
+    province.includes("santiago") ||
+    province.includes("metropolitana") ||
+    provinceCode === "rm"
   ) {
     return "santiago";
   }
