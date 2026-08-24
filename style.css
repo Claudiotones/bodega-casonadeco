@@ -3101,24 +3101,26 @@ img {
   background: #ffffff;
 }
 
+
 /* Las Condes */
 .order-card.location-card-las-condes {
-  background: #f4f8ff;
-  border-color: #cfe0ff;
+  background: #E4F5EA;
+  border-color: #B7E4C7;
 }
 
 .order-card.location-card-las-condes::before {
-  background: #3b82f6;
+  background: #22A35A;
 }
+
 
 /* Patronato */
 .order-card.location-card-patronato {
-  background: #faf7ff;
-  border-color: #e4d8ff;
+  background: #FFF0D9;
+  border-color: #F3D09A;
 }
 
 .order-card.location-card-patronato::before {
-  background: #8b5cf6;
+  background: #E58A17;
 }
 
 /* =========================================================
