@@ -3957,3 +3957,21 @@ img {
 .document-link.hidden {
   display: none;
 }
+
+.warehouse-product-status-row {
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+  margin-bottom: 10px;
+}
+
+.warehouse-product-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.warehouse-product-actions button {
+  margin: 0;
+}
