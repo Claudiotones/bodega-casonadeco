@@ -3932,3 +3932,28 @@ img {
 
   color: #15803d;
 }
+
+.document-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #1e293b;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: 0.2s ease;
+}
+
+.document-link:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.document-link.hidden {
+  display: none;
+}
