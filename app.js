@@ -2568,13 +2568,6 @@ return `
       ↔ No hay aquí
     </button>
 
-    <button
-      type="button"
-      class="incident-report-button"
-      data-product-id="${product.id}"
-    >
-      ⚠ Reportar incidencia
-    </button>
 
   </div>
 `;
