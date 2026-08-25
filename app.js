@@ -142,6 +142,11 @@ const modalZone =
 const modalOrderDate =
   document.getElementById("modal-order-date");
 
+const modalDocumentLink =
+  document.getElementById(
+    "modal-document-link"
+  );
+
 const assemblyLocationSelect =
   document.getElementById("assembly-location-select");
 
@@ -843,6 +848,10 @@ function shopifyOrderToLocalOrder(
       formatShopifyDate(
         order.createdAt
       ),
+
+    documentUrl:
+  order.documentUrl ||
+  "",
 
     status:
       "pendiente",
@@ -1728,6 +1737,24 @@ function openOrder(
 
   modalOrderDate.textContent =
     `${order.date} · ${order.shipping}`;
+
+  if (
+  order.documentUrl
+) {
+  modalDocumentLink.href =
+    order.documentUrl;
+
+  modalDocumentLink.classList.remove(
+    "hidden"
+  );
+} else {
+  modalDocumentLink.href =
+    "#";
+
+  modalDocumentLink.classList.add(
+    "hidden"
+  );
+}
 
 if (
   order.pickup?.isPickup
