@@ -1116,6 +1116,7 @@ function classifyZone(
     "macul",
     "maipu",
     "nunoa",
+    "padre hurtado",
     "pedro aguirre cerda",
     "penalolen",
     "providencia",
