@@ -2540,10 +2540,14 @@ const transferDestination =
 }
 
 return `
-  <div
-    class="warehouse-product-status pending"
-  >
-    POR BAJAR
+  <div class="warehouse-product-status-row">
+
+    <div
+      class="warehouse-product-status pending"
+    >
+      POR BAJAR
+    </div>
+
   </div>
 
   <div class="warehouse-product-actions">
@@ -2562,6 +2566,14 @@ return `
       data-product-id="${product.id}"
     >
       ↔ No hay aquí
+    </button>
+
+    <button
+      type="button"
+      class="incident-report-button"
+      data-product-id="${product.id}"
+    >
+      ⚠ Reportar incidencia
     </button>
 
   </div>
