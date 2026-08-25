@@ -1082,42 +1082,61 @@ function classifyZone(
   shippingMethod,
   shipping = {}
 ) {
-  const method =
-    String(
-      shippingMethod ||
-      ""
-    ).toLowerCase();
-
   const city =
     String(
       shipping.city ||
       ""
-    ).toLowerCase();
+    )
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(
+        /[\u0300-\u036f]/g,
+        ""
+      );
 
-  const province =
-    String(
-      shipping.province ||
-      ""
-    ).toLowerCase();
-
-  const provinceCode =
-    String(
-      shipping.provinceCode ||
-      ""
-    ).toLowerCase();
+  const santiagoCommunes = [
+    "cerrillos",
+    "cerro navia",
+    "colina",
+    "conchali",
+    "el bosque",
+    "estacion central",
+    "huechuraba",
+    "independencia",
+    "la cisterna",
+    "la florida",
+    "la granja",
+    "la pintana",
+    "la reina",
+    "las condes",
+    "lo barnechea",
+    "lo espejo",
+    "lo prado",
+    "macul",
+    "maipu",
+    "nunoa",
+    "pedro aguirre cerda",
+    "penalolen",
+    "providencia",
+    "pudahuel",
+    "puente alto",
+    "quilicura",
+    "quinta normal",
+    "recoleta",
+    "renca",
+    "san bernardo",
+    "san joaquin",
+    "san miguel",
+    "san ramon",
+    "santiago",
+    "vitacura"
+  ];
 
   if (
-    method.includes("santiago") ||
-    city.includes("santiago") ||
-    city.includes("las condes") ||
-    city.includes("providencia") ||
-    city.includes("vitacura") ||
-    city.includes("ñuñoa") ||
-    city.includes("nunoa") ||
-    city.includes("recoleta") ||
-    province.includes("santiago") ||
-    province.includes("metropolitana") ||
-    provinceCode === "rm"
+    santiagoCommunes.includes(
+      city
+    )
   ) {
     return "santiago";
   }
