@@ -2681,53 +2681,28 @@ async function markProductMissing(
     return;
   }
 
-  const oldStatus =
-    product.warehouseStatus;
+  const fromLocation =
+    order.assemblyLocation;
 
-  const oldTransfer =
-    product.transferFrom;
-
-  const transferFrom =
-    order.assemblyLocation ===
+  const toLocation =
+    fromLocation ===
       "patronato"
       ? "las-condes"
       : "patronato";
 
-  product.warehouseStatus =
-    "traslado";
-
-  product.transferFrom =
-    transferFrom;
-
-try {
-  await saveRemoteProductState(
-    order,
-    product
-  );
-
-  const existingIncident =
-    order.incidents?.find(
-      item =>
-        item.productId ===
-          product.id &&
-        item.reason ===
-          "Falta en sucursal" &&
-        item.status ===
-          "pendiente"
-    );
-
-  if (!existingIncident) {
-    const incidentData =
+  try {
+    const transferData =
       await apiRequest(
-        `/api/orders/${encodeURIComponent(
-          order.number
-        )}/incidents`,
+        "/api/transfer-requests",
         {
           method:
             "POST",
 
           body:
             JSON.stringify({
+              orderNumber:
+                order.number,
+
               productId:
                 product.id,
 
@@ -2738,44 +2713,97 @@ try {
                 product.code ||
                 "",
 
-              reason:
-                "Falta en sucursal",
-
               quantity:
-                product.quantity
+                product.quantity,
+
+              fromLocation,
+              toLocation
             })
         }
       );
 
-    order.incidents.push(
-      incidentData.incident
+    const existingIncident =
+      order.incidents?.find(
+        item =>
+          item.productId ===
+            product.id &&
+          String(
+            item.reason ||
+            ""
+          ).toLowerCase() ===
+            "falta en sucursal" &&
+          item.status ===
+            "pendiente"
+      );
+
+    if (!existingIncident) {
+      const incidentData =
+        await apiRequest(
+          `/api/orders/${encodeURIComponent(
+            order.number
+          )}/incidents`,
+          {
+            method:
+              "POST",
+
+            body:
+              JSON.stringify({
+                productId:
+                  product.id,
+
+                productName:
+                  product.name,
+
+                productCode:
+                  product.code ||
+                  "",
+
+                reason:
+                  "Falta en sucursal",
+
+                quantity:
+                  product.quantity
+              })
+          }
+        );
+
+      if (
+        incidentData?.incident
+      ) {
+        order.incidents.push(
+          incidentData.incident
+        );
+      }
+    }
+
+    await addRemoteHistory(
+      order,
+      `No hay en ${getAssemblyLocationLabel(
+        fromLocation
+      )}: ${product.name}. Solicitud enviada a ${getAssemblyLocationLabel(
+        toLocation
+      )}.`
     );
-  }
-
-  await addRemoteHistory(
-    order,
-    `Falta en ${getAssemblyLocationLabel(
-      order.assemblyLocation
-    )}: ${product.name} · solicitado desde ${getAssemblyLocationLabel(
-      transferFrom
-    )}`
-  );
-
-  refreshOpenOrder();
-
-  showToast(
-    "Producto marcado como falta en sucursal"
-  );
-
-} catch (error) {
-    product.warehouseStatus =
-      oldStatus;
-
-    product.transferFrom =
-      oldTransfer;
 
     refreshOpenOrder();
 
+    if (
+      transferData?.alreadyExists
+    ) {
+      showToast(
+        `Ya existe una solicitud pendiente para ${getAssemblyLocationLabel(
+          toLocation
+        )}`
+      );
+    } else {
+      showToast(
+        `Solicitud enviada a ${getAssemblyLocationLabel(
+          toLocation
+        )}`
+      );
+    }
+
+  } catch (error) {
     showToast(
       `Error: ${error.message}`
     );
