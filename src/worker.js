@@ -312,6 +312,28 @@ export default {
       }
 
 
+// ==========================================================
+// CREAR SOLICITUD ENTRE SUCURSALES
+// POST /api/transfer-requests
+// ==========================================================
+
+if (
+  pathname ===
+    "/api/transfer-requests"
+) {
+  if (
+    request.method !==
+    "POST"
+  ) {
+    return methodNotAllowed();
+  }
+
+  return await createTransferRequest(
+    request,
+    env
+  );
+}
+
       // ======================================================
       // RESOLVER INCIDENCIA
       // ======================================================
@@ -3026,6 +3048,228 @@ async function updateProductState(
     }
   });
 }
+
+// ==========================================================
+// CREAR SOLICITUD ENTRE SUCURSALES
+// ==========================================================
+
+async function createTransferRequest(
+  request,
+  env
+) {
+  validateD1(
+    env
+  );
+
+  const user =
+    await requireAuth(
+      request,
+      env
+    );
+
+  const body =
+    await readJsonBody(
+      request
+    );
+
+  const orderNumber =
+    String(
+      body.orderNumber ||
+      ""
+    ).trim();
+
+  const productId =
+    String(
+      body.productId ||
+      ""
+    ).trim();
+
+  const productName =
+    String(
+      body.productName ||
+      ""
+    ).trim();
+
+  const productCode =
+    String(
+      body.productCode ||
+      ""
+    ).trim();
+
+  const quantity =
+    Number.parseInt(
+      body.quantity,
+      10
+    );
+
+  const fromLocation =
+    String(
+      body.fromLocation ||
+      ""
+    ).trim();
+
+  const toLocation =
+    String(
+      body.toLocation ||
+      ""
+    ).trim();
+
+  if (
+    !orderNumber ||
+    !productId ||
+    !productName
+  ) {
+    throw new Error(
+      "Faltan datos de la solicitud."
+    );
+  }
+
+  if (
+    ![
+      "las-condes",
+      "patronato"
+    ].includes(
+      fromLocation
+    )
+  ) {
+    throw new Error(
+      "Sucursal de origen inválida."
+    );
+  }
+
+  if (
+    ![
+      "las-condes",
+      "patronato"
+    ].includes(
+      toLocation
+    )
+  ) {
+    throw new Error(
+      "Sucursal de destino inválida."
+    );
+  }
+
+  if (
+    fromLocation ===
+    toLocation
+  ) {
+    throw new Error(
+      "Origen y destino no pueden ser iguales."
+    );
+  }
+
+  if (
+    Number.isNaN(
+      quantity
+    ) ||
+    quantity <
+      1
+  ) {
+    throw new Error(
+      "Cantidad inválida."
+    );
+  }
+
+  const existing =
+    await env.DB
+      .prepare(`
+        SELECT id
+        FROM transfer_requests
+        WHERE
+          order_number = ?
+          AND product_id = ?
+          AND status = 'pendiente'
+        LIMIT 1
+      `)
+      .bind(
+        orderNumber,
+        productId
+      )
+      .first();
+
+  if (
+    existing
+  ) {
+    return jsonResponse({
+      success:
+        true,
+
+      alreadyExists:
+        true,
+
+      id:
+        existing.id
+    });
+  }
+
+  const id =
+    crypto.randomUUID();
+
+  const createdAt =
+    new Date()
+      .toISOString();
+
+  await env.DB
+    .prepare(`
+      INSERT INTO transfer_requests (
+        id,
+        order_number,
+        product_id,
+        product_name,
+        product_code,
+        quantity,
+        from_location,
+        to_location,
+        status,
+        created_by,
+        created_at
+      )
+      VALUES (
+        ?, ?, ?, ?, ?, ?,
+        ?, ?, 'pendiente',
+        ?, ?
+      )
+    `)
+    .bind(
+      id,
+      orderNumber,
+      productId,
+      productName,
+      productCode,
+      quantity,
+      fromLocation,
+      toLocation,
+      user.id,
+      createdAt
+    )
+    .run();
+
+  return jsonResponse(
+    {
+      success:
+        true,
+
+      request: {
+        id,
+        orderNumber,
+        productId,
+        productName,
+        productCode,
+        quantity,
+        fromLocation,
+        toLocation,
+        status:
+          "pendiente",
+        createdBy:
+          user.id,
+        createdAt
+      }
+    },
+    201
+  );
+}
+
 
 
 // ==========================================================
