@@ -73,6 +73,37 @@ const currentUserRole =
 const logoutButton =
   document.getElementById("logout-button");
 
+// ==========================================================
+// SOLICITUDES ENTRE SUCURSALES
+// ==========================================================
+
+const transferAlertButton =
+  document.getElementById(
+    "transfer-alert-button"
+  );
+
+const transferAlertCount =
+  document.getElementById(
+    "transfer-alert-count"
+  );
+
+const transferAlertPanel =
+  document.getElementById(
+    "transfer-alert-panel"
+  );
+
+const transferAlertClose =
+  document.getElementById(
+    "transfer-alert-close"
+  );
+
+const transferAlertList =
+  document.getElementById(
+    "transfer-alert-list"
+  );
+
+let transferRequests = [];
+
 
 // ==========================================================
 // NAVEGACIÓN
@@ -363,6 +394,155 @@ async function apiRequest(
   }
 
   return data;
+}
+
+// ==========================================================
+// CARGAR SOLICITUDES ENTRE SUCURSALES
+// ==========================================================
+
+async function loadTransferRequests() {
+  if (!currentUser) {
+    transferRequests = [];
+
+    renderTransferRequests();
+
+    return;
+  }
+
+  try {
+    const data =
+      await apiRequest(
+        "/api/transfer-requests"
+      );
+
+    transferRequests =
+      Array.isArray(
+        data?.requests
+      )
+        ? data.requests
+        : [];
+
+    renderTransferRequests();
+
+  } catch (error) {
+    console.error(
+      "Error cargando solicitudes:",
+      error
+    );
+  }
+}
+
+
+// ==========================================================
+// MOSTRAR SOLICITUDES ENTRE SUCURSALES
+// ==========================================================
+
+function renderTransferRequests() {
+  if (
+    !transferAlertCount ||
+    !transferAlertList
+  ) {
+    return;
+  }
+
+  const count =
+    transferRequests.length;
+
+  transferAlertCount.textContent =
+    String(count);
+
+  transferAlertCount.classList.toggle(
+    "hidden",
+    count === 0
+  );
+
+  if (count === 0) {
+    transferAlertList.innerHTML = `
+      <div class="transfer-alert-empty">
+        No hay solicitudes pendientes.
+      </div>
+    `;
+
+    return;
+  }
+
+  transferAlertList.innerHTML =
+    transferRequests
+      .map(request => {
+        const fromLabel =
+          getAssemblyLocationLabel(
+            request.fromLocation
+          );
+
+        const productCode =
+          request.productCode
+            ? `
+              <div class="transfer-alert-code">
+                SKU: ${escapeHtml(
+                  request.productCode
+                )}
+              </div>
+            `
+            : "";
+
+        return `
+          <div
+            class="transfer-alert-item"
+            data-transfer-request-id="${escapeHtml(
+              request.id
+            )}"
+          >
+            <div class="transfer-alert-order">
+              Pedido ${escapeHtml(
+                request.orderNumber
+              )}
+            </div>
+
+            <div class="transfer-alert-message">
+              <strong>${escapeHtml(
+                fromLabel
+              )}</strong>
+              solicita:
+            </div>
+
+            <div class="transfer-alert-product">
+              ${escapeHtml(
+                request.productName
+              )}
+            </div>
+
+            ${productCode}
+
+            <div class="transfer-alert-quantity">
+              Cantidad:
+              <strong>${Number(
+                request.quantity
+              ) || 1}</strong>
+            </div>
+
+            <div class="transfer-alert-actions">
+              <button
+                type="button"
+                class="secondary-button"
+                disabled
+              >
+                Enviar a ${escapeHtml(
+                  fromLabel
+                )}
+              </button>
+
+              <button
+                type="button"
+                class="secondary-button"
+                disabled
+              >
+                Armar pedido acá
+              </button>
+            </div>
+          </div>
+        `;
+      })
+      .join("");
 }
 
 
@@ -1360,9 +1540,14 @@ async function syncRemoteStates() {
 function startStateSync() {
   stopStateSync();
 
+  loadTransferRequests();
+
   syncTimer =
     setInterval(
-      syncRemoteStates,
+      async () => {
+        await syncRemoteStates();
+        await loadTransferRequests();
+      },
       SYNC_INTERVAL_MS
     );
 }
@@ -4684,6 +4869,27 @@ logoutButton.addEventListener(
   logout
 );
 
+// ==========================================================
+// EVENTOS SOLICITUDES ENTRE SUCURSALES
+// ==========================================================
+
+transferAlertButton?.addEventListener(
+  "click",
+  () => {
+    transferAlertPanel?.classList.toggle(
+      "hidden"
+    );
+  }
+);
+
+transferAlertClose?.addEventListener(
+  "click",
+  () => {
+    transferAlertPanel?.classList.add(
+      "hidden"
+    );
+  }
+);
 
 // ==========================================================
 // NAVEGACIÓN
