@@ -322,16 +322,26 @@ if (
     "/api/transfer-requests"
 ) {
   if (
-    request.method !==
+    request.method ===
     "POST"
   ) {
-    return methodNotAllowed();
+    return await createTransferRequest(
+      request,
+      env
+    );
   }
 
-  return await createTransferRequest(
-    request,
-    env
-  );
+  if (
+    request.method ===
+    "GET"
+  ) {
+    return await getTransferRequests(
+      request,
+      env
+    );
+  }
+
+  return methodNotAllowed();
 }
 
       // ======================================================
@@ -3048,6 +3058,116 @@ async function updateProductState(
     }
   });
 }
+
+
+// ==========================================================
+// OBTENER SOLICITUDES PARA LA SUCURSAL DEL USUARIO
+// ==========================================================
+
+async function getTransferRequests(
+  request,
+  env
+) {
+  validateD1(
+    env
+  );
+
+  const user =
+    await requireAuth(
+      request,
+      env
+    );
+
+  if (
+    !user.location
+  ) {
+    return jsonResponse({
+      success:
+        true,
+
+      requests:
+        []
+    });
+  }
+
+  const result =
+    await env.DB
+      .prepare(`
+        SELECT
+          id,
+          order_number,
+          product_id,
+          product_name,
+          product_code,
+          quantity,
+          from_location,
+          to_location,
+          status,
+          created_by,
+          created_at,
+          resolved_by,
+          resolved_at
+        FROM transfer_requests
+        WHERE
+          to_location = ?
+          AND status = 'pendiente'
+        ORDER BY created_at ASC
+      `)
+      .bind(
+        user.location
+      )
+      .all();
+
+  const requests =
+    (
+      result.results ||
+      []
+    ).map(
+      row => ({
+        id:
+          row.id,
+
+        orderNumber:
+          row.order_number,
+
+        productId:
+          row.product_id,
+
+        productName:
+          row.product_name,
+
+        productCode:
+          row.product_code ||
+          "",
+
+        quantity:
+          row.quantity,
+
+        fromLocation:
+          row.from_location,
+
+        toLocation:
+          row.to_location,
+
+        status:
+          row.status,
+
+        createdBy:
+          row.created_by,
+
+        createdAt:
+          row.created_at
+      })
+    );
+
+  return jsonResponse({
+    success:
+      true,
+
+    requests
+  });
+}
+
 
 // ==========================================================
 // CREAR SOLICITUD ENTRE SUCURSALES
