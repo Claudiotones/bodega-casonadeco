@@ -168,23 +168,23 @@
       <div class="topbar-right">
 
 
-        <button
-          class="topbar-icon-button"
-          type="button"
-          aria-label="Notificaciones"
-        >
+<button
+  id="transfer-alert-button"
+  class="topbar-icon-button"
+  type="button"
+  aria-label="Solicitudes entre sucursales"
+>
+  <span class="topbar-icon">
+    !
+  </span>
 
-          <span class="topbar-icon">
-            !
-          </span>
-
-          <span
-            class="notification-count hidden"
-          >
-            0
-          </span>
-
-        </button>
+  <span
+    id="transfer-alert-count"
+    class="notification-count hidden"
+  >
+    0
+  </span>
+</button>
 
 
 
@@ -1736,7 +1736,32 @@
   ====================================================== -->
 
   <script src="app.js"></script>
+<!-- PANEL DE SOLICITUDES ENTRE SUCURSALES -->
+<div
+  id="transfer-alert-panel"
+  class="transfer-alert-panel hidden"
+>
+  <div class="transfer-alert-panel-header">
+    <strong>Solicitudes de sucursal</strong>
 
+    <button
+      id="transfer-alert-close"
+      type="button"
+      aria-label="Cerrar"
+    >
+      ×
+    </button>
+  </div>
+
+  <div
+    id="transfer-alert-list"
+    class="transfer-alert-list"
+  >
+    <div class="transfer-alert-empty">
+      No hay solicitudes pendientes.
+    </div>
+  </div>
+</div>
 
 </body>
 
