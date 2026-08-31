@@ -3978,7 +3978,7 @@ function normalizeIncidentReason(
   const allowed = [
     "quebrado",
     "dañado",
-    "Falta en sucursal"
+    "falta en sucursal"
   ];
 
   if (
