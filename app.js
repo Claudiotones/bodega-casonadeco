@@ -1236,10 +1236,20 @@ function applyRemoteStates(
                   savedProduct
                     ?.warehouseStatus ||
                   "pendiente",
-
+                
                 transferFrom:
                   savedProduct
                     ?.transferFrom ||
+                  null,
+                
+                stockStatus:
+                  savedProduct
+                    ?.stockStatus ||
+                  null,
+                
+                stockLocation:
+                  savedProduct
+                    ?.stockLocation ||
                   null
               };
             }
@@ -1391,6 +1401,14 @@ async function saveRemoteProductState(
 
           transferFrom:
             product.transferFrom ||
+            null,
+
+          stockStatus:
+            product.stockStatus ||
+            null,
+
+          stockLocation:
+            product.stockLocation ||
             null
         })
     }
@@ -2619,6 +2637,23 @@ function bindProductButtons() {
 
   modalProducts
     .querySelectorAll(
+      ".warehouse-product-last-unit-button"
+    )
+    .forEach(button => {
+      button.addEventListener(
+        "click",
+        event => {
+          event.stopPropagation();
+
+          markProductLastUnit(
+            button.dataset.productId
+          );
+        }
+      );
+    });
+  
+  modalProducts
+    .querySelectorAll(
       ".warehouse-product-missing-button"
     )
     .forEach(button => {
@@ -2662,22 +2697,33 @@ function renderWarehouseProductStatus(
   product
 ) {
   const status =
-  product.warehouseStatus ||
-  "pendiente";
+    product.warehouseStatus ||
+    "pendiente";
+
+  const stockStatus =
+    product.stockStatus ||
+    null;
 
   const transferOrigin =
-  getAssemblyLocationLabel(
-    product.transferFrom
-  );
+    getAssemblyLocationLabel(
+      product.transferFrom
+    );
 
-const transferDestination =
-  getAssemblyLocationLabel(
-    order.assemblyLocation
-  );
+  const transferDestination =
+    getAssemblyLocationLabel(
+      order.assemblyLocation
+    );
+
+  const stockLocation =
+    getAssemblyLocationLabel(
+      product.stockLocation
+    );
 
   if (
     status ===
-    "bajado"
+      "bajado" &&
+    stockStatus ===
+      "agotado"
   ) {
     return `
       <div
@@ -2685,7 +2731,21 @@ const transferDestination =
       >
         ✓ PRODUCTO BAJADO
       </div>
-  
+
+      <div
+        class="warehouse-product-stockout"
+      >
+        ⚠ AGOTADO EN
+        ${escapeHtml(
+          stockLocation.toUpperCase()
+        )}
+        <div
+          class="warehouse-product-stockout-detail"
+        >
+          Última unidad asignada a este pedido
+        </div>
+      </div>
+
       <button
         type="button"
         class="warehouse-reset-button"
@@ -2697,67 +2757,94 @@ const transferDestination =
   }
 
   if (
-  status ===
-  "traslado"
-) {
+    status ===
+    "bajado"
+  ) {
+    return `
+      <div
+        class="warehouse-product-status ready"
+      >
+        ✓ PRODUCTO BAJADO
+      </div>
+
+      <button
+        type="button"
+        class="warehouse-reset-button"
+        data-product-id="${product.id}"
+      >
+        Deshacer
+      </button>
+    `;
+  }
+
+  if (
+    status ===
+    "traslado"
+  ) {
+    return `
+      <div
+        class="warehouse-product-status transfer"
+      >
+        ↔ TRASLADO:
+        ${escapeHtml(
+          transferOrigin.toUpperCase()
+        )}
+        →
+        ${escapeHtml(
+          transferDestination.toUpperCase()
+        )}
+      </div>
+
+      <button
+        type="button"
+        class="warehouse-product-ready-button"
+        data-product-id="${product.id}"
+      >
+        ✓ Marcar como recibido
+      </button>
+    `;
+  }
+
   return `
     <div
-      class="warehouse-product-status transfer"
+      class="warehouse-product-status-row"
     >
-      ↔ TRASLADO:
-      ${escapeHtml(
-        transferOrigin.toUpperCase()
-      )}
-      →
-      ${escapeHtml(
-        transferDestination.toUpperCase()
-      )}
+      <div
+        class="warehouse-product-status pending"
+      >
+        POR BAJAR
+      </div>
     </div>
-
-    <button
-      type="button"
-      class="warehouse-product-ready-button"
-      data-product-id="${product.id}"
-    >
-      ✓ Marcar como recibido
-    </button>
-  `;
-}
-
-return `
-  <div class="warehouse-product-status-row">
 
     <div
-      class="warehouse-product-status pending"
+      class="warehouse-product-actions"
     >
-      POR BAJAR
+      <button
+        type="button"
+        class="warehouse-product-ready-button"
+        data-product-id="${product.id}"
+      >
+        ✓ Marcar como bajado
+      </button>
+
+      <button
+        type="button"
+        class="warehouse-product-last-unit-button"
+        data-product-id="${product.id}"
+      >
+        ⚠ Marcar última unidad
+      </button>
+
+      <button
+        type="button"
+        class="warehouse-product-missing-button"
+        data-product-id="${product.id}"
+      >
+        ↔ No hay aquí
+      </button>
     </div>
-
-  </div>
-
-  <div class="warehouse-product-actions">
-
-    <button
-      type="button"
-      class="warehouse-product-ready-button"
-      data-product-id="${product.id}"
-    >
-      ✓ Marcar como bajado
-    </button>
-
-    <button
-      type="button"
-      class="warehouse-product-missing-button"
-      data-product-id="${product.id}"
-    >
-      ↔ No hay aquí
-    </button>
-
-
-  </div>
-`;
+  `;
 }
-
 
 // ==========================================================
 // PRODUCTO LISTO
@@ -2790,10 +2877,22 @@ async function markProductReady(
   const oldTransfer =
     product.transferFrom;
 
+  const oldStockStatus =
+    product.stockStatus;
+
+  const oldStockLocation =
+    product.stockLocation;
+
   product.warehouseStatus =
     "bajado";
 
   product.transferFrom =
+    null;
+
+  product.stockStatus =
+    null;
+
+  product.stockLocation =
     null;
 
   try {
@@ -2801,8 +2900,6 @@ async function markProductReady(
       order,
       product
     );
-
-    
 
     refreshOpenOrder();
 
@@ -2814,20 +2911,129 @@ async function markProductReady(
     );
 
   } catch (error) {
+    product.warehouseStatus =
+      oldStatus;
+
+    product.transferFrom =
+      oldTransfer;
+
+    product.stockStatus =
+      oldStockStatus;
+
+    product.stockLocation =
+      oldStockLocation;
+
+    refreshOpenOrder();
+
+    showToast(
+      "Error: " +
+      error.message
+    );
+  }
+}
+
+// ==========================================================
+// ÚLTIMA UNIDAD
+// ==========================================================
+
+async function markProductLastUnit(
+  productId
+) {
+  const order =
+    getSelectedOrder();
+
+  if (!order) {
+    return;
+  }
+
+  if (
+    !order.assemblyLocation ||
+    order.assemblyLocation ===
+      "sin-asignar"
+  ) {
+    showToast(
+      "Primero asigna Las Condes o Patronato"
+    );
+
+    return;
+  }
+
+  const product =
+    order.products.find(
+      item =>
+        item.id ===
+        productId
+    );
+
+  if (!product) {
+    return;
+  }
+
+  const oldStatus =
+    product.warehouseStatus;
+
+  const oldTransfer =
+    product.transferFrom;
+
+  const oldStockStatus =
+    product.stockStatus;
+
+  const oldStockLocation =
+    product.stockLocation;
+
   product.warehouseStatus =
-    oldStatus;
+    "bajado";
 
   product.transferFrom =
-    oldTransfer;
+    null;
 
-  refreshOpenOrder();
+  product.stockStatus =
+    "agotado";
 
-  showToast(
-    "Error: " + error.message
-  );
+  product.stockLocation =
+    order.assemblyLocation;
+
+  try {
+    await saveRemoteProductState(
+      order,
+      product
+    );
+
+    await addRemoteHistory(
+      order,
+      `Última unidad utilizada en ${getAssemblyLocationLabel(
+        order.assemblyLocation
+      )}: ${product.name}. Producto agotado en esa sucursal.`
+    );
+
+    refreshOpenOrder();
+
+    showToast(
+      `Última unidad asignada · agotado en ${getAssemblyLocationLabel(
+        order.assemblyLocation
+      )}`
+    );
+
+  } catch (error) {
+    product.warehouseStatus =
+      oldStatus;
+
+    product.transferFrom =
+      oldTransfer;
+
+    product.stockStatus =
+      oldStockStatus;
+
+    product.stockLocation =
+      oldStockLocation;
+
+    refreshOpenOrder();
+
+    showToast(
+      `Error: ${error.message}`
+    );
+  }
 }
-}
-
 
 // ==========================================================
 // NO HAY AQUÍ
