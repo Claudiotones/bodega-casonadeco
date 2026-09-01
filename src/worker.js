@@ -2550,6 +2550,8 @@ async function getAllStates(
             product_id,
             warehouse_status,
             transfer_from,
+            stock_status,
+            stock_location,
             updated_at
           FROM product_states
         `)
@@ -2652,6 +2654,12 @@ async function getAllStates(
       transferFrom:
         row.transfer_from,
 
+      stockStatus:
+        row.stock_status,
+
+      stockLocation:
+        row.stock_location,
+
       updatedAt:
         row.updated_at
     });
@@ -2731,7 +2739,6 @@ async function getAllStates(
       stateMap
   });
 }
-
 
 // ==========================================================
 // GUARDAR ESTADO GENERAL DEL PEDIDO
@@ -2959,12 +2966,43 @@ async function updateProductState(
       body.transferFrom
     );
 
+  const stockStatus =
+    normalizeStockStatus(
+      body.stockStatus
+    );
+
+  const stockLocation =
+    normalizeStockLocation(
+      body.stockLocation
+    );
+
+  if (
+    stockStatus ===
+      "agotado" &&
+    !stockLocation
+  ) {
+    throw new Error(
+      "Un producto agotado debe indicar la sucursal."
+    );
+  }
+
+  if (
+    !stockStatus &&
+    stockLocation
+  ) {
+    throw new Error(
+      "No puede existir una sucursal de stock sin estado de stock."
+    );
+  }
+
   const existing =
     await env.DB
       .prepare(`
         SELECT
           warehouse_status,
-          transfer_from
+          transfer_from,
+          stock_status,
+          stock_location
         FROM product_states
         WHERE order_number = ?
           AND product_id = ?
@@ -2986,9 +3024,11 @@ async function updateProductState(
         product_id,
         warehouse_status,
         transfer_from,
+        stock_status,
+        stock_location,
         updated_at
       )
-      VALUES (?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
 
       ON CONFLICT(
         order_number,
@@ -3001,6 +3041,12 @@ async function updateProductState(
         transfer_from =
           excluded.transfer_from,
 
+        stock_status =
+          excluded.stock_status,
+
+        stock_location =
+          excluded.stock_location,
+
         updated_at =
           excluded.updated_at
     `)
@@ -3009,6 +3055,8 @@ async function updateProductState(
       productId,
       warehouseStatus,
       transferFrom,
+      stockStatus,
+      stockLocation,
       updatedAt
     )
     .run();
@@ -3018,7 +3066,11 @@ async function updateProductState(
     existing.warehouse_status !==
       warehouseStatus ||
     existing.transfer_from !==
-      transferFrom
+      transferFrom ||
+    existing.stock_status !==
+      stockStatus ||
+    existing.stock_location !==
+      stockLocation
   ) {
     let historyText =
       `${user.name} actualizó un producto a ${formatWarehouseStatusForHistory(
@@ -3032,6 +3084,17 @@ async function updateProductState(
         ` (traslado desde ${formatAssemblyLocationForHistory(
           transferFrom
         )})`;
+    }
+
+    if (
+      stockStatus ===
+        "agotado" &&
+      stockLocation
+    ) {
+      historyText +=
+        ` · última unidad, agotado en ${formatAssemblyLocationForHistory(
+          stockLocation
+        )}`;
     }
 
     historyText +=
@@ -3054,12 +3117,12 @@ async function updateProductState(
       productId,
       warehouseStatus,
       transferFrom,
+      stockStatus,
+      stockLocation,
       updatedAt
     }
   });
 }
-
-
 // ==========================================================
 // OBTENER SOLICITUDES PARA LA SUCURSAL DEL USUARIO
 // ==========================================================
@@ -3959,6 +4022,81 @@ function normalizeTransferFrom(
   return location;
 }
 
+// ==========================================================
+// NORMALIZAR ESTADO DE STOCK
+// ==========================================================
+
+function normalizeStockStatus(
+  value
+) {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return null;
+  }
+
+  const status =
+    String(value)
+      .trim()
+      .toLowerCase();
+
+  const allowed = [
+    "agotado"
+  ];
+
+  if (
+    !allowed.includes(
+      status
+    )
+  ) {
+    throw new Error(
+      `Estado de stock inválido: ${status}`
+    );
+  }
+
+  return status;
+}
+
+
+// ==========================================================
+// NORMALIZAR SUCURSAL DE STOCK
+// ==========================================================
+
+function normalizeStockLocation(
+  value
+) {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return null;
+  }
+
+  const location =
+    String(value)
+      .trim()
+      .toLowerCase();
+
+  const allowed = [
+    "las-condes",
+    "patronato"
+  ];
+
+  if (
+    !allowed.includes(
+      location
+    )
+  ) {
+    throw new Error(
+      `Sucursal de stock inválida: ${location}`
+    );
+  }
+
+  return location;
+}
 
 // ==========================================================
 // NORMALIZAR MOTIVO DE INCIDENCIA
