@@ -3175,6 +3175,39 @@ img {
   transform: translateY(-1px);
 }
 
+/* ==========================================================
+   BOTÓN ÚLTIMA UNIDAD
+   ========================================================== */
+
+.warehouse-product-last-unit-button {
+  appearance: none;
+  border: 1px solid #f5b942;
+  background: #fff8e6;
+  color: #9a6700;
+  border-radius: 8px;
+  padding: 8px 12px;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.warehouse-product-last-unit-button:hover {
+  background: #ffefbd;
+  border-color: #e5a50a;
+}
+
+.warehouse-product-last-unit-button:active {
+  transform: translateY(1px);
+}
 
 /* =========================================================
    BOTÓN: NO HAY AQUÍ
