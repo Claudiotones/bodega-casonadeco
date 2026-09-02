@@ -178,6 +178,16 @@ const modalDocumentLink =
     "modal-document-link"
   );
 
+const modalDocumentPrintedStatus =
+  document.getElementById(
+    "modal-document-printed-status"
+  );
+
+const modalDocumentPrintedButton =
+  document.getElementById(
+    "modal-document-printed-button"
+  );
+
 const assemblyLocationSelect =
   document.getElementById("assembly-location-select");
 
@@ -1206,11 +1216,24 @@ function applyRemoteStates(
           saved.assemblyLocation ||
           "sin-asignar",
 
-        notes:
-          typeof saved.notes ===
-          "string"
-            ? saved.notes
-            : "",
+       notes:
+  typeof saved.notes ===
+  "string"
+    ? saved.notes
+    : "",
+
+documentPrinted:
+  Boolean(
+    saved.documentPrinted
+  ),
+
+documentPrintedAt:
+  saved.documentPrintedAt ||
+  null,
+
+documentPrintedBy:
+  saved.documentPrintedBy ||
+  null,
 
         incidents:
           Array.isArray(
@@ -1939,6 +1962,61 @@ function createOrderCard(
 
 
 // ==========================================================
+// MARCAR BOLETA COMO IMPRESA
+// ==========================================================
+
+async function markDocumentPrinted() {
+  const order =
+    getSelectedOrder();
+
+  if (
+    !order ||
+    !order.documentUrl
+  ) {
+    return;
+  }
+
+  try {
+    const data =
+      await apiRequest(
+        `/api/orders/${encodeURIComponent(
+          order.number
+        )}/document-printed`,
+        {
+          method:
+            "PUT"
+        }
+      );
+
+    order.documentPrinted =
+      true;
+
+    order.documentPrintedAt =
+      data.documentPrintedAt ||
+      new Date().toISOString();
+
+    order.documentPrintedBy =
+      data.documentPrintedBy ||
+      currentUser?.name ||
+      "";
+
+    openOrder(
+      order.id
+    );
+
+    showToast(
+      "Boleta marcada como impresa"
+    );
+
+  } catch (error) {
+    showToast(
+      `Error: ${error.message}`
+    );
+  }
+}
+
+
+// ==========================================================
 // ABRIR PEDIDO
 // ==========================================================
 
@@ -1962,51 +2040,120 @@ function openOrder(
     `${order.date} · ${order.shipping}`;
 
   if (
-  order.documentUrl
-) {
-  modalDocumentLink.href =
-    order.documentUrl;
+    order.documentUrl
+  ) {
+    modalDocumentLink.href =
+      order.documentUrl;
 
-  modalDocumentLink.classList.remove(
-    "hidden"
-  );
-} else {
-  modalDocumentLink.href =
-    "#";
+    modalDocumentLink.classList.remove(
+      "hidden"
+    );
 
-  modalDocumentLink.classList.add(
-    "hidden"
-  );
-}
+    if (
+      order.documentPrinted
+    ) {
+      modalDocumentPrintedButton
+        ?.classList.add(
+          "hidden"
+        );
 
-if (
-  order.pickup?.isPickup
-) {
-  modalZone.textContent =
-    order.pickup.location
-      ? `RETIRO · ${order.pickup.location.toUpperCase()}`
-      : "RETIRO · TIENDA";
+      if (
+        modalDocumentPrintedStatus
+      ) {
+        const printedBy =
+          order.documentPrintedBy ||
+          "Usuario";
 
-  modalZone.className =
-    "zone-badge zone-pickup";
+        const printedAt =
+          order.documentPrintedAt
+            ? new Date(
+                order.documentPrintedAt
+              ).toLocaleString(
+                "es-CL"
+              )
+            : "";
 
-} else {
+        modalDocumentPrintedStatus
+          .innerHTML = `
+            ✅ BOLETA IMPRESA
+            <span>
+              ${escapeHtml(
+                printedBy
+              )}
+              ${
+                printedAt
+                  ? ` · ${escapeHtml(
+                      printedAt
+                    )}`
+                  : ""
+              }
+            </span>
+          `;
 
-  modalZone.textContent =
-    order.zone ===
-      "santiago"
-      ? "Santiago"
-      : "Regiones";
+        modalDocumentPrintedStatus
+          .classList.remove(
+            "hidden"
+          );
+      }
 
-  modalZone.className =
-    "zone-badge " +
-    (
+    } else {
+      modalDocumentPrintedButton
+        ?.classList.remove(
+          "hidden"
+        );
+
+      modalDocumentPrintedStatus
+        ?.classList.add(
+          "hidden"
+        );
+    }
+
+  } else {
+    modalDocumentLink.href =
+      "#";
+
+    modalDocumentLink.classList.add(
+      "hidden"
+    );
+
+    modalDocumentPrintedButton
+      ?.classList.add(
+        "hidden"
+      );
+
+    modalDocumentPrintedStatus
+      ?.classList.add(
+        "hidden"
+      );
+  }
+
+  if (
+    order.pickup?.isPickup
+  ) {
+    modalZone.textContent =
+      order.pickup.location
+        ? `RETIRO · ${order.pickup.location.toUpperCase()}`
+        : "RETIRO · TIENDA";
+
+    modalZone.className =
+      "zone-badge zone-pickup";
+
+  } else {
+    modalZone.textContent =
       order.zone ===
         "santiago"
-        ? "zone-santiago"
-        : "zone-regiones"
-    );
-}
+        ? "Santiago"
+        : "Regiones";
+
+    modalZone.className =
+      "zone-badge " +
+      (
+        order.zone ===
+          "santiago"
+          ? "zone-santiago"
+          : "zone-regiones"
+      );
+  }
 
   orderNotesInput.value =
     order.notes ||
@@ -2039,20 +2186,6 @@ if (
   document.body.style.overflow =
     "hidden";
 }
-
-
-function closeModal() {
-  modal.classList.add(
-    "hidden"
-  );
-
-  document.body.style.overflow =
-    "";
-
-  selectedOrderId =
-    null;
-}
-
 
 // ==========================================================
 // SUCURSAL
@@ -2685,6 +2818,7 @@ function bindProductButtons() {
         }
       );
     });
+  
 }
 
 
@@ -5074,6 +5208,21 @@ logoutButton.addEventListener(
   "click",
   logout
 );
+
+
+// ==========================================================
+// BOLETA IMPRESA
+// ==========================================================
+
+modalDocumentPrintedButton
+  ?.addEventListener(
+    "click",
+    event => {
+      event.preventDefault();
+
+      markDocumentPrinted();
+    }
+  );
 
 // ==========================================================
 // EVENTOS SOLICITUDES ENTRE SUCURSALES
