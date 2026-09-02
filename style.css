@@ -3966,11 +3966,18 @@ img {
   color: #15803d;
 }
 
+.document-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
 .document-link {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-top: 10px;
   padding: 8px 12px;
   border: 1px solid #cbd5e1;
   border-radius: 10px;
@@ -3988,6 +3995,66 @@ img {
 }
 
 .document-link.hidden {
+  display: none;
+}
+
+
+/* ==========================================================
+   BOLETA IMPRESA
+========================================================== */
+
+.document-printed-button {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid #16a34a;
+  border-radius: 10px;
+  background: #f0fdf4;
+  color: #15803d;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.document-printed-button:hover {
+  background: #dcfce7;
+  border-color: #15803d;
+}
+
+.document-printed-button:active {
+  transform: translateY(1px);
+}
+
+.document-printed-button.hidden {
+  display: none;
+}
+
+.document-printed-status {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 7px 10px;
+  border: 1px solid #86efac;
+  border-radius: 10px;
+  background: #f0fdf4;
+  color: #15803d;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.document-printed-status span {
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.document-printed-status.hidden {
   display: none;
 }
 
