@@ -5434,6 +5434,21 @@ searchOrder.addEventListener(
 
 
 // ==========================================================
+// CERRAR MODAL DE PEDIDO
+// ==========================================================
+
+function closeModal() {
+  selectedOrderId = null;
+
+  modal.classList.add(
+    "hidden"
+  );
+
+  document.body.style.overflow =
+    "";
+}
+
+// ==========================================================
 // PEDIDO
 // ==========================================================
 
