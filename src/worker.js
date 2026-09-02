@@ -252,6 +252,36 @@ export default {
 
 
       // ======================================================
+      // BOLETA IMPRESA
+      // PUT /api/orders/:orderNumber/document-printed
+      // ======================================================
+
+      const documentPrintedMatch =
+        pathname.match(
+          /^\/api\/orders\/([^/]+)\/document-printed$/
+        );
+
+      if (
+        documentPrintedMatch
+      ) {
+        if (
+          request.method !==
+          "PUT"
+        ) {
+          return methodNotAllowed();
+        }
+
+        return await markDocumentPrinted(
+          request,
+          env,
+          decodeURIComponent(
+            documentPrintedMatch[1]
+          )
+        );
+      }
+
+
+      // ======================================================
       // ESTADO PRODUCTO
       // ======================================================
 
@@ -2538,6 +2568,9 @@ async function getAllStates(
             previous_status,
             assembly_location,
             notes,
+            document_printed,
+            document_printed_at,
+            document_printed_by,
             updated_at
           FROM order_states
         `)
@@ -2617,6 +2650,20 @@ async function getAllStates(
       notes:
         row.notes ||
         "",
+
+      documentPrinted:
+        Number(
+          row.document_printed ||
+          0
+        ) === 1,
+
+      documentPrintedAt:
+        row.document_printed_at ||
+        null,
+
+      documentPrintedBy:
+        row.document_printed_by ||
+        null,
 
       updatedAt:
         row.updated_at,
@@ -2927,6 +2974,162 @@ async function updateOrderState(
       notes,
       updatedAt
     }
+  });
+}
+
+
+// ==========================================================
+// MARCAR BOLETA COMO IMPRESA
+// ==========================================================
+
+async function markDocumentPrinted(
+  request,
+  env,
+  orderNumber
+) {
+  validateD1(
+    env
+  );
+
+  const user =
+    await requireAuth(
+      request,
+      env
+    );
+
+  const existing =
+    await env.DB
+      .prepare(`
+        SELECT
+          order_number,
+          document_printed,
+          document_printed_at,
+          document_printed_by
+        FROM order_states
+        WHERE order_number = ?
+      `)
+      .bind(
+        orderNumber
+      )
+      .first();
+
+  // Si ya estaba marcada, conservar quién y cuándo la marcó por primera vez.
+  if (
+    existing &&
+    Number(
+      existing.document_printed ||
+      0
+    ) === 1
+  ) {
+    return jsonResponse({
+      success:
+        true,
+
+      alreadyPrinted:
+        true,
+
+      documentPrinted:
+        true,
+
+      documentPrintedAt:
+        existing.document_printed_at ||
+        null,
+
+      documentPrintedBy:
+        existing.document_printed_by ||
+        null
+    });
+  }
+
+  const printedAt =
+    new Date()
+      .toISOString();
+
+  const printedBy =
+    user.name ||
+    user.username ||
+    "Usuario";
+
+  if (
+    existing
+  ) {
+    await env.DB
+      .prepare(`
+        UPDATE order_states
+        SET
+          document_printed = 1,
+          document_printed_at = ?,
+          document_printed_by = ?,
+          updated_at = ?
+        WHERE order_number = ?
+      `)
+      .bind(
+        printedAt,
+        printedBy,
+        printedAt,
+        orderNumber
+      )
+      .run();
+
+  } else {
+    await env.DB
+      .prepare(`
+        INSERT INTO order_states (
+          order_number,
+          shopify_order_id,
+          status,
+          previous_status,
+          assembly_location,
+          notes,
+          document_printed,
+          document_printed_at,
+          document_printed_by,
+          updated_at
+        )
+        VALUES (
+          ?,
+          NULL,
+          'pendiente',
+          NULL,
+          'sin-asignar',
+          '',
+          1,
+          ?,
+          ?,
+          ?
+        )
+      `)
+      .bind(
+        orderNumber,
+        printedAt,
+        printedBy,
+        printedAt
+      )
+      .run();
+  }
+
+  await insertAutomaticHistory(
+    env,
+    orderNumber,
+    `${printedBy} marcó la boleta como impresa.`,
+    printedAt
+  );
+
+  return jsonResponse({
+    success:
+      true,
+
+    alreadyPrinted:
+      false,
+
+    documentPrinted:
+      true,
+
+    documentPrintedAt:
+      printedAt,
+
+    documentPrintedBy:
+      printedBy
   });
 }
 
@@ -3856,6 +4059,15 @@ function ensureOrderStateContainer(
 
     notes:
       "",
+
+    documentPrinted:
+      false,
+
+    documentPrintedAt:
+      null,
+
+    documentPrintedBy:
+      null,
 
     updatedAt:
       null,
