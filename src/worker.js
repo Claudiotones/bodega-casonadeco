@@ -2552,6 +2552,11 @@ async function getAllStates(
     env
   );
 
+  
+  // --------------------------------------------------------
+  // D1
+  // --------------------------------------------------------
+
   const [
     orderStatesResult,
     productStatesResult,
@@ -2621,6 +2626,11 @@ async function getAllStates(
         .all()
     ]);
 
+
+  // --------------------------------------------------------
+  // CONSTRUIR ESTADOS
+  // --------------------------------------------------------
+
   const stateMap =
     {};
 
@@ -2679,6 +2689,7 @@ async function getAllStates(
     };
   }
 
+
   for (
     const row of
     productStatesResult.results ||
@@ -2711,6 +2722,7 @@ async function getAllStates(
         row.updated_at
     });
   }
+
 
   for (
     const row of
@@ -2754,6 +2766,7 @@ async function getAllStates(
     });
   }
 
+
   for (
     const row of
     historyResult.results ||
@@ -2778,13 +2791,14 @@ async function getAllStates(
     });
   }
 
-  return jsonResponse({
-    success:
-      true,
+return jsonResponse({
+  success:
+    true,
 
-    states:
-      stateMap
-  });
+  states:
+    stateMap
+});
+
 }
 
 // ==========================================================
