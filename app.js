@@ -15,7 +15,7 @@ let users = [];
 let lastStatesSignature = "";
 let syncTimer = null;
 
-const SYNC_INTERVAL_MS = 5000;
+const SYNC_INTERVAL_MS = 60000;
 
 
 // ==========================================================
@@ -1578,17 +1578,29 @@ async function syncRemoteStates() {
 }
 
 
+async function syncApplicationData() {
+  if (
+    !currentUser ||
+    document.hidden
+  ) {
+    return;
+  }
+
+  await Promise.allSettled([
+    syncRemoteStates(),
+    loadTransferRequests()
+  ]);
+}
+
+
 function startStateSync() {
   stopStateSync();
 
-  loadTransferRequests();
+  syncApplicationData();
 
   syncTimer =
     setInterval(
-      async () => {
-        await syncRemoteStates();
-        await loadTransferRequests();
-      },
+      syncApplicationData,
       SYNC_INTERVAL_MS
     );
 }
@@ -1606,7 +1618,6 @@ function stopStateSync() {
       null;
   }
 }
-
 
 // ==========================================================
 // RENDER GENERAL
