@@ -5,6 +5,9 @@
 let orders = [];
 let selectedOrderId = null;
 
+// Pedidos seleccionados para impresión
+const selectedPrintOrders = new Set();
+
 let activeZone = "todos";
 let activeStatus = "todos";
 let activeLocation = "todos";
@@ -1774,202 +1777,311 @@ function renderOrders() {
 
 
 // ==========================================================
-// TARJETA PEDIDO
+// LISTADO PEDIDOS
 // ==========================================================
 
-function createOrderCard(
-  order
-) {
-  const article =
-    document.createElement(
-      "article"
-    );
+function renderOrders() {
+  const filteredOrders =
+    orders.filter(order => {
+      const matchesZone =
+        activeZone === "todos" ||
+        (
+          activeZone === "problema"
+            ? hasPendingIncidents(order) ||
+              order.status === "problema"
+            : order.zone === activeZone
+        );
 
-  article.className =
-    `order-card location-card-${order.assemblyLocation || "sin-asignar"}`;
+      const matchesStatus =
+        activeStatus === "todos" ||
+        order.status === activeStatus;
 
-  const visibleProducts =
-    order.products.slice(
-      0,
-      3
-    );
+      const matchesLocation =
+        activeLocation === "todos" ||
+        order.assemblyLocation === activeLocation;
 
-  const totalUnits =
-    order.products.reduce(
-      (
-        sum,
-        product
-      ) =>
-        sum +
-        product.quantity,
+      const normalizedSearch =
+        searchTerm.toLowerCase();
+
+      const matchesSearch =
+        order.number.toLowerCase().includes(normalizedSearch) ||
+
+        order.products.some(product =>
+          product.name.toLowerCase().includes(normalizedSearch) ||
+
+          String(product.code || "")
+            .toLowerCase()
+            .includes(normalizedSearch) ||
+
+          String(product.sku || "")
+            .toLowerCase()
+            .includes(normalizedSearch)
+        );
+
+      return (
+        matchesZone &&
+        matchesStatus &&
+        matchesLocation &&
+        matchesSearch
+      );
+    });
+
+  // Conservar solo selecciones de pedidos que aún están cargados
+  const existingIds = new Set(
+    orders.map(order => String(order.id))
+  );
+
+  for (const id of selectedPrintOrders) {
+    if (!existingIds.has(id)) {
+      selectedPrintOrders.delete(id);
+    }
+  }
+
+  ordersGrid.innerHTML = "";
+
+  if (filteredOrders.length === 0) {
+    emptyState.classList.remove("hidden");
+    updatePrintSelectionToolbar();
+    return;
+  }
+
+  emptyState.classList.add("hidden");
+
+  filteredOrders.forEach(order => {
+    ordersGrid.appendChild(createOrderCard(order));
+  });
+
+  updatePrintSelectionToolbar();
+}
+
+// ==========================================================
+// IMPRESIÓN MÚLTIPLE DE PEDIDOS - 70 MM
+// ==========================================================
+
+function updatePrintSelectionToolbar() {
+  const toolbar = document.getElementById("print-selection-toolbar");
+  const count = document.getElementById("print-selection-count");
+  const printButton = document.getElementById("print-selected-orders");
+
+  if (!toolbar || !count || !printButton) return;
+
+  const total = selectedPrintOrders.size;
+
+  count.textContent = `${total} seleccionados`;
+
+  toolbar.classList.toggle("hidden", total === 0);
+  printButton.disabled = total === 0;
+}
+
+
+function selectAllVisibleOrders() {
+  const visibleCards = ordersGrid.querySelectorAll(
+    ".order-card"
+  );
+
+  visibleCards.forEach(card => {
+    const checkbox = card.querySelector(".order-print-checkbox");
+
+    if (checkbox && !checkbox.checked) {
+      checkbox.checked = true;
+      checkbox.dispatchEvent(
+        new Event("change", { bubbles: true })
+      );
+    }
+  });
+}
+
+
+function clearPrintSelection() {
+  selectedPrintOrders.clear();
+  renderOrders();
+}
+
+
+function printSelectedOrders() {
+  const selectedOrders = orders.filter(order =>
+    selectedPrintOrders.has(String(order.id))
+  );
+
+  if (!selectedOrders.length) {
+    showToast("Selecciona al menos un pedido");
+    return;
+  }
+
+  const printWindow = window.open("", "_blank");
+
+  if (!printWindow) {
+    showToast("Permite las ventanas emergentes para imprimir");
+    return;
+  }
+
+  const ordersHtml = selectedOrders.map(order => {
+    const destination = order.pickup?.isPickup
+      ? `RETIRO ${order.pickup.location || "TIENDA"}`
+      : order.zone === "santiago"
+        ? "SANTIAGO"
+        : "REGIONES";
+
+    const productsHtml = order.products.map(product => `
+      <div class="product">
+        <span class="quantity">
+          ${Number(product.quantity || 0)} ×
+        </span>
+        <span class="product-name">
+          ${escapeHtml(product.name)}
+        </span>
+      </div>
+    `).join("");
+
+    const totalUnits = order.products.reduce(
+      (sum, product) => sum + Number(product.quantity || 0),
       0
     );
 
-  const pendingIncidents =
-    getPendingIncidentCount(
-      order
-    );
-
-  article.innerHTML = `
-    <div class="order-card-inner">
-
-      <div class="order-card-top">
-
-        <div>
-
-          <h3 class="order-number">
-            ${escapeHtml(
-              order.number
-            )}
-          </h3>
-
-          <p class="order-date">
-            ${escapeHtml(
-              order.date
-            )}
-          </p>
-
+    return `
+      <section class="order">
+        <div class="destination">
+          ${escapeHtml(destination)}
         </div>
 
-        <span
-  class="zone-badge ${
-    order.pickup?.isPickup
-      ? "zone-pickup"
-      : order.zone ===
-          "santiago"
-        ? "zone-santiago"
-        : "zone-regiones"
-  }"
->
-  ${
-    order.pickup?.isPickup
-      ? `RETIRO · ${
-          order.pickup.location
-            ? escapeHtml(
-                order.pickup.location.toUpperCase()
-              )
-            : "TIENDA"
-        }`
-      : order.zone ===
-          "santiago"
-        ? "Santiago"
-        : "Regiones"
-  }
-</span>
-
-      </div>
-
-      <div class="order-card-products">
-
-        <div class="order-thumb-group">
-
-          ${
-            visibleProducts
-              .map(product => {
-                if (
-                  !product.image
-                ) {
-                  return "";
-                }
-
-                return `
-                  <img
-                    class="order-thumb"
-                    src="${product.image}"
-                    alt="${escapeHtml(
-                      product.name
-                    )}"
-                  >
-                `;
-              })
-              .join("")
-          }
-
+        <div class="order-number">
+          ${escapeHtml(order.number)}
         </div>
 
-        <div class="order-product-summary">
-
-          ${order.products.length}
-
-          ${
-            order.products.length ===
-            1
-              ? "producto"
-              : "productos"
-          }
-
-          · ${totalUnits}
-
-          ${
-            totalUnits ===
-            1
-              ? "unidad"
-              : "unidades"
-          }
-
-          ${
-            pendingIncidents > 0
-              ? `
-                <div
-                  style="
-                    margin-top:6px;
-                    color:#dc2626;
-                    font-weight:800;
-                  "
-                >
-                  ⚠ ${pendingIncidents}
-                  ${
-                    pendingIncidents ===
-                    1
-                      ? "incidencia pendiente"
-                      : "incidencias pendientes"
-                  }
-                </div>
-              `
-              : ""
-          }
-
+        <div class="products">
+          ${productsHtml}
         </div>
 
-      </div>
+        <div class="total">
+          TOTAL: ${totalUnits} UNIDADES
+        </div>
+      </section>
+    `;
+  }).join("");
 
-      <div class="order-status-row">
+  printWindow.document.open();
 
-        <span
-          class="status-badge status-${order.status}"
-        >
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <title>Preparación de pedidos</title>
 
-          <span class="status-dot"></span>
+      <style>
+        @page {
+          size: 70mm auto;
+          margin: 0;
+        }
 
-          ${getStatusLabel(
-            order.status
-          )}
+        * {
+          box-sizing: border-box;
+        }
 
-        </span>
+        html,
+        body {
+          width: 70mm;
+          margin: 0;
+          padding: 0;
+          background: white;
+          color: black;
+          font-family: Arial, sans-serif;
+        }
 
-        <button
-          class="order-view-button"
-          type="button"
-        >
-          Ver pedido →
-        </button>
+        .sheet {
+          width: 70mm;
+          padding: 3mm;
+        }
 
-      </div>
+        .order {
+          padding: 3mm 0 5mm;
+          border-bottom: 2px dashed #000;
+          break-inside: avoid;
+          page-break-inside: avoid;
+        }
 
-    </div>
-  `;
+        .destination {
+          font-size: 18pt;
+          font-weight: 900;
+          text-align: center;
+        }
 
-  article.addEventListener(
-    "click",
-    () => {
-      openOrder(
-        order.id
-      );
-    }
-  );
+        .order-number {
+          font-size: 24pt;
+          font-weight: 900;
+          text-align: center;
+          margin: 2mm 0 4mm;
+        }
 
-  return article;
+        .products {
+          display: flex;
+          flex-direction: column;
+          gap: 3mm;
+        }
+
+        .product {
+          display: flex;
+          align-items: flex-start;
+          gap: 2mm;
+          font-size: 11pt;
+          line-height: 1.3;
+        }
+
+        .quantity {
+          flex-shrink: 0;
+          font-weight: 900;
+          min-width: 9mm;
+        }
+
+        .product-name {
+          flex: 1;
+          overflow-wrap: anywhere;
+        }
+
+        .total {
+          margin-top: 4mm;
+          padding-top: 2mm;
+          border-top: 1px solid #000;
+          font-size: 10pt;
+          font-weight: 800;
+          text-align: right;
+        }
+
+        @media screen {
+          body {
+            margin: 20px auto;
+            box-shadow: 0 0 10px #ccc;
+          }
+        }
+      </style>
+    </head>
+
+    <body>
+      <main class="sheet">
+        ${ordersHtml}
+      </main>
+    </body>
+    </html>
+  `);
+
+  printWindow.document.close();
+
+  printWindow.focus();
+  printWindow.print();
 }
+
+// ==========================================================
+// EVENTOS IMPRESIÓN MÚLTIPLE
+// ==========================================================
+
+document.getElementById("print-selected-orders")
+  ?.addEventListener("click", printSelectedOrders);
+
+document.getElementById("print-select-all")
+  ?.addEventListener("click", selectAllVisibleOrders);
+
+document.getElementById("print-clear-selection")
+  ?.addEventListener("click", clearPrintSelection);
 
 
 // ==========================================================
