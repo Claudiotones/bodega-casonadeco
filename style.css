@@ -4075,3 +4075,142 @@ img {
 .warehouse-product-actions button {
   margin: 0;
 }
+
+
+/* ==========================================================
+   SELECCIÓN E IMPRESIÓN MÚLTIPLE DE PEDIDOS
+========================================================== */
+
+.print-orders-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 18px 0 22px;
+}
+
+.print-select-all-button {
+  align-self: flex-start;
+  padding: 10px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.print-select-all-button:hover {
+  background: #f3f4f6;
+}
+
+.print-selection-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  background: #eff6ff;
+}
+
+.print-selection-toolbar.hidden {
+  display: none;
+}
+
+.print-selection-count {
+  font-size: 13px;
+  font-weight: 800;
+  color: #1e40af;
+  margin-right: auto;
+}
+
+.print-selected-button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.print-selected-button:hover {
+  background: #1d4ed8;
+}
+
+.print-selected-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.print-clear-button {
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.print-clear-button:hover {
+  background: #f1f5f9;
+}
+
+/* Casilla para seleccionar pedidos */
+
+.order-print-selector {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 10px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #334155;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.order-print-checkbox {
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  accent-color: #2563eb;
+  cursor: pointer;
+}
+
+/* Destacar pedidos seleccionados */
+
+.order-card-print-selected {
+  outline: 3px solid #2563eb;
+  outline-offset: -3px;
+}
+
+.order-card-print-selected .order-print-selector {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+/* Adaptación a celulares */
+
+@media (max-width: 600px) {
+  .print-selection-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .print-selection-count {
+    margin-right: 0;
+  }
+
+  .print-selected-button,
+  .print-clear-button {
+    width: 100%;
+  }
+}
