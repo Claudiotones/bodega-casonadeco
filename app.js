@@ -2032,53 +2032,59 @@ function printSelectedOrders() {
 
   printWindow.document.open();
 
+  
   printWindow.document.write(`
     <!DOCTYPE html>
     <html lang="es">
     <head>
       <meta charset="UTF-8">
-      <title>Preparación de pedidos</title>
+      <title>Preparación de pedidos - Carta</title>
 
       <style>
         @page {
-          size: 70mm auto;
-          margin: 0;
+          size: letter;
+          margin: 10mm;
         }
 
         * {
           box-sizing: border-box;
         }
 
-        html,
-        body {
-          width: 70mm;
+        html, body {
           margin: 0;
           padding: 0;
-          background: white;
-          color: black;
+          background: #ffffff;
+          color: #000000;
           font-family: Arial, sans-serif;
         }
 
         .sheet {
-          width: 70mm;
-          padding: 3mm;
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          column-gap: 4mm;
+          row-gap: 0;
+          width: 100%;
+          align-items: start;
         }
 
         .order {
-          padding: 3mm 0 5mm;
-          border-bottom: 2px dashed #000;
+          padding: 4mm 2mm;
+          border-bottom: 1px dashed #333;
           break-inside: avoid;
           page-break-inside: avoid;
+          min-width: 0;
         }
 
         .destination {
-          font-size: 18pt;
+          font-size: 13pt;
           font-weight: 900;
           text-align: center;
+          text-transform: uppercase;
+          overflow-wrap: anywhere;
         }
 
         .order-number {
-          font-size: 24pt;
+          font-size: 18pt;
           font-weight: 900;
           text-align: center;
           margin: 2mm 0 4mm;
@@ -2087,21 +2093,20 @@ function printSelectedOrders() {
         .products {
           display: flex;
           flex-direction: column;
-          gap: 3mm;
+          gap: 2mm;
         }
 
         .product {
           display: flex;
           align-items: flex-start;
-          gap: 2mm;
-          font-size: 11pt;
+          gap: 1.5mm;
+          font-size: 8pt;
           line-height: 1.3;
         }
 
         .quantity {
           flex-shrink: 0;
           font-weight: 900;
-          min-width: 9mm;
         }
 
         .product-name {
@@ -2110,18 +2115,32 @@ function printSelectedOrders() {
         }
 
         .total {
-          margin-top: 4mm;
+          margin-top: 3mm;
           padding-top: 2mm;
-          border-top: 1px solid #000;
-          font-size: 10pt;
+          border-top: 1px solid #777;
+          font-size: 7pt;
           font-weight: 800;
           text-align: right;
         }
 
+        @media print {
+          .sheet {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+          }
+
+          .order {
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
+        }
+
         @media screen {
           body {
+            max-width: 216mm;
             margin: 20px auto;
-            box-shadow: 0 0 10px #ccc;
+            padding: 10mm;
+            box-shadow: 0 0 12px #ccc;
           }
         }
       </style>
@@ -2134,6 +2153,7 @@ function printSelectedOrders() {
     </body>
     </html>
   `);
+
 
   printWindow.document.close();
 
