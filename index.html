@@ -759,64 +759,116 @@
 
 
 
-        <!-- ===============================================
+        
+<!-- ===============================================
              PEDIDOS
-        ================================================ -->
+=============================================== -->
 
-        <section class="orders-section">
+<section class="orders-section">
 
+  <div class="orders-heading">
 
-          <div class="orders-heading">
+    <div>
 
-            <div>
+      <h3>
+        Pedidos activos
+      </h3>
 
-              <h3>
-                Pedidos activos
-              </h3>
+      <p>
+        Pedidos pagados pendientes de completar.
+      </p>
 
-              <p>
-                Pedidos pagados pendientes de completar.
-              </p>
+    </div>
 
-            </div>
-
-          </div>
-
+  </div>
 
 
-          <div
-            id="orders-grid"
-            class="orders-grid"
-          >
-            <!-- Los pedidos se generan desde app.js -->
-          </div>
+  <!-- ===============================================
+       IMPRESIÓN MÚLTIPLE DE PEDIDOS
+  ================================================ -->
+
+  <div class="print-orders-controls">
+
+    <button
+      id="print-select-all"
+      class="print-select-all-button"
+      type="button"
+    >
+      ☑ Seleccionar todos los visibles
+    </button>
+
+    <div
+      id="print-selection-toolbar"
+      class="print-selection-toolbar hidden"
+    >
+
+      <span
+        id="print-selection-count"
+        class="print-selection-count"
+      >
+        0 seleccionados
+      </span>
+
+      <button
+        id="print-selected-orders"
+        class="print-selected-button"
+        type="button"
+      >
+        🖨 Imprimir seleccionados
+      </button>
+
+      <button
+        id="print-clear-selection"
+        class="print-clear-button"
+        type="button"
+      >
+        ✕ Limpiar selección
+      </button>
+
+    </div>
+
+  </div>
 
 
+  <!-- ===============================================
+       LISTADO DE PEDIDOS
+  ================================================ -->
 
-          <div
-            id="empty-state"
-            class="empty-state hidden"
-          >
-
-            <div class="empty-icon">
-              ▣
-            </div>
-
-            <h3>
-              No hay pedidos
-            </h3>
-
-            <p>
-              No encontramos pedidos que coincidan con los filtros seleccionados.
-            </p>
-
-          </div>
+  <div
+    id="orders-grid"
+    class="orders-grid"
+  >
+    <!-- Los pedidos se generan desde app.js -->
+  </div>
 
 
-        </section>
+  <!-- ===============================================
+       SIN PEDIDOS
+  ================================================ -->
+
+  <div
+    id="empty-state"
+    class="empty-state hidden"
+  >
+
+    <div class="empty-icon">
+      ▣
+    </div>
+
+    <h3>
+      No hay pedidos
+    </h3>
+
+    <p>
+      No encontramos pedidos que coincidan con los filtros seleccionados.
+    </p>
+
+  </div>
+
+</section>
 
 
-      </div>
+</div>
 
 
 
