@@ -1667,112 +1667,184 @@ function renderStats() {
 }
 
 
+
 // ==========================================================
-// LISTADO PEDIDOS
+// TARJETA PEDIDO
 // ==========================================================
 
-function renderOrders() {
-  const filteredOrders =
-    orders.filter(order => {
-      const matchesZone =
-        activeZone ===
-          "todos" ||
-        (
-          activeZone ===
-            "problema"
-            ? hasPendingIncidents(
-                order
-              ) ||
-              order.status ===
-                "problema"
-            : order.zone ===
-              activeZone
-        );
+function createOrderCard(order) {
+  const article = document.createElement("article");
 
-      const matchesStatus =
-        activeStatus ===
-          "todos" ||
-        order.status ===
-          activeStatus;
+  article.className =
+    `order-card location-card-${order.assemblyLocation || "sin-asignar"}`;
 
-      const matchesLocation =
-        activeLocation ===
-          "todos" ||
-        order.assemblyLocation ===
-          activeLocation;
+  const isSelected = selectedPrintOrders.has(String(order.id));
 
-      const normalizedSearch =
-        searchTerm.toLowerCase();
-
-      const matchesSearch =
-        order.number
-          .toLowerCase()
-          .includes(
-            normalizedSearch
-          ) ||
-
-        order.products.some(
-          product =>
-            product.name
-              .toLowerCase()
-              .includes(
-                normalizedSearch
-              ) ||
-
-            String(
-              product.code ||
-              ""
-            )
-              .toLowerCase()
-              .includes(
-                normalizedSearch
-              ) ||
-
-            String(
-              product.sku ||
-              ""
-            )
-              .toLowerCase()
-              .includes(
-                normalizedSearch
-              )
-        );
-
-      return (
-        matchesZone &&
-        matchesStatus &&
-        matchesLocation &&
-        matchesSearch
-      );
-    });
-
-  ordersGrid.innerHTML =
-    "";
-
-  if (
-    filteredOrders.length ===
-    0
-  ) {
-    emptyState.classList.remove(
-      "hidden"
-    );
-
-    return;
+  if (isSelected) {
+    article.classList.add("order-card-print-selected");
   }
 
-  emptyState.classList.add(
-    "hidden"
+  const visibleProducts = order.products.slice(0, 3);
+
+  const totalUnits = order.products.reduce(
+    (sum, product) => sum + Number(product.quantity || 0),
+    0
   );
 
-  filteredOrders.forEach(
-    order => {
-      ordersGrid.appendChild(
-        createOrderCard(
-          order
-        )
-      );
+  const pendingIncidents = getPendingIncidentCount(order);
+
+  article.innerHTML = `
+    <div class="order-card-inner">
+
+      <div class="order-card-top">
+
+        <div>
+
+          <label class="order-print-selector">
+            <input
+              type="checkbox"
+              class="order-print-checkbox"
+              ${isSelected ? "checked" : ""}
+            >
+            <span>Seleccionar para imprimir</span>
+          </label>
+
+          <h3 class="order-number">
+            ${escapeHtml(order.number)}
+          </h3>
+
+          <p class="order-date">
+            ${escapeHtml(order.date)}
+          </p>
+
+        </div>
+
+        <span
+          class="zone-badge ${
+            order.pickup?.isPickup
+              ? "zone-pickup"
+              : order.zone === "santiago"
+                ? "zone-santiago"
+                : "zone-regiones"
+          }"
+        >
+          ${
+            order.pickup?.isPickup
+              ? `RETIRO · ${
+                  order.pickup.location
+                    ? escapeHtml(order.pickup.location.toUpperCase())
+                    : "TIENDA"
+                }`
+              : order.zone === "santiago"
+                ? "Santiago"
+                : "Regiones"
+          }
+        </span>
+
+      </div>
+
+      <div class="order-card-products">
+
+        <div class="order-thumb-group">
+          ${
+            visibleProducts.map(product => {
+              if (!product.image) return "";
+
+              return `
+                <img
+                  class="order-thumb"
+                  src="${escapeHtml(product.image)}"
+                  alt="${escapeHtml(product.name)}"
+                >
+              `;
+            }).join("")
+          }
+        </div>
+
+        <div class="order-product-summary">
+
+          ${order.products.length}
+          ${order.products.length === 1 ? "producto" : "productos"}
+
+          · ${totalUnits}
+          ${totalUnits === 1 ? "unidad" : "unidades"}
+
+          ${
+            pendingIncidents > 0
+              ? `
+                <div
+                  style="
+                    margin-top:6px;
+                    color:#dc2626;
+                    font-weight:800;
+                  "
+                >
+                  ⚠ ${pendingIncidents}
+                  ${
+                    pendingIncidents === 1
+                      ? "incidencia pendiente"
+                      : "incidencias pendientes"
+                  }
+                </div>
+              `
+              : ""
+          }
+
+        </div>
+
+      </div>
+
+      <div class="order-status-row">
+
+        <span class="status-badge status-${order.status}">
+
+          <span class="status-dot"></span>
+
+          ${getStatusLabel(order.status)}
+
+        </span>
+
+        <button
+          class="order-view-button"
+          type="button"
+        >
+          Ver pedido →
+        </button>
+
+      </div>
+
+    </div>
+  `;
+
+  const checkbox = article.querySelector(".order-print-checkbox");
+
+  checkbox.addEventListener("click", event => {
+    event.stopPropagation();
+  });
+
+  checkbox.addEventListener("change", () => {
+    const id = String(order.id);
+
+    if (checkbox.checked) {
+      selectedPrintOrders.add(id);
+      article.classList.add("order-card-print-selected");
+    } else {
+      selectedPrintOrders.delete(id);
+      article.classList.remove("order-card-print-selected");
     }
-  );
+
+    updatePrintSelectionToolbar();
+  });
+
+  article.addEventListener("click", event => {
+    if (event.target.closest(".order-print-selector")) {
+      return;
+    }
+
+    openOrder(order.id);
+  });
+
+  return article;
 }
 
 
@@ -1781,52 +1853,50 @@ function renderOrders() {
 // ==========================================================
 
 function renderOrders() {
-  const filteredOrders =
-    orders.filter(order => {
-      const matchesZone =
-        activeZone === "todos" ||
-        (
-          activeZone === "problema"
-            ? hasPendingIncidents(order) ||
-              order.status === "problema"
-            : order.zone === activeZone
-        );
-
-      const matchesStatus =
-        activeStatus === "todos" ||
-        order.status === activeStatus;
-
-      const matchesLocation =
-        activeLocation === "todos" ||
-        order.assemblyLocation === activeLocation;
-
-      const normalizedSearch =
-        searchTerm.toLowerCase();
-
-      const matchesSearch =
-        order.number.toLowerCase().includes(normalizedSearch) ||
-
-        order.products.some(product =>
-          product.name.toLowerCase().includes(normalizedSearch) ||
-
-          String(product.code || "")
-            .toLowerCase()
-            .includes(normalizedSearch) ||
-
-          String(product.sku || "")
-            .toLowerCase()
-            .includes(normalizedSearch)
-        );
-
-      return (
-        matchesZone &&
-        matchesStatus &&
-        matchesLocation &&
-        matchesSearch
+  const filteredOrders = orders.filter(order => {
+    const matchesZone =
+      activeZone === "todos" ||
+      (
+        activeZone === "problema"
+          ? hasPendingIncidents(order) ||
+            order.status === "problema"
+          : order.zone === activeZone
       );
-    });
 
-  // Conservar solo selecciones de pedidos que aún están cargados
+    const matchesStatus =
+      activeStatus === "todos" ||
+      order.status === activeStatus;
+
+    const matchesLocation =
+      activeLocation === "todos" ||
+      order.assemblyLocation === activeLocation;
+
+    const normalizedSearch = searchTerm.toLowerCase();
+
+    const matchesSearch =
+      order.number.toLowerCase().includes(normalizedSearch) ||
+
+      order.products.some(product =>
+        product.name.toLowerCase().includes(normalizedSearch) ||
+
+        String(product.code || "")
+          .toLowerCase()
+          .includes(normalizedSearch) ||
+
+        String(product.sku || "")
+          .toLowerCase()
+          .includes(normalizedSearch)
+      );
+
+    return (
+      matchesZone &&
+      matchesStatus &&
+      matchesLocation &&
+      matchesSearch
+    );
+  });
+
+  // Eliminar selecciones de pedidos que ya no están cargados
   const existingIds = new Set(
     orders.map(order => String(order.id))
   );
@@ -1853,6 +1923,7 @@ function renderOrders() {
 
   updatePrintSelectionToolbar();
 }
+
 
 // ==========================================================
 // IMPRESIÓN MÚLTIPLE DE PEDIDOS - 70 MM
