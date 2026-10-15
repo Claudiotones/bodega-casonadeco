@@ -2040,110 +2040,139 @@ function printSelectedOrders() {
       <meta charset="UTF-8">
       <title>Preparación de pedidos - Carta</title>
 
-      <style>
-        @page {
-          size: letter;
-          margin: 10mm;
-        }
+      
+<style>
+  @page {
+    size: letter;
+    margin: 10mm;
+  }
 
-        * {
-          box-sizing: border-box;
-        }
+  * {
+    box-sizing: border-box;
+  }
 
-        html, body {
-          margin: 0;
-          padding: 0;
-          background: #ffffff;
-          color: #000000;
-          font-family: Arial, sans-serif;
-        }
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    background: #ffffff;
+    color: #000000;
+    font-family: Arial, sans-serif;
+  }
 
-        .sheet {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          column-gap: 4mm;
-          row-gap: 0;
-          width: 100%;
-          align-items: start;
-        }
+  /* HOJA CON TRES COLUMNAS */
 
-        .order {
-          padding: 4mm 2mm;
-          border-bottom: 1px dashed #333;
-          break-inside: avoid;
-          page-break-inside: avoid;
-          min-width: 0;
-        }
+  .sheet {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 0;
+    row-gap: 0;
+    width: 100%;
+    align-items: stretch;
+  }
 
-        .destination {
-          font-size: 13pt;
-          font-weight: 900;
-          text-align: center;
-          text-transform: uppercase;
-          overflow-wrap: anywhere;
-        }
+  /* CADA PEDIDO */
 
-        .order-number {
-          font-size: 18pt;
-          font-weight: 900;
-          text-align: center;
-          margin: 2mm 0 4mm;
-        }
+  .order {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 4mm 2.5mm;
+    border-right: 1px solid #777;
+    border-bottom: 3px solid #000;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
 
-        .products {
-          display: flex;
-          flex-direction: column;
-          gap: 2mm;
-        }
+  /* ÚLTIMA COLUMNA SIN BORDE DERECHO */
 
-        .product {
-          display: flex;
-          align-items: flex-start;
-          gap: 1.5mm;
-          font-size: 8pt;
-          line-height: 1.3;
-        }
+  .order:nth-child(3n) {
+    border-right: none;
+  }
 
-        .quantity {
-          flex-shrink: 0;
-          font-weight: 900;
-        }
+  /* DESTINO */
 
-        .product-name {
-          flex: 1;
-          overflow-wrap: anywhere;
-        }
+  .destination {
+    font-size: 13pt;
+    font-weight: 900;
+    text-align: center;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+  }
 
-        .total {
-          margin-top: 3mm;
-          padding-top: 2mm;
-          border-top: 1px solid #777;
-          font-size: 7pt;
-          font-weight: 800;
-          text-align: right;
-        }
+  /* NÚMERO DE PEDIDO */
 
-        @media print {
-          .sheet {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-          }
+  .order-number {
+    font-size: 18pt;
+    font-weight: 900;
+    text-align: center;
+    margin: 2mm 0 4mm;
+  }
 
-          .order {
-            break-inside: avoid;
-            page-break-inside: avoid;
-          }
-        }
+  /* LISTA DE PRODUCTOS */
 
-        @media screen {
-          body {
-            max-width: 216mm;
-            margin: 20px auto;
-            padding: 10mm;
-            box-shadow: 0 0 12px #ccc;
-          }
-        }
-      </style>
+  .products {
+    display: flex;
+    flex-direction: column;
+    gap: 2mm;
+    flex: 1;
+  }
+
+  .product {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5mm;
+    font-size: 8pt;
+    line-height: 1.3;
+  }
+
+  .quantity {
+    flex-shrink: 0;
+    font-weight: 900;
+  }
+
+  .product-name {
+    flex: 1;
+    overflow-wrap: anywhere;
+  }
+
+  /* TOTAL DE UNIDADES */
+
+  .total {
+    margin-top: 3mm;
+    padding-top: 2mm;
+    border-top: 1px solid #777;
+    font-size: 7pt;
+    font-weight: 800;
+    text-align: right;
+  }
+
+  /* VISTA PREVIA EN PANTALLA */
+
+  @media screen {
+    body {
+      max-width: 216mm;
+      margin: 20px auto;
+      padding: 10mm;
+      box-shadow: 0 0 12px #ccc;
+    }
+  }
+
+  /* IMPRESIÓN */
+
+  @media print {
+    .sheet {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .order {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+  }
+</style>
+
     </head>
 
     <body>
